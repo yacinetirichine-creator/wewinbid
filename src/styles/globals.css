@@ -1,0 +1,222 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-outfit: 'Outfit', system-ui, sans-serif;
+  --font-cabinet: 'Cabinet Grotesk', 'Outfit', system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-outfit);
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-surface-50 text-surface-900;
+  }
+
+  /* Scrollbar personnalisée */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-surface-100;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-300 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-surface-400;
+  }
+
+  /* Focus visible */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-primary-200 text-primary-900;
+  }
+}
+
+@layer components {
+  /* Boutons gradient */
+  .btn-gradient {
+    @apply bg-gradient-to-r from-primary-600 to-secondary-600 text-white;
+    @apply hover:from-primary-700 hover:to-secondary-700;
+    @apply shadow-lg hover:shadow-xl;
+    @apply transition-all duration-300;
+  }
+
+  /* Cards avec glassmorphism */
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-xl border border-white/20;
+    @apply shadow-xl;
+  }
+
+  /* Badge tendance public/privé */
+  .badge-public {
+    @apply bg-tender-public-100 text-tender-public-700 border border-tender-public-200;
+  }
+
+  .badge-private {
+    @apply bg-tender-private-100 text-tender-private-700 border border-tender-private-200;
+  }
+
+  /* Input avec focus amélioré */
+  .input-enhanced {
+    @apply transition-all duration-200;
+    @apply focus:shadow-glow;
+  }
+
+  /* Stat cards */
+  .stat-card {
+    @apply relative overflow-hidden;
+    @apply before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/50 before:to-transparent;
+  }
+
+  /* Animation de shimmer pour loading */
+  .shimmer {
+    @apply bg-gradient-to-r from-surface-200 via-surface-100 to-surface-200;
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* Kanban column */
+  .kanban-column {
+    @apply bg-surface-100/50 rounded-xl p-4;
+    @apply min-h-[500px];
+  }
+
+  .kanban-card {
+    @apply bg-white rounded-lg p-4 shadow-soft;
+    @apply border border-surface-200;
+    @apply hover:shadow-lg hover:border-primary-200;
+    @apply cursor-grab active:cursor-grabbing;
+    @apply transition-all duration-200;
+  }
+
+  /* Score indicator */
+  .score-excellent {
+    @apply text-emerald-500;
+  }
+
+  .score-good {
+    @apply text-green-500;
+  }
+
+  .score-medium {
+    @apply text-amber-500;
+  }
+
+  .score-low {
+    @apply text-orange-500;
+  }
+
+  .score-poor {
+    @apply text-rose-500;
+  }
+}
+
+@layer utilities {
+  /* Animation fade in up */
+  .animate-fade-in-up {
+    animation: fadeInUp 0.5s ease-out forwards;
+  }
+
+  /* Staggered animations */
+  .stagger-1 { animation-delay: 0.1s; }
+  .stagger-2 { animation-delay: 0.2s; }
+  .stagger-3 { animation-delay: 0.3s; }
+  .stagger-4 { animation-delay: 0.4s; }
+  .stagger-5 { animation-delay: 0.5s; }
+
+  /* Gradient text */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-600 to-secondary-600;
+    @apply bg-clip-text text-transparent;
+  }
+
+  /* Hover lift effect */
+  .hover-lift {
+    @apply transition-transform duration-300;
+    @apply hover:-translate-y-1;
+  }
+
+  /* No scrollbar */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Safe area padding */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Animations keyframes */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+  }
+}

@@ -1,0 +1,264 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, Building2, Chrome } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { Button, Input, Alert } from '@/components/ui';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const supabase = createClient();
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        if (error.message === 'Invalid login credentials') {
+          setError('Email ou mot de passe incorrect');
+        } else {
+          setError(error.message);
+        }
+        return;
+      }
+
+      router.push('/dashboard');
+      router.refresh();
+    } catch (err) {
+      setError('Une erreur est survenue. Veuillez réessayer.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        setError(error.message);
+        setGoogleLoading(false);
+      }
+    } catch (err) {
+      setError('Une erreur est survenue avec Google. Veuillez réessayer.');
+      setGoogleLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex">
+      {/* Left Panel - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-violet-600/20" />
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+        
+        <div className="relative z-10 flex flex-col justify-center px-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <Link href="/" className="flex items-center gap-3 mb-12">
+              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center">
+                <Building2 className="w-7 h-7 text-white" />
+              </div>
+              <span className="text-3xl font-bold text-white">WeWinBid</span>
+            </Link>
+
+            <h1 className="text-4xl font-bold text-white mb-6">
+              Remportez plus d'appels d'offres grâce à l'IA
+            </h1>
+            
+            <p className="text-xl text-slate-300 mb-8">
+              Rejoignez des centaines d'entreprises qui ont transformé leur approche commerciale avec WeWinBid.
+            </p>
+
+            <div className="space-y-4">
+              {[
+                'Score de compatibilité IA pour chaque appel d\'offres',
+                'Analyse des concurrents et historique des prix',
+                'Génération automatique de documents',
+              ].map((feature, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.2 + idx * 0.1 }}
+                  className="flex items-center gap-3 text-slate-200"
+                >
+                  <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  {feature}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Decorative Elements */}
+        <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-slate-900/80 to-transparent" />
+        <div className="absolute top-20 right-20 w-72 h-72 bg-indigo-500/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 left-20 w-96 h-96 bg-violet-500/20 rounded-full blur-3xl" />
+      </div>
+
+      {/* Right Panel - Form */}
+      <div className="flex-1 flex items-center justify-center p-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md"
+        >
+          <div className="lg:hidden mb-8 text-center">
+            <Link href="/" className="inline-flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center">
+                <Building2 className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-2xl font-bold text-white">WeWinBid</span>
+            </Link>
+          </div>
+
+          <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-white mb-2">Bon retour !</h2>
+              <p className="text-slate-400">Connectez-vous à votre compte</p>
+            </div>
+
+            {error && (
+              <Alert variant="error" className="mb-6">
+                {error}
+              </Alert>
+            )}
+
+            <form onSubmit={handleLogin} className="space-y-5">
+              <Input
+                label="Email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="vous@entreprise.com"
+                icon={<Mail className="w-5 h-5" />}
+                required
+                className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
+              />
+
+              <div className="relative">
+                <Input
+                  label="Mot de passe"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  icon={<Lock className="w-5 h-5" />}
+                  required
+                  className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-9 text-slate-400 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between text-sm">
+                <label className="flex items-center gap-2 text-slate-400 cursor-pointer">
+                  <input type="checkbox" className="w-4 h-4 rounded border-white/20 bg-white/5 text-indigo-500 focus:ring-indigo-500/20" />
+                  Se souvenir de moi
+                </label>
+                <Link href="/auth/forgot-password" className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                  Mot de passe oublié ?
+                </Link>
+              </div>
+
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                loading={loading}
+                className="w-full"
+              >
+                {loading ? 'Connexion...' : 'Se connecter'}
+                {!loading && <ArrowRight className="w-5 h-5 ml-2" />}
+              </Button>
+            </form>
+
+            <div className="relative my-8">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/10" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-transparent text-slate-500">ou continuer avec</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              onClick={handleGoogleLogin}
+              loading={googleLoading}
+              className="w-full border-white/10 text-white hover:bg-white/5"
+            >
+              {googleLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  <Chrome className="w-5 h-5 mr-2" />
+                  Google
+                </>
+              )}
+            </Button>
+
+            <p className="mt-8 text-center text-slate-400">
+              Pas encore de compte ?{' '}
+              <Link href="/auth/register" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
+                Créer un compte
+              </Link>
+            </p>
+          </div>
+
+          <p className="mt-6 text-center text-sm text-slate-500">
+            En vous connectant, vous acceptez nos{' '}
+            <Link href="/legal/terms" className="text-slate-400 hover:text-white transition-colors">
+              CGU
+            </Link>{' '}
+            et notre{' '}
+            <Link href="/legal/privacy" className="text-slate-400 hover:text-white transition-colors">
+              Politique de confidentialité
+            </Link>
+          </p>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
