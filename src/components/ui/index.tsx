@@ -269,7 +269,7 @@ export function CardFooter({ children, className }: { children: React.ReactNode;
 // ============================================
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';
+  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info' | 'blue' | 'purple' | 'gray' | 'green' | 'red' | 'yellow';
   size?: 'sm' | 'md';
   className?: string;
 }
@@ -283,6 +283,12 @@ export function Badge({ children, variant = 'default', size = 'md', className }:
     warning: 'bg-warning-100 text-warning-700',
     danger: 'bg-danger-100 text-danger-700',
     info: 'bg-blue-100 text-blue-700',
+    blue: 'bg-blue-100 text-blue-700',
+    purple: 'bg-purple-100 text-purple-700',
+    gray: 'bg-gray-100 text-gray-700',
+    green: 'bg-green-100 text-green-700',
+    red: 'bg-red-100 text-red-700',
+    yellow: 'bg-yellow-100 text-yellow-700',
   };
 
   const sizes = {

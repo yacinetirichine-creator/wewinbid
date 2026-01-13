@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import { AppLayout, PageHeader } from '@/components/layout/Sidebar';
 import { Card, CardContent, CardHeader, Badge, Progress, Button, Skeleton, ScoreGauge, Alert } from '@/components/ui';
+import { StatsCard } from '@/components/dashboard/StatsCard';
+import { TendersTable } from '@/components/dashboard/TendersTable';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate, getDaysRemaining } from '@/lib/utils';
 

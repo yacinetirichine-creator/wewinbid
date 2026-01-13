@@ -257,17 +257,32 @@ export function Sidebar({ user, company }: SidebarProps) {
 interface HeaderProps {
   title: string;
   subtitle?: string;
+  description?: string;
   actions?: React.ReactNode;
+  action?: {
+    label: string;
+    href: string;
+  };
 }
 
-export function PageHeader({ title, subtitle, actions }: HeaderProps) {
+export function PageHeader({ title, subtitle, description, actions, action }: HeaderProps) {
+  const displaySubtitle = subtitle || description;
+  
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
         <h1 className="text-2xl font-display font-bold text-surface-900">{title}</h1>
-        {subtitle && <p className="text-surface-500 mt-1">{subtitle}</p>}
+        {displaySubtitle && <p className="text-surface-500 mt-1">{displaySubtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-3">{actions}</div>}
+      {action && (
+        <Link
+          href={action.href}
+          className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700"
+        >
+          {action.label}
+        </Link>
+      )}
     </div>
   );
 }

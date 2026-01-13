@@ -10,7 +10,9 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type SubscriptionPlan = 'FREE' | 'PRO' | 'BUSINESS' | 'ENTERPRISE'
+export type UserRole = 'user' | 'admin'
+export type SubscriptionPlan = 'free' | 'pro' | 'business'
+export type SubscriptionStatus = 'active' | 'inactive' | 'past_due' | 'canceled'
 export type TenderType = 'PUBLIC' | 'PRIVATE'
 export type TenderStatus = 'DRAFT' | 'ANALYSIS' | 'IN_PROGRESS' | 'REVIEW' | 'SUBMITTED' | 'WON' | 'LOST' | 'ABANDONED'
 export type Sector = 
