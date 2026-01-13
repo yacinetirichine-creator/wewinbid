@@ -1,14 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { withErrorHandler } from '@/lib/errors';
+import { z } from 'zod';
 
-// Partnership types
-type PartnershipType = 'SUBCONTRACTOR' | 'PRIME_CONTRACTOR' | 'GROUPEMENT' | 'CONSULTANT';
-type PartnershipStatus = 'PENDING' | 'ACTIVE' | 'REJECTED' | 'INACTIVE';
+// Validation schemas
+const PartnerSearchSchema = z.object({
+  action: z.enum(['search', 'my_partnerships']).default('my_partnerships'),
+  sector: z.string().optional(),
+  region: z.string().optional(),
+  search: z.string().optional(),
+  limit: z.coerce.number().min(1).max(100).default(20),
+});
+
+const CreatePartnershipSchema = z.object({
+  partner_id: z.string().uuid(),
+  type: z.enum(['SUBCONTRACTOR', 'PRIME_CONTRACTOR', 'GROUPEMENT', 'CONSULTANT']),
+  message: z.string().optional(),
+  tender_id: z.string().uuid().optional(),
+  proposed_terms: z.string().optional(),
+});
+
+const UpdatePartnershipSchema = z.object({
+  id: z.string().uuid(),
+  action: z.enum(['accept', 'reject', 'terminate', 'cancel']),
+  response_message: z.string().optional(),
+});
 
 // GET /api/partnerships - List partnerships and search for partners
-export async function GET(request: NextRequest) {
-  try {
-    const supabase = await createClient();
+async function getHandler(request: NextRequest) {
+  const supabase = await createClient();
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -25,12 +45,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No company associated' }, { status: 400 });
     }
 
+    // Parse and validate query params
     const { searchParams } = new URL(request.url);
-    const action = searchParams.get('action') || 'my_partnerships';
-    const sector = searchParams.get('sector');
-    const region = searchParams.get('region');
-    const search = searchParams.get('search');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const params = PartnerSearchSchema.parse({
+      action: searchParams.get('action') || 'my_partnerships',
+      sector: searchParams.get('sector') || undefined,
+      region: searchParams.get('region') || undefined,
+      search: searchParams.get('search') || undefined,
+      limit: searchParams.get('limit'),
+    });
+    const { action, sector, region, search, limit } = params;
 
     if (action === 'search') {
       // Search for potential partners (other companies)
@@ -102,16 +126,11 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({ partnerships: formattedPartnerships });
     }
-  } catch (error) {
-    console.error('Partnerships GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
 }
 
 // POST /api/partnerships - Create a partnership request
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await createClient();
+async function postHandler(request: NextRequest) {
+  const supabase = await createClient();
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -128,26 +147,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No company associated' }, { status: 400 });
     }
 
+    // Parse and validate request body
     const body = await request.json();
-    const { 
-      partner_id, 
-      type, 
-      message, 
-      tender_id,
-      proposed_terms 
-    } = body;
-
-    if (!partner_id || !type) {
-      return NextResponse.json({ 
-        error: 'Partner ID and partnership type are required' 
-      }, { status: 400 });
-    }
+    const data = CreatePartnershipSchema.parse(body);
 
     // Check if partnership already exists
     const { data: existing } = await supabase
       .from('partnerships')
       .select('id, status')
-      .or(`and(requester_id.eq.${profile.company_id},partner_id.eq.${partner_id}),and(requester_id.eq.${partner_id},partner_id.eq.${profile.company_id})`)
+      .or(`and(requester_id.eq.${profile.company_id},partner_id.eq.${data.partner_id}),and(requester_id.eq.${data.partner_id},partner_id.eq.${profile.company_id})`)
       .single();
 
     if (existing) {
@@ -168,12 +176,12 @@ export async function POST(request: NextRequest) {
       .from('partnerships')
       .insert({
         requester_id: profile.company_id,
-        partner_id,
-        type,
+        partner_id: data.partner_id,
+        type: data.type,
         status: 'PENDING',
-        message,
-        tender_id,
-        proposed_terms,
+        message: data.message,
+        tender_id: data.tender_id,
+        proposed_terms: data.proposed_terms,
         requested_by: user.id,
       })
       .select(`
@@ -187,19 +195,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create partnership' }, { status: 500 });
     }
 
-    // TODO: Send notification email to partner
+  // TODO: Send notification email to partner
 
-    return NextResponse.json({ partnership }, { status: 201 });
-  } catch (error) {
-    console.error('Partnerships POST error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  return NextResponse.json({ partnership }, { status: 201 });
 }
 
 // PUT /api/partnerships - Update partnership (accept/reject/terminate)
-export async function PUT(request: NextRequest) {
-  try {
-    const supabase = await createClient();
+async function putHandler(request: NextRequest) {
+  const supabase = await createClient();
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -216,14 +219,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'No company associated' }, { status: 400 });
     }
 
+    // Parse and validate request body
     const body = await request.json();
-    const { id, action, response_message } = body;
-
-    if (!id || !action) {
-      return NextResponse.json({ 
-        error: 'Partnership ID and action are required' 
-      }, { status: 400 });
-    }
+    const { id, action, response_message } = UpdatePartnershipSchema.parse(body);
 
     // Get the partnership
     const { data: partnership } = await supabase
@@ -308,19 +306,14 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to update partnership' }, { status: 500 });
     }
 
-    // TODO: Send notification email
+  // TODO: Send notification email
 
-    return NextResponse.json({ partnership: updated });
-  } catch (error) {
-    console.error('Partnerships PUT error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  return NextResponse.json({ partnership: updated });
 }
 
 // DELETE /api/partnerships - Delete a partnership (only if pending or inactive)
-export async function DELETE(request: NextRequest) {
-  try {
-    const supabase = await createClient();
+async function deleteHandler(request: NextRequest) {
+  const supabase = await createClient();
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -337,12 +330,9 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'No company associated' }, { status: 400 });
     }
 
+    // Parse and validate partnership ID
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json({ error: 'Partnership ID required' }, { status: 400 });
-    }
+    const id = z.string().uuid().parse(searchParams.get('id'));
 
     // Get and validate partnership
     const { data: partnership } = await supabase
@@ -377,9 +367,11 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to delete partnership' }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Partnerships DELETE error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  return NextResponse.json({ success: true });
 }
+
+// Export wrapped handlers
+export const GET = withErrorHandler(getHandler);
+export const POST = withErrorHandler(postHandler);
+export const PUT = withErrorHandler(putHandler);
+export const DELETE = withErrorHandler(deleteHandler);

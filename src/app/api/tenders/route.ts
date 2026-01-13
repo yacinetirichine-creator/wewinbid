@@ -1,10 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { withErrorHandler } from '@/lib/errors';
+import { z } from 'zod';
+
+// Validation schemas
+const TenderQuerySchema = z.object({
+  status: z.string().optional(),
+  type: z.enum(['PUBLIC', 'PRIVATE']).optional(),
+  search: z.string().optional(),
+  limit: z.coerce.number().min(1).max(100).default(50),
+  offset: z.coerce.number().min(0).default(0),
+});
+
+const CreateTenderSchema = z.object({
+  title: z.string().min(1).max(500),
+  reference: z.string().max(100).optional(),
+  type: z.enum(['PUBLIC', 'PRIVATE']),
+  status: z.enum(['DRAFT', 'ANALYSIS', 'IN_PROGRESS', 'REVIEW', 'SUBMITTED', 'WON', 'LOST', 'ABANDONED']).default('DRAFT'),
+  description: z.string().optional(),
+  sector: z.string().optional(),
+  country: z.string().length(2),
+  region: z.string().optional(),
+  department: z.string().optional(),
+  buyer: z.object({
+    name: z.string(),
+    type: z.enum(['PUBLIC', 'PRIVATE']).optional(),
+    email: z.string().email().optional(),
+    phone: z.string().optional(),
+    address: z.string().optional(),
+    city: z.string().optional(),
+    postal_code: z.string().optional(),
+  }).optional(),
+  estimated_value: z.number().positive().optional(),
+  deadline: z.string().datetime().optional(),
+  publication_date: z.string().datetime().optional(),
+  source_url: z.string().url().optional(),
+  source_platform: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+const UpdateTenderSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string().min(1).max(500).optional(),
+  status: z.enum(['DRAFT', 'ANALYSIS', 'IN_PROGRESS', 'REVIEW', 'SUBMITTED', 'WON', 'LOST', 'ABANDONED']).optional(),
+  description: z.string().optional(),
+  estimated_value: z.number().positive().optional(),
+  deadline: z.string().datetime().optional(),
+  notes: z.string().optional(),
+});
 
 // GET /api/tenders - List all tenders for the user's company
-export async function GET(request: NextRequest) {
-  try {
-    const supabase = await createClient();
+async function getHandler(request: NextRequest) {
+  const supabase = await createClient();
     
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -23,13 +70,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No company associated' }, { status: 400 });
     }
 
-    // Parse query params
+    // Parse and validate query params
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
-    const type = searchParams.get('type');
-    const search = searchParams.get('search');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const params = TenderQuerySchema.parse({
+      status: searchParams.get('status') || undefined,
+      type: searchParams.get('type') || undefined,
+      search: searchParams.get('search') || undefined,
+      limit: searchParams.get('limit'),
+      offset: searchParams.get('offset'),
+    });
+    const { status, type, search, limit, offset } = params;
 
     // Build query
     let query = supabase
@@ -56,70 +106,59 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch tenders' }, { status: 500 });
     }
 
-    return NextResponse.json({
-      tenders,
-      pagination: {
-        total: count,
-        limit,
-        offset,
-        hasMore: count ? offset + limit < count : false,
-      },
-    });
-  } catch (error) {
-    console.error('Tenders GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  return NextResponse.json({
+    tenders,
+    pagination: {
+      total: count,
+      limit,
+      offset,
+      hasMore: count ? offset + limit < count : false,
+    },
+  });
 }
 
 // POST /api/tenders - Create a new tender
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-    
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+async function postHandler(request: NextRequest) {
+  const supabase = await createClient();
+  
+  // Get current user
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-    // Get user's company
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('company_id')
-      .eq('id', user.id)
-      .single();
+  // Get user's company
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('company_id')
+    .eq('id', user.id)
+    .single();
 
-    if (!profile?.company_id) {
-      return NextResponse.json({ error: 'No company associated' }, { status: 400 });
-    }
+  if (!profile?.company_id) {
+    return NextResponse.json({ error: 'No company associated' }, { status: 400 });
+  }
 
-    // Parse request body
-    const body = await request.json();
-    const {
-      title,
-      reference,
-      type,
-      status = 'DRAFT',
-      description,
-      sector,
-      country,
-      region,
-      department,
-      buyer,
-      estimated_value,
-      deadline,
-      publication_date,
-      source_url,
-      source_platform,
-      notes,
-    } = body;
-
-    // Validate required fields
-    if (!title || !type || !country) {
-      return NextResponse.json({ 
-        error: 'Missing required fields: title, type, country' 
-      }, { status: 400 });
-    }
+  // Parse and validate request body
+  const body = await request.json();
+  const data = CreateTenderSchema.parse(body);
+  const {
+    title,
+    reference,
+    type,
+    status = 'DRAFT',
+    description,
+    sector,
+    country,
+    region,
+    department,
+    buyer,
+    estimated_value,
+    deadline,
+    publication_date,
+    source_url,
+    source_platform,
+    notes,
+  } = data;
 
     // Generate reference if not provided
     const finalReference = reference || `WW-${Date.now().toString(36).toUpperCase()}`;
@@ -192,42 +231,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create tender' }, { status: 500 });
     }
 
-    return NextResponse.json({ tender }, { status: 201 });
-  } catch (error) {
-    console.error('Tenders POST error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  return NextResponse.json({ tender }, { status: 201 });
 }
 
 // PUT /api/tenders - Update a tender (by id in body)
-export async function PUT(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-    
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+async function putHandler(request: NextRequest) {
+  const supabase = await createClient();
+  
+  // Get current user
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-    // Get user's company
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('company_id')
-      .eq('id', user.id)
-      .single();
+  // Get user's company
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('company_id')
+    .eq('id', user.id)
+    .single();
 
-    if (!profile?.company_id) {
-      return NextResponse.json({ error: 'No company associated' }, { status: 400 });
-    }
+  if (!profile?.company_id) {
+    return NextResponse.json({ error: 'No company associated' }, { status: 400 });
+  }
 
-    // Parse request body
-    const body = await request.json();
-    const { id, ...updateData } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'Tender ID is required' }, { status: 400 });
-    }
+  // Parse and validate request body
+  const body = await request.json();
+  const { id, ...updateData } = UpdateTenderSchema.parse(body);
 
     // Update tender (only if belongs to user's company)
     const { data: tender, error: updateError } = await supabase
@@ -250,42 +280,33 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Tender not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ tender });
-  } catch (error) {
-    console.error('Tenders PUT error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  return NextResponse.json({ tender });
 }
 
 // DELETE /api/tenders - Delete a tender
-export async function DELETE(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-    
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+async function deleteHandler(request: NextRequest) {
+  const supabase = await createClient();
+  
+  // Get current user
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-    // Get user's company
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('company_id')
-      .eq('id', user.id)
-      .single();
+  // Get user's company
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('company_id')
+    .eq('id', user.id)
+    .single();
 
-    if (!profile?.company_id) {
-      return NextResponse.json({ error: 'No company associated' }, { status: 400 });
-    }
+  if (!profile?.company_id) {
+    return NextResponse.json({ error: 'No company associated' }, { status: 400 });
+  }
 
-    // Parse tender ID from query or body
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json({ error: 'Tender ID is required' }, { status: 400 });
-    }
+  // Parse and validate tender ID
+  const { searchParams } = new URL(request.url);
+  const id = z.string().uuid().parse(searchParams.get('id'));
 
     // Delete tender (only if belongs to user's company)
     const { error: deleteError } = await supabase
@@ -299,9 +320,11 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to delete tender' }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Tenders DELETE error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  return NextResponse.json({ success: true });
 }
+
+// Export wrapped handlers
+export const GET = withErrorHandler(getHandler);
+export const POST = withErrorHandler(postHandler);
+export const PUT = withErrorHandler(putHandler);
+export const DELETE = withErrorHandler(deleteHandler);

@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { withErrorHandler } from '@/lib/errors';
+import { z } from 'zod';
+
+// Validation schemas
+const ScoreRequestSchema = z.object({
+  tender_id: z.string().uuid(),
+});
+
+const ScoreQuerySchema = z.object({
+  tender_id: z.string().uuid(),
+});
 
 // Scoring weights for different criteria
 const SCORING_WEIGHTS = {
@@ -327,23 +338,18 @@ function generateSummary(percentage: number, criteria: ScoringCriteria[]): strin
 }
 
 // POST /api/ai/score - Calculate AI score for a tender
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-    
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+async function postHandler(request: NextRequest) {
+  const supabase = await createClient();
+  
+  // Get current user
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-    // Parse request body
-    const body = await request.json();
-    const { tender_id } = body;
-
-    if (!tender_id) {
-      return NextResponse.json({ error: 'Tender ID is required' }, { status: 400 });
-    }
+  // Parse and validate request body
+  const body = await request.json();
+  const { tender_id } = ScoreRequestSchema.parse(body);
 
     // Get user's profile and company
     const { data: profile } = await supabase
@@ -399,28 +405,22 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(result);
-  } catch (error) {
-    console.error('AI Score error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
 }
 
 // GET /api/ai/score?tender_id=xxx - Get cached score
-export async function GET(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+async function getHandler(request: NextRequest) {
+  const supabase = await createClient();
+  
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-    const { searchParams } = new URL(request.url);
-    const tender_id = searchParams.get('tender_id');
-
-    if (!tender_id) {
-      return NextResponse.json({ error: 'Tender ID is required' }, { status: 400 });
-    }
+  // Parse and validate query params
+  const { searchParams } = new URL(request.url);
+  const { tender_id } = ScoreQuerySchema.parse({
+    tender_id: searchParams.get('tender_id'),
+  });
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -439,13 +439,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Tender not found' }, { status: 404 });
     }
 
-    return NextResponse.json({
-      score: tender.ai_score,
-      details: tender.ai_score_details,
-      updatedAt: tender.ai_score_updated_at,
-    });
-  } catch (error) {
-    console.error('AI Score GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  return NextResponse.json({
+    score: tender.ai_score,
+    details: tender.ai_score_details,
+    updatedAt: tender.ai_score_updated_at,
+  });
 }
+
+// Export wrapped handlers
+export const GET = withErrorHandler(getHandler);
+export const POST = withErrorHandler(postHandler);
