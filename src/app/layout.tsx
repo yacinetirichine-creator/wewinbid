@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 import { Toaster } from 'react-hot-toast';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { QueryProvider } from '@/components/providers/QueryProvider';
+import { AnalyticsProvider } from '@/components/providers/AnalyticsProvider';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
@@ -52,7 +55,7 @@ export const metadata: Metadata = {
     shortcut: '/favicon-16x16.png',
     apple: '/apple-touch-icon.png',
   },
-  manifest: '/site.webmanifest',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -62,8 +65,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" suppressHydrationWarning>
+      <head>
+        <meta name="theme-color" content="#2563eb" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="WeWinBid" />
+      </head>
       <body className="min-h-screen bg-surface-50 antialiased">
-        {children}
+        <ErrorBoundary>
+          <QueryProvider>
+            <AnalyticsProvider>
+              {children}
+            </AnalyticsProvider>
+          </QueryProvider>
+        </ErrorBoundary>
         <Toaster
           position="top-right"
           toastOptions={{
