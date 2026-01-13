@@ -12,9 +12,8 @@ CREATE INDEX IF NOT EXISTS idx_profiles_role ON profiles(role);
 -- Mettre à jour les profils existants (tous users par défaut)
 UPDATE profiles SET role = 'user' WHERE role IS NULL;
 
--- Créer un premier compte admin (à adapter avec votre email)
--- Décommentez et modifiez l'email ci-dessous :
--- UPDATE profiles SET role = 'admin' WHERE email = 'votre-email-admin@example.com';
+-- Créer le compte admin principal
+UPDATE profiles SET role = 'admin' WHERE email = 'contact@wewinbid.com';
 
 -- Ajouter des champs supplémentaires pour les métriques company
 ALTER TABLE companies
