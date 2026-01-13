@@ -25,11 +25,7 @@ ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'inactive' CHECK (subs
 ALTER TABLE companies
 ADD COLUMN IF NOT EXISTS is_marketplace_visible BOOLEAN DEFAULT false;
 
--- Ajouter la relation buyer dans tenders
-ALTER TABLE tenders
-ADD COLUMN IF NOT EXISTS buyer_id UUID REFERENCES buyers(id);
-
--- Créer la table buyers si elle n'existe pas
+-- Créer la table buyers AVANT de l'utiliser dans tenders
 CREATE TABLE IF NOT EXISTS buyers (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
@@ -43,6 +39,10 @@ CREATE TABLE IF NOT EXISTS buyers (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Ajouter la relation buyer dans tenders (APRÈS création de la table buyers)
+ALTER TABLE tenders
+ADD COLUMN IF NOT EXISTS buyer_id UUID REFERENCES buyers(id);
 
 -- Index pour améliorer les performances
 CREATE INDEX IF NOT EXISTS idx_buyers_name ON buyers(name);
