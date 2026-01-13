@@ -125,6 +125,12 @@ CREATE TABLE profiles (
   locale TEXT DEFAULT 'fr',
   timezone TEXT DEFAULT 'Europe/Paris',
   email_notifications BOOLEAN DEFAULT TRUE,
+  -- Subscription fields
+  subscription_plan TEXT DEFAULT 'free' CHECK (subscription_plan IN ('free', 'pro', 'business')),
+  subscription_status TEXT CHECK (subscription_status IN ('active', 'canceled', 'past_due', 'trialing')),
+  subscription_interval TEXT CHECK (subscription_interval IN ('monthly', 'yearly')),
+  subscription_current_period_end TIMESTAMPTZ,
+  stripe_customer_id TEXT UNIQUE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
