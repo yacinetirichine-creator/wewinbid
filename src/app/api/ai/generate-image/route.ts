@@ -1,33 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { createClient } from '@/lib/supabase/server';
+import { ImageGenerationSchema } from '@/lib/validation';
+import { withErrorHandler, throwAuthError } from '@/lib/errors';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-    
-    // Vérifier l'authentification
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+/**
+ * POST /api/ai/generate-image
+ * 
+ * Génère une image professionnelle avec DALL-E 3
+ * 
+ * @body {string} prompt - Description de l'image à générer (10-1000 caractères)
+ * @body {string} style - Style visuel (professional, creative, technical, etc.)
+ * @body {string} size - Format (1024x1024, 1792x1024, 1024x1792)
+ * @body {string} quality - Qualité (standard, hd)
+ * @body {string} context - Contexte additionnel (optionnel)
+ * 
+ * @returns {object} Image URL et métadonnées
+ * 
+ * @throws {401} Si l'utilisateur n'est pas authentifié
+ * @throws {400} Si les données sont invalides
+ * @throws {500} Si la génération échoue
+ * 
+ * @example
+ * POST /api/ai/generate-image
+ * {
+ *   "prompt": "Une équipe professionnelle travaillant sur un projet",
+  // Améliorer le prompt selon le style demandé
+  const enhancedPrompt = enhancePrompt(
+    validatedData.prompt,
+    validatedData.style,
+    validatedData.context || ''
+  );
 
-    const body = await request.json();
-    const { 
-      prompt, 
-      style = 'professional',
-      size = '1024x1024',
-      quality = 'hd',
-      context = '' 
-    } = body;
+  console.log('Generating image with DALL-E 3:', enhancedPrompt);
 
-    if (!prompt) {
-      return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
-    }
+  // Générer l'image avec DALL-E 3
+  const response = await openai.images.generate({
+    model: 'dall-e-3',
+    prompt: enhancedPrompt,
+    n: 1,
+    size: validatedData.size,
+    quality: validatedData.quality,
+    style: 'natural',
+  });
+  // Valider les données d'entrée
+  const body = await request.json();
+  const validatedData = ImageGenerationSchema.parse(body);
 
     // Améliorer le prompt selon le style demandé
     const enhancedPrompt = enhancePrompt(prompt, style, context);
@@ -40,57 +62,44 @@ export async function POST(request: NextRequest) {
       prompt: enhancedPrompt,
       n: 1,
       size: size as '1024x1024' | '1792x1024' | '1024x1792',
-      quality: quality as 'standard' | 'hd',
-      style: 'natural', // ou 'vivid' pour plus de couleurs
-    });
+  const imageUrl = response.data[0]?.url;
+  const revisedPrompt = response.data[0]?.revised_prompt;
 
-    const imageUrl = response.data[0]?.url;
-    const revisedPrompt = response.data[0]?.revised_prompt;
+  if (!imageUrl) {
+    throw new Error('No image generated');
+  }
 
-    if (!imageUrl) {
-      throw new Error('No image generated');
-    }
+  // TODO: Sauvegarder l'image dans Supabase Storage pour persistance
+  
+  return NextResponse.json({
+    success: true,
+    imageUrl,
+    revisedPrompt,
+    originalPrompt: validatedData.prompt,
+    metadata: {
+      style: validatedData.style,
+      size: validatedData.size,
+      quality: validatedData.quality,
+      generatedAt: new Date().toISOString(),
+      userId: user.id,
+    },
+  });
+}
 
-    // Optionnel: Sauvegarder l'image dans Supabase Storage
-    // Pour l'instant on retourne juste l'URL temporaire d'OpenAI (24h)
-    
-    return NextResponse.json({
-      success: true,
-      imageUrl,
-      revisedPrompt,
-      originalPrompt: prompt,
-      metadata: {
-        style,
-        size,
-        quality,
-        generatedAt: new Date().toISOString(),
-      },
-    });
-
-  } catch (error: any) {
-    console.error('Image generation error:', error);
-    
-    // Gestion des erreurs OpenAI spécifiques
-    if (error?.error?.code === 'content_policy_violation') {
-      return NextResponse.json({
-        error: 'Le contenu demandé viole les règles de contenu. Veuillez reformuler.',
-      }, { status: 400 });
-    }
-
-    if (error?.error?.code === 'billing_hard_limit_reached') {
-      return NextResponse.json({
-        error: 'Limite de crédit OpenAI atteinte. Veuillez vérifier votre facturation.',
-      }, { status: 402 });
-    }
-
-    return NextResponse.json({
-      error: 'Failed to generate image',
+export const POST = withErrorHandler(generateImageHandler);     error: 'Failed to generate image',
       details: error.message,
     }, { status: 500 });
   }
 }
 
-// Fonction pour améliorer le prompt selon le style
+/**
+ * Améliore le prompt selon le style demandé
+ * 
+ * @param prompt - Prompt de base de l'utilisateur
+ * @param style - Style visuel souhaité
+ * @param context - Contexte additionnel
+ * @returns Prompt amélioré pour DALL-E
+ */
 function enhancePrompt(prompt: string, style: string, context: string): string {
   const styleEnhancements: Record<string, string> = {
     professional: 'Professional, clean, modern, corporate style, high-quality business photography, minimal background, well-lit',
