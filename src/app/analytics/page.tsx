@@ -1,15 +1,34 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/lib/supabase/client';
 import { 
   Card, 
   CardContent,
   Button, 
   Badge 
 } from '@/components/ui';
-import { AppLayout } from '@/components/layout/AppLayout';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { AppLayout } from '@/components/layout/Sidebar';
+import { PageHeader } from '@/components/layout/Sidebar';
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Area,
+  AreaChart,
+} from 'recharts';
+import { formatCurrency } from '@/lib/utils';
+import { motion } from 'framer-motion';
 import {
   TrendingUp,
   TrendingDown,
@@ -31,7 +50,25 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Sparkles,
+  RefreshCw,
 } from 'lucide-react';
+import {
+  LineChart,
+  Line,
+  BarChart as RechartsBarChart,
+  Bar,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+  ResponsiveContainer,
+  Area,
+  AreaChart,
+} from 'recharts';
 
 // Types
 interface AnalyticsData {
@@ -328,8 +365,147 @@ export default function AnalyticsPage() {
           />
         </div>
 
-        {/* Graphique tendance et répartition */}
+        {/* Graphiques Recharts améliorés */}
         <div className="grid grid-cols-3 gap-6">
+          {/* Tendance mensuelle avec Recharts */}
+          <Card className="col-span-2">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-semibold text-gray-900">Tendance mensuelle (Interactif)</h3>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-blue-500" />
+                    <span className="text-sm text-gray-500">Soumis</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500" />
+                    <span className="text-sm text-gray-500">Gagnés</span>
+                  </div>
+                </div>
+              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={data.monthlyTrend}>
+                  <defs>
+                    <linearGradient id="colorSubmitted" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+                    </linearGradient>
+                    <linearGradient id="colorWon" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                  <XAxis dataKey="month" stroke="#6B7280" style={{ fontSize: '12px' }} />
+                  <YAxis stroke="#6B7280" style={{ fontSize: '12px' }} />
+                  <RechartsTooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#fff', 
+                      border: '1px solid #E5E7EB', 
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                    }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="submitted" 
+                    stroke="#3B82F6" 
+                    fillOpacity={1}
+                    fill="url(#colorSubmitted)"
+                    name="Soumis"
+                    strokeWidth={2}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="won" 
+                    stroke="#10B981" 
+                    fillOpacity={1}
+                    fill="url(#colorWon)"
+                    name="Gagnés"
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Distribution par statut avec PieChart */}
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="font-semibold text-gray-900 mb-6">Répartition par statut</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <RechartsPieChart>
+                  <Pie
+                    data={data.byStatus}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ status, count }) => `${status}: ${count}`}
+                    outerRadius={90}
+                    fill="#8884d8"
+                    dataKey="count"
+                  >
+                    {data.byStatus.map((entry, index) => {
+                      const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+                      return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                    })}
+                  </Pie>
+                  <RechartsTooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#fff', 
+                      border: '1px solid #E5E7EB', 
+                      borderRadius: '8px' 
+                    }}
+                  />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Nouveaux graphiques: Revenus et Performance par secteur */}
+        <div className="grid grid-cols-2 gap-6">
+          {/* Revenus mensuels */}
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="font-semibold text-gray-900 mb-6">Revenus mensuels</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <RechartsBarChart data={data.monthlyTrend}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                  <XAxis dataKey="month" stroke="#6B7280" style={{ fontSize: '12px' }} />
+                  <YAxis stroke="#6B7280" style={{ fontSize: '12px' }} />
+                  <RechartsTooltip 
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: '8px' }}
+                    formatter={(value: number) => [`${(value / 1000).toFixed(0)}k €`, 'Revenu']}
+                  />
+                  <Bar dataKey="revenue" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
+                </RechartsBarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Taux de réussite par secteur */}
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="font-semibold text-gray-900 mb-6">Performance par secteur</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <RechartsBarChart data={data.bySector} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                  <XAxis type="number" domain={[0, 100]} stroke="#6B7280" style={{ fontSize: '12px' }} />
+                  <YAxis dataKey="sector" type="category" width={130} stroke="#6B7280" style={{ fontSize: '11px' }} />
+                  <RechartsTooltip 
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: '8px' }}
+                    formatter={(value: number) => [`${value.toFixed(1)}%`, 'Taux de réussite']}
+                  />
+                  <Bar dataKey="winRate" fill="#10B981" radius={[0, 8, 8, 0]} />
+                </RechartsBarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Anciens graphiques barres (conservés pour compatibilité) */}
+        <div className="grid grid-cols-2 gap-6">
           {/* Tendance mensuelle */}
           <Card className="col-span-2">
             <CardContent className="p-6">
