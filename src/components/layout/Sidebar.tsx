@@ -23,6 +23,7 @@ import {
   X,
 } from 'lucide-react';
 import { Avatar } from '@/components/ui';
+import { TopBar } from '@/components/layout/TopBar';
 
 interface NavItem {
   name: string;
@@ -308,6 +309,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     <div className="min-h-screen bg-surface-50">
       <Sidebar user={user} company={company} />
       <main className="lg:pl-[280px] min-h-screen">
+        <TopBar />
         <div className="p-4 lg:p-8">{children}</div>
       </main>
     </div>
