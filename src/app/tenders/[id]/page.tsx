@@ -24,6 +24,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { Button, Card, Badge, Modal, Select, Alert, Skeleton, ScoreGauge, EmptyState } from '@/components/ui';
 import { AppLayout, PageHeader } from '@/components/layout/Sidebar';
+import { CommentsThread } from '@/components/tenders/CommentsThread';
+import { HistoryTimeline } from '@/components/tenders/HistoryTimeline';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate, getDaysRemaining, getScoreColor } from '@/lib/utils';
 import { getCountryConfig, getRequiredDocuments } from '@/lib/countries';
@@ -50,14 +52,26 @@ export default function TenderDetailPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [isCalculatingScore, setIsCalculatingScore] = useState(false);
+  const [activeTab, setActiveTab] = useState<'details' | 'comments' | 'history'>('details');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const supabase = createClient();
 
   const tenderId = params.id as string;
 
   useEffect(() => {
+    fetchUser();
     fetchTender();
     fetchDocuments();
   }, [tenderId]);
+
+  async function fetchUser() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) setCurrentUserId(user.id);
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    }
+  }
 
   async function fetchTender() {
     try {
@@ -246,145 +260,199 @@ export default function TenderDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Colonne principale */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Info Card */}
-          <Card className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <Badge variant={tender.type === 'PUBLIC' ? 'info' : 'secondary'}>
-                  {tender.type === 'PUBLIC' ? 'Marché Public' : 'Marché Privé'}
-                </Badge>
-                {tender.sector && (
-                  <Badge variant="secondary">{tender.sector}</Badge>
-                )}
-              </div>
-              {tender.source_url && (
-                <a 
-                  href={tender.source_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary-600 hover:text-primary-700 flex items-center gap-1 text-sm"
+          {/* Onglets */}
+          <Card className="p-0">
+            <div className="border-b border-gray-200">
+              <div className="flex">
+                <button
+                  onClick={() => setActiveTab('details')}
+                  className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
+                    activeTab === 'details'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
                 >
-                  <LinkIcon className="w-4 h-4" />
-                  Source
-                </a>
-              )}
-            </div>
-
-            {tender.description && (
-              <p className="text-slate-600 mb-6">{tender.description}</p>
-            )}
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-xs text-slate-500 mb-1">Acheteur</p>
-                <div className="flex items-center gap-2">
-                  <BuildingOfficeIcon className="w-4 h-4 text-slate-400" />
-                  <span className="font-medium text-slate-900">{tender.buyer_name || '-'}</span>
-                </div>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 mb-1">Valeur estimée</p>
-                <div className="flex items-center gap-2">
-                  <CurrencyEuroIcon className="w-4 h-4 text-slate-400" />
-                  <span className="font-medium text-slate-900">
-                    {tender.estimated_value ? formatCurrency(Number(tender.estimated_value), 'EUR') : '-'}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 mb-1">Date limite</p>
-                <div className={`flex items-center gap-2 ${
-                  isOverdue ? 'text-red-600' : isUrgent ? 'text-amber-600' : ''
-                }`}>
-                  <CalendarIcon className="w-4 h-4" />
-                  <span className="font-medium">
-                    {tender.deadline ? formatDate(tender.deadline) : '-'}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 mb-1">Jours restants</p>
-                <div className={`flex items-center gap-2 ${
-                  isOverdue ? 'text-red-600' : isUrgent ? 'text-amber-600' : 'text-slate-900'
-                }`}>
-                  <ClockIcon className="w-4 h-4" />
-                  <span className="font-medium">
-                    {daysRemaining !== null ? (
-                      isOverdue ? 'Expiré' : `J-${daysRemaining}`
-                    ) : '-'}
-                  </span>
-                </div>
+                  Détails
+                </button>
+                <button
+                  onClick={() => setActiveTab('comments')}
+                  className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
+                    activeTab === 'comments'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Commentaires
+                </button>
+                <button
+                  onClick={() => setActiveTab('history')}
+                  className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
+                    activeTab === 'history'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Historique
+                </button>
               </div>
             </div>
-          </Card>
 
-          {/* Documents */}
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-900">Documents</h3>
-              <Button variant="secondary" size="sm">
-                <PlusIcon className="w-4 h-4 mr-2" />
-                Ajouter
-              </Button>
-            </div>
+            <div className="p-6">
+              {activeTab === 'details' && (
+                <div className="space-y-6">
+                  {/* Info Card */}
+                  <div>
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <Badge variant={tender.type === 'PUBLIC' ? 'info' : 'secondary'}>
+                          {tender.type === 'PUBLIC' ? 'Marché Public' : 'Marché Privé'}
+                        </Badge>
+                        {tender.sector && (
+                          <Badge variant="secondary">{tender.sector}</Badge>
+                        )}
+                      </div>
+                      {tender.source_url && (
+                        <a 
+                          href={tender.source_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-primary-600 hover:text-primary-700 flex items-center gap-1 text-sm"
+                        >
+                          <LinkIcon className="w-4 h-4" />
+                          Source
+                        </a>
+                      )}
+                    </div>
 
-            {documents.length === 0 ? (
-              <div className="text-center py-8">
-                <DocumentTextIcon className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-500 mb-4">Aucun document pour cet AO</p>
-                <Button variant="secondary" size="sm">
-                  <PlusIcon className="w-4 h-4 mr-2" />
-                  Ajouter un document
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {documents.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <DocumentTextIcon className="w-5 h-5 text-slate-400" />
+                    {tender.description && (
+                      <p className="text-slate-600 mb-6">{tender.description}</p>
+                    )}
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div>
-                        <p className="font-medium text-slate-900">{doc.name}</p>
-                        <p className="text-xs text-slate-500">{doc.type}</p>
+                        <p className="text-xs text-slate-500 mb-1">Acheteur</p>
+                        <div className="flex items-center gap-2">
+                          <BuildingOfficeIcon className="w-4 h-4 text-slate-400" />
+                          <span className="font-medium text-slate-900">{tender.buyer_name || '-'}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Valeur estimée</p>
+                        <div className="flex items-center gap-2">
+                          <CurrencyEuroIcon className="w-4 h-4 text-slate-400" />
+                          <span className="font-medium text-slate-900">
+                            {tender.estimated_value ? formatCurrency(Number(tender.estimated_value), 'EUR') : '-'}
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Date limite</p>
+                        <div className={`flex items-center gap-2 ${
+                          isOverdue ? 'text-red-600' : isUrgent ? 'text-amber-600' : ''
+                        }`}>
+                          <CalendarIcon className="w-4 h-4" />
+                          <span className="font-medium">
+                            {tender.deadline ? formatDate(tender.deadline) : '-'}
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Jours restants</p>
+                        <div className={`flex items-center gap-2 ${
+                          isOverdue ? 'text-red-600' : isUrgent ? 'text-amber-600' : 'text-slate-900'
+                        }`}>
+                          <ClockIcon className="w-4 h-4" />
+                          <span className="font-medium">
+                            {daysRemaining !== null ? (
+                              isOverdue ? 'Expiré' : `J-${daysRemaining}`
+                            ) : '-'}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <Badge variant={
-                      doc.status === 'VALIDATED' ? 'success' :
-                      doc.status === 'REVIEW' ? 'warning' : 'secondary'
-                    } size="sm">
-                      {doc.status}
-                    </Badge>
                   </div>
-                ))}
-              </div>
-            )}
 
-            {/* Checklist des documents requis */}
-            <div className="mt-6 pt-6 border-t border-slate-200">
-              <h4 className="font-medium text-slate-700 mb-3">Documents requis ({tender.type})</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {requiredDocs.filter(d => d.mandatory).slice(0, 8).map((doc) => {
-                  const hasDoc = documents.some(d => d.type === doc.type);
-                  return (
-                    <div
-                      key={doc.type}
-                      className={`flex items-center gap-2 p-2 rounded text-sm ${
-                        hasDoc ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
-                      }`}
-                    >
-                      {hasDoc ? (
-                        <CheckCircleIcon className="w-4 h-4 text-emerald-500" />
-                      ) : (
-                        <XCircleIcon className="w-4 h-4 text-amber-500" />
-                      )}
-                      <span className="truncate">{doc.name}</span>
+                  {/* Documents */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-slate-900">Documents</h3>
+                      <Button variant="secondary" size="sm">
+                        <PlusIcon className="w-4 h-4 mr-2" />
+                        Ajouter
+                      </Button>
                     </div>
-                  );
-                })}
-              </div>
+
+                    {documents.length === 0 ? (
+                      <div className="text-center py-8">
+                        <DocumentTextIcon className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                        <p className="text-slate-500 mb-4">Aucun document pour cet AO</p>
+                        <Button variant="secondary" size="sm">
+                          <PlusIcon className="w-4 h-4 mr-2" />
+                          Ajouter un document
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {documents.map((doc) => (
+                          <div
+                            key={doc.id}
+                            className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                            key={doc.id}
+                            className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <DocumentTextIcon className="w-5 h-5 text-slate-400" />
+                              <div>
+                                <p className="font-medium text-slate-900">{doc.name}</p>
+                                <p className="text-xs text-slate-500">{doc.type}</p>
+                              </div>
+                            </div>
+                            <Badge variant={
+                              doc.status === 'VALIDATED' ? 'success' :
+                              doc.status === 'REVIEW' ? 'warning' : 'secondary'
+                            } size="sm">
+                              {doc.status}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Checklist des documents requis */}
+                    <div className="mt-6 pt-6 border-t border-slate-200">
+                      <h4 className="font-medium text-slate-700 mb-3">Documents requis ({tender.type})</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {requiredDocs.filter(d => d.mandatory).slice(0, 8).map((doc) => {
+                          const hasDoc = documents.some(d => d.type === doc.type);
+                          return (
+                            <div
+                              key={doc.type}
+                              className={`flex items-center gap-2 p-2 rounded text-sm ${
+                                hasDoc ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                              }`}
+                            >
+                              {hasDoc ? (
+                                <CheckCircleIcon className="w-4 h-4 text-emerald-500" />
+                              ) : (
+                                <XCircleIcon className="w-4 h-4 text-amber-500" />
+                              )}
+                              <span className="truncate">{doc.name}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'comments' && currentUserId && (
+                <CommentsThread tenderId={tenderId} currentUserId={currentUserId} />
+              )}
+
+              {activeTab === 'history' && (
+                <HistoryTimeline tenderId={tenderId} />
+              )}
             </div>
           </Card>
         </div>
