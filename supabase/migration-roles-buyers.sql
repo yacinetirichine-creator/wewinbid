@@ -53,6 +53,11 @@ CREATE INDEX IF NOT EXISTS idx_companies_subscription_status ON companies(subscr
 -- RLS policies pour buyers
 ALTER TABLE buyers ENABLE ROW LEVEL SECURITY;
 
+-- Supprimer les policies existantes si elles existent
+DROP POLICY IF EXISTS "Users can view all buyers" ON buyers;
+DROP POLICY IF EXISTS "Users can create buyers" ON buyers;
+DROP POLICY IF EXISTS "Admins can do everything on buyers" ON buyers;
+
 -- Les utilisateurs peuvent voir tous les buyers
 CREATE POLICY "Users can view all buyers"
   ON buyers FOR SELECT

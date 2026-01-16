@@ -55,6 +55,12 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_preferences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_sent ENABLE ROW LEVEL SECURITY;
 
+-- Supprimer les policies existantes
+DROP POLICY IF EXISTS "Users can view own notifications" ON notifications;
+DROP POLICY IF EXISTS "Users can update own notifications" ON notifications;
+DROP POLICY IF EXISTS "Users can delete own notifications" ON notifications;
+DROP POLICY IF EXISTS "Users can manage own preferences" ON notification_preferences;
+
 -- Les utilisateurs peuvent voir leurs propres notifications
 CREATE POLICY "Users can view own notifications"
   ON notifications FOR SELECT

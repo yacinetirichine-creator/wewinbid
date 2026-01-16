@@ -58,7 +58,28 @@ CREATE TABLE IF NOT EXISTS template_versions (
   CONSTRAINT template_versions_number_check CHECK (version_number > 0)
 );
 
--- Table: snippets
+-- Table: snippet_categories (CRÉÉE AVANT snippets)
+-- Catégories pour organiser les snippets
+CREATE TABLE IF NOT EXISTS snippet_categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  
+  name VARCHAR(100) NOT NULL,
+  description TEXT,
+  color VARCHAR(7), -- Hex color (ex: "#3B82F6")
+  icon VARCHAR(50), -- Nom d'icône (ex: "document-text")
+  
+  -- Order
+  display_order INTEGER DEFAULT 0,
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  CONSTRAINT snippet_categories_unique UNIQUE (company_id, name),
+  CONSTRAINT snippet_categories_name_check CHECK (char_length(name) >= 2)
+);
+
+-- Table: snippets (CRÉÉE APRÈS snippet_categories)
 -- Petits blocs de texte réutilisables (paragraphes, clauses, etc.)
 CREATE TABLE IF NOT EXISTS snippets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -88,27 +109,6 @@ CREATE TABLE IF NOT EXISTS snippets (
   CONSTRAINT snippets_title_check CHECK (char_length(title) >= 3),
   CONSTRAINT snippets_content_check CHECK (char_length(content) >= 5),
   CONSTRAINT snippets_shortcut_check CHECK (shortcut ~ '^[a-z0-9-]+$')
-);
-
--- Table: snippet_categories
--- Catégories pour organiser les snippets
-CREATE TABLE IF NOT EXISTS snippet_categories (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-  
-  name VARCHAR(100) NOT NULL,
-  description TEXT,
-  color VARCHAR(7), -- Hex color (ex: "#3B82F6")
-  icon VARCHAR(50), -- Nom d'icône (ex: "document-text")
-  
-  -- Order
-  display_order INTEGER DEFAULT 0,
-  
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  
-  CONSTRAINT snippet_categories_unique UNIQUE (company_id, name),
-  CONSTRAINT snippet_categories_name_check CHECK (char_length(name) >= 2)
 );
 
 -- Table: template_shares
@@ -311,6 +311,25 @@ ALTER TABLE template_versions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE snippets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE snippet_categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE template_shares ENABLE ROW LEVEL SECURITY;
+
+-- Supprimer les policies existantes
+DROP POLICY IF EXISTS "templates_select_policy" ON templates;
+DROP POLICY IF EXISTS "templates_insert_policy" ON templates;
+DROP POLICY IF EXISTS "templates_update_policy" ON templates;
+DROP POLICY IF EXISTS "templates_delete_policy" ON templates;
+DROP POLICY IF EXISTS "template_versions_select_policy" ON template_versions;
+DROP POLICY IF EXISTS "template_versions_insert_policy" ON template_versions;
+DROP POLICY IF EXISTS "snippets_select_policy" ON snippets;
+DROP POLICY IF EXISTS "snippets_insert_policy" ON snippets;
+DROP POLICY IF EXISTS "snippets_update_policy" ON snippets;
+DROP POLICY IF EXISTS "snippets_delete_policy" ON snippets;
+DROP POLICY IF EXISTS "snippet_categories_select_policy" ON snippet_categories;
+DROP POLICY IF EXISTS "snippet_categories_insert_policy" ON snippet_categories;
+DROP POLICY IF EXISTS "snippet_categories_update_policy" ON snippet_categories;
+DROP POLICY IF EXISTS "snippet_categories_delete_policy" ON snippet_categories;
+DROP POLICY IF EXISTS "template_shares_select_policy" ON template_shares;
+DROP POLICY IF EXISTS "template_shares_insert_policy" ON template_shares;
+DROP POLICY IF EXISTS "template_shares_delete_policy" ON template_shares;
 
 -- Templates policies
 CREATE POLICY templates_select_policy ON templates

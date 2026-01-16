@@ -3,6 +3,19 @@
 -- Created: 2026-01-15
 
 -- ============================================================
+-- CLEANUP: Supprimer TOUS les objets existants
+-- ============================================================
+
+-- Drop ALL potentially conflicting indexes from previous runs
+DROP INDEX IF EXISTS idx_document_versions_number CASCADE;
+DROP INDEX IF EXISTS idx_document_versions_document CASCADE;
+DROP INDEX IF EXISTS idx_document_templates_company CASCADE;
+DROP INDEX IF EXISTS idx_document_templates_category CASCADE;
+DROP INDEX IF EXISTS idx_generated_documents_company CASCADE;
+DROP INDEX IF EXISTS idx_document_sections_company CASCADE;
+DROP INDEX IF EXISTS idx_ai_generation_history_company CASCADE;
+
+-- ============================================================
 -- TABLES
 -- ============================================================
 
@@ -175,41 +188,41 @@ CREATE TABLE IF NOT EXISTS ai_generation_history (
 -- ============================================================
 
 -- Document templates indexes
-CREATE INDEX idx_document_templates_company ON document_templates(company_id);
-CREATE INDEX idx_document_templates_category ON document_templates(category);
-CREATE INDEX idx_document_templates_created_by ON document_templates(created_by);
-CREATE INDEX idx_document_templates_default ON document_templates(is_default);
-CREATE INDEX idx_document_templates_public ON document_templates(is_public);
-CREATE INDEX idx_document_templates_usage ON document_templates(usage_count DESC);
+CREATE INDEX IF NOT EXISTS idx_document_templates_company ON document_templates(company_id);
+CREATE INDEX IF NOT EXISTS idx_document_templates_category ON document_templates(category);
+CREATE INDEX IF NOT EXISTS idx_document_templates_created_by ON document_templates(created_by);
+CREATE INDEX IF NOT EXISTS idx_document_templates_default ON document_templates(is_default);
+CREATE INDEX IF NOT EXISTS idx_document_templates_public ON document_templates(is_public);
+CREATE INDEX IF NOT EXISTS idx_document_templates_usage ON document_templates(usage_count DESC);
 
 -- Generated documents indexes
-CREATE INDEX idx_generated_documents_company ON generated_documents(company_id);
-CREATE INDEX idx_generated_documents_tender ON generated_documents(tender_id);
-CREATE INDEX idx_generated_documents_template ON generated_documents(template_id);
-CREATE INDEX idx_generated_documents_created_by ON generated_documents(created_by);
-CREATE INDEX idx_generated_documents_status ON generated_documents(status);
-CREATE INDEX idx_generated_documents_category ON generated_documents(category);
-CREATE INDEX idx_generated_documents_date ON generated_documents(created_at DESC);
-CREATE INDEX idx_generated_documents_ai ON generated_documents(ai_generated);
+CREATE INDEX IF NOT EXISTS idx_generated_documents_company ON generated_documents(company_id);
+CREATE INDEX IF NOT EXISTS idx_generated_documents_tender ON generated_documents(tender_id);
+CREATE INDEX IF NOT EXISTS idx_generated_documents_template ON generated_documents(template_id);
+CREATE INDEX IF NOT EXISTS idx_generated_documents_created_by ON generated_documents(created_by);
+CREATE INDEX IF NOT EXISTS idx_generated_documents_status ON generated_documents(status);
+CREATE INDEX IF NOT EXISTS idx_generated_documents_category ON generated_documents(category);
+CREATE INDEX IF NOT EXISTS idx_generated_documents_date ON generated_documents(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_generated_documents_ai ON generated_documents(ai_generated);
 
 -- Document sections indexes
-CREATE INDEX idx_document_sections_company ON document_sections(company_id);
-CREATE INDEX idx_document_sections_category ON document_sections(category);
-CREATE INDEX idx_document_sections_type ON document_sections(section_type);
-CREATE INDEX idx_document_sections_favorite ON document_sections(is_favorite);
-CREATE INDEX idx_document_sections_tags ON document_sections USING GIN(tags);
+CREATE INDEX IF NOT EXISTS idx_document_sections_company ON document_sections(company_id);
+CREATE INDEX IF NOT EXISTS idx_document_sections_category ON document_sections(category);
+CREATE INDEX IF NOT EXISTS idx_document_sections_type ON document_sections(section_type);
+CREATE INDEX IF NOT EXISTS idx_document_sections_favorite ON document_sections(is_favorite);
+CREATE INDEX IF NOT EXISTS idx_document_sections_tags ON document_sections USING GIN(tags);
 
 -- Document versions indexes
-CREATE INDEX idx_document_versions_document ON document_versions(document_id);
-CREATE INDEX idx_document_versions_number ON document_versions(version_number DESC);
+CREATE INDEX IF NOT EXISTS idx_document_versions_document ON document_versions(document_id);
+CREATE INDEX IF NOT EXISTS idx_document_versions_number ON document_versions(version_number DESC);
 
 -- AI history indexes
-CREATE INDEX idx_ai_generation_history_company ON ai_generation_history(company_id);
-CREATE INDEX idx_ai_generation_history_user ON ai_generation_history(user_id);
-CREATE INDEX idx_ai_generation_history_tender ON ai_generation_history(tender_id);
-CREATE INDEX idx_ai_generation_history_type ON ai_generation_history(generation_type);
-CREATE INDEX idx_ai_generation_history_date ON ai_generation_history(created_at DESC);
-CREATE INDEX idx_ai_generation_history_used ON ai_generation_history(content_used);
+CREATE INDEX IF NOT EXISTS idx_ai_generation_history_company ON ai_generation_history(company_id);
+CREATE INDEX IF NOT EXISTS idx_ai_generation_history_user ON ai_generation_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_ai_generation_history_tender ON ai_generation_history(tender_id);
+CREATE INDEX IF NOT EXISTS idx_ai_generation_history_type ON ai_generation_history(generation_type);
+CREATE INDEX IF NOT EXISTS idx_ai_generation_history_date ON ai_generation_history(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ai_generation_history_used ON ai_generation_history(content_used);
 
 -- ============================================================
 -- FUNCTIONS
@@ -330,11 +343,25 @@ $$ LANGUAGE plpgsql;
 -- TRIGGERS
 -- ============================================================
 
+-- Drop existing triggers (after tables are created)
+DROP TRIGGER IF EXISTS trigger_auto_create_document_version ON generated_documents;
+DROP TRIGGER IF EXISTS trigger_document_templates_updated_at ON document_templates;
+DROP TRIGGER IF EXISTS trigger_generated_documents_updated_at ON generated_documents;
+DROP TRIGGER IF EXISTS trigger_document_sections_updated_at ON document_sections;
+
 -- Trigger: Auto-create version when document is updated
 CREATE OR REPLACE FUNCTION auto_create_document_version()
 RETURNS TRIGGER AS $$
+DECLARE
+  v_next_version INTEGER;
 BEGIN
   IF OLD.content IS DISTINCT FROM NEW.content THEN
+    -- Get next version number
+    SELECT COALESCE(MAX(version_number), 0) + 1 
+    INTO v_next_version
+    FROM document_versions
+    WHERE document_id = NEW.id;
+    
     INSERT INTO document_versions (
       document_id,
       version_number,
@@ -343,11 +370,14 @@ BEGIN
       created_by
     ) VALUES (
       NEW.id,
-      NEW.version,
+      v_next_version,
       OLD.content,
       'Auto-saved version',
       NEW.created_by
     );
+    
+    -- Update document version
+    NEW.version := v_next_version;
   END IF;
   RETURN NEW;
 END;
@@ -384,6 +414,23 @@ ALTER TABLE generated_documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE document_sections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE document_versions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ai_generation_history ENABLE ROW LEVEL SECURITY;
+
+-- Supprimer les policies existantes
+DROP POLICY IF EXISTS "document_templates_select_policy" ON document_templates;
+DROP POLICY IF EXISTS "document_templates_insert_policy" ON document_templates;
+DROP POLICY IF EXISTS "document_templates_update_policy" ON document_templates;
+DROP POLICY IF EXISTS "document_templates_delete_policy" ON document_templates;
+DROP POLICY IF EXISTS "generated_documents_select_policy" ON generated_documents;
+DROP POLICY IF EXISTS "generated_documents_insert_policy" ON generated_documents;
+DROP POLICY IF EXISTS "generated_documents_update_policy" ON generated_documents;
+DROP POLICY IF EXISTS "generated_documents_delete_policy" ON generated_documents;
+DROP POLICY IF EXISTS "document_sections_select_policy" ON document_sections;
+DROP POLICY IF EXISTS "document_sections_insert_policy" ON document_sections;
+DROP POLICY IF EXISTS "document_sections_update_policy" ON document_sections;
+DROP POLICY IF EXISTS "document_sections_delete_policy" ON document_sections;
+DROP POLICY IF EXISTS "document_versions_select_policy" ON document_versions;
+DROP POLICY IF EXISTS "ai_generation_history_select_policy" ON ai_generation_history;
+DROP POLICY IF EXISTS "ai_generation_history_insert_policy" ON ai_generation_history;
 
 -- Document templates policies
 CREATE POLICY document_templates_select_policy ON document_templates
