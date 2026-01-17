@@ -186,8 +186,8 @@ BEGIN
         UPDATE tenders SET search_vector = 
           setweight(to_tsvector(''french'', COALESCE(title, '''')), ''A'') ||
           setweight(to_tsvector(''french'', COALESCE(description, '''')), ''B'') ||
-          setweight(to_tsvector(''french'', COALESCE(organization, '''')), ''C'') ||
-          setweight(to_tsvector(''french'', COALESCE(country, '''')), ''D'')
+          setweight(to_tsvector(''french'', COALESCE(buyer_name, '''')), ''C'') ||
+          setweight(to_tsvector(''french'', COALESCE(region, '''') || '' '' || COALESCE(department, '''')), ''D'')
       ';
     END IF;
     
@@ -203,8 +203,8 @@ BEGIN
         NEW.search_vector := 
           setweight(to_tsvector(''french'', COALESCE(NEW.title, '''')), ''A'') ||
           setweight(to_tsvector(''french'', COALESCE(NEW.description, '''')), ''B'') ||
-          setweight(to_tsvector(''french'', COALESCE(NEW.organization, '''')), ''C'') ||
-          setweight(to_tsvector(''french'', COALESCE(NEW.country, '''')), ''D'');
+          setweight(to_tsvector(''french'', COALESCE(NEW.buyer_name, '''')), ''C'') ||
+          setweight(to_tsvector(''french'', COALESCE(NEW.region, '''') || '' '' || COALESCE(NEW.department, '''')), ''D'');
         RETURN NEW;
       END;
       $func$ LANGUAGE plpgsql
@@ -335,10 +335,10 @@ CREATE OR REPLACE FUNCTION search_tenders(
 RETURNS TABLE (
   tender_id UUID,
   title TEXT,
-  organization TEXT,
-  country VARCHAR,
-  budget NUMERIC,
-  deadline TIMESTAMPTZ,
+  buyer_name TEXT,
+  region TEXT,
+  estimated_value NUMERIC,
+  deadline DATE,
   rank REAL
 )
 LANGUAGE plpgsql
@@ -358,7 +358,7 @@ BEGIN
   END IF;
   
   -- Build dynamic query
-  sql_query := 'SELECT id, title, organization, country, budget, deadline, ';
+  sql_query := 'SELECT id, title, buyer_name, region, estimated_value, deadline, ';
   
   IF p_query IS NOT NULL AND p_query != '' THEN
     sql_query := sql_query || 'ts_rank(search_vector, plainto_tsquery(''french'', $1)) as rank ';
@@ -368,8 +368,8 @@ BEGIN
   END IF;
   
   -- Apply filters from JSONB
-  IF p_filters ? 'country' THEN
-    sql_query := sql_query || 'AND country = ANY(ARRAY(SELECT jsonb_array_elements_text($2->''country''))) ';
+  IF p_filters ? 'region' THEN
+    sql_query := sql_query || 'AND region = ANY(ARRAY(SELECT jsonb_array_elements_text($2->''region''))) ';
   END IF;
   
   IF p_filters ? 'sector' THEN
@@ -377,19 +377,19 @@ BEGIN
   END IF;
   
   IF p_filters ? 'min_budget' THEN
-    sql_query := sql_query || 'AND budget >= ($2->>''min_budget'')::NUMERIC ';
+    sql_query := sql_query || 'AND estimated_value >= ($2->>''min_budget'')::NUMERIC ';
   END IF;
   
   IF p_filters ? 'max_budget' THEN
-    sql_query := sql_query || 'AND budget <= ($2->>''max_budget'')::NUMERIC ';
+    sql_query := sql_query || 'AND estimated_value <= ($2->>''max_budget'')::NUMERIC ';
   END IF;
   
   IF p_filters ? 'deadline_from' THEN
-    sql_query := sql_query || 'AND deadline >= ($2->>''deadline_from'')::TIMESTAMPTZ ';
+    sql_query := sql_query || 'AND deadline >= ($2->>''deadline_from'')::DATE ';
   END IF;
   
   IF p_filters ? 'deadline_to' THEN
-    sql_query := sql_query || 'AND deadline <= ($2->>''deadline_to'')::TIMESTAMPTZ ';
+    sql_query := sql_query || 'AND deadline <= ($2->>''deadline_to'')::DATE ';
   END IF;
   
   -- Order by rank and limit
