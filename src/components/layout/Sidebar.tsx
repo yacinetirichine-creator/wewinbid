@@ -21,6 +21,7 @@ import {
   Crown,
   Menu,
   X,
+  Calendar,
 } from 'lucide-react';
 import { Avatar } from '@/components/ui';
 import { TopBar } from '@/components/layout/TopBar';
@@ -37,6 +38,7 @@ const mainNav: NavItem[] = [
   { name: 'Appels d\'offres', href: '/tenders', icon: FileText, badge: 3 },
   { name: 'Marketplace', href: '/marketplace', icon: Users },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'Calendrier', href: '/calendar', icon: Calendar },
   { name: 'Studio créatif', href: '/studio', icon: Sparkles },
   { name: 'Alertes', href: '/alerts', icon: Bell, badge: 5 },
   { name: 'Documents', href: '/documents', icon: FolderOpen },
