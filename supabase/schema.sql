@@ -439,16 +439,24 @@ ALTER TABLE client_references ENABLE ROW LEVEL SECURITY;
 -- Politiques de sécurité
 
 -- Profiles: utilisateur peut voir/modifier son propre profil
+DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 
 -- Companies: membres peuvent voir leur entreprise
+DROP POLICY IF EXISTS "Members can view company" ON companies;
+DROP POLICY IF EXISTS "Owners can update company" ON companies;
 CREATE POLICY "Members can view company" ON companies FOR SELECT 
   USING (id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid()));
 CREATE POLICY "Owners can update company" ON companies FOR UPDATE 
   USING (id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid() AND role = 'owner'));
 
 -- Tenders: membres de l'entreprise peuvent voir/modifier
+DROP POLICY IF EXISTS "Members can view tenders" ON tenders;
+DROP POLICY IF EXISTS "Members can insert tenders" ON tenders;
+DROP POLICY IF EXISTS "Members can update tenders" ON tenders;
+DROP POLICY IF EXISTS "Members can delete tenders" ON tenders;
 CREATE POLICY "Members can view tenders" ON tenders FOR SELECT 
   USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid()));
 CREATE POLICY "Members can insert tenders" ON tenders FOR INSERT 
@@ -459,16 +467,21 @@ CREATE POLICY "Members can delete tenders" ON tenders FOR DELETE
   USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid()));
 
 -- Documents: accès via l'entreprise
+DROP POLICY IF EXISTS "Members can view documents" ON documents;
+DROP POLICY IF EXISTS "Members can manage documents" ON documents;
 CREATE POLICY "Members can view documents" ON documents FOR SELECT 
   USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid()));
 CREATE POLICY "Members can manage documents" ON documents FOR ALL 
   USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid()));
 
 -- Notifications: utilisateur voit ses propres notifications
+DROP POLICY IF EXISTS "Users can view own notifications" ON notifications;
+DROP POLICY IF EXISTS "Users can update own notifications" ON notifications;
 CREATE POLICY "Users can view own notifications" ON notifications FOR SELECT USING (user_id = auth.uid());
 CREATE POLICY "Users can update own notifications" ON notifications FOR UPDATE USING (user_id = auth.uid());
 
 -- Activities: membres voient les activités de leur entreprise
+DROP POLICY IF EXISTS "Members can view activities" ON activities;
 CREATE POLICY "Members can view activities" ON activities FOR SELECT 
   USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid()));
 
