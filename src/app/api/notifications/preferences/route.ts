@@ -1,60 +1,70 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { z } from 'zod';
 
-const preferencesSchema = z.object({
-  emailEnabled: z.boolean().optional(),
-  pushEnabled: z.boolean().optional(),
-  deadline7d: z.boolean().optional(),
-  deadline3d: z.boolean().optional(),
-  deadline24h: z.boolean().optional(),
-  tenderStatusChange: z.boolean().optional(),
-  teamActivity: z.boolean().optional(),
-  marketing: z.boolean().optional(),
-});
+// ============================================================
+// GET /api/notifications/preferences - Get user preferences
+// ============================================================
 
-/**
- * GET /api/notifications/preferences
- * Récupère les préférences de notifications
- */
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Non autorisé' },
+        { status: 401 }
+      );
     }
 
-    const { data, error } = (await supabase
+    // Get user preferences
+    const { data: preferences, error } = await supabase
       .from('notification_preferences')
       .select('*')
       .eq('user_id', user.id)
-      .single()) as { data: any | null; error: any };
+      .single();
 
     if (error && error.code !== 'PGRST116') {
-      throw error;
+      // PGRST116 = no rows returned
+      console.error('Error fetching preferences:', error);
+      return NextResponse.json(
+        { error: 'Erreur lors de la récupération des préférences' },
+        { status: 500 }
+      );
     }
 
-    // Si pas de préférences, créer par défaut
-    if (!data) {
-      const { data: newPrefs, error: insertError } = await supabase
+    // If no preferences exist, create default ones
+    if (!preferences) {
+      const { data: newPreferences, error: createError } = await supabase
         .from('notification_preferences')
-        .insert({ user_id: user.id })
+        .insert({
+          user_id: user.id,
+          email_enabled: true,
+          push_enabled: true,
+          deadline_7d: true,
+          deadline_3d: true,
+          deadline_24h: true,
+          tender_status_change: true,
+          team_activity: true,
+          marketing: false,
+        })
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (createError) {
+        console.error('Error creating default preferences:', createError);
+        return NextResponse.json(
+          { error: 'Erreur lors de la création des préférences' },
+          { status: 500 }
+        );
+      }
 
-      return NextResponse.json({ preferences: newPrefs });
+      return NextResponse.json(newPreferences);
     }
 
-    return NextResponse.json({ preferences: data });
+    return NextResponse.json(preferences);
   } catch (error) {
-    console.error('Erreur récupération préférences:', error);
+    console.error('Error in GET /api/notifications/preferences:', error);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500 }
@@ -62,54 +72,63 @@ export async function GET() {
   }
 }
 
-/**
- * PATCH /api/notifications/preferences
- * Met à jour les préférences de notifications
- */
-export async function PATCH(request: Request) {
+// ============================================================
+// POST /api/notifications/preferences - Update preferences
+// ============================================================
+
+export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient();
-    const body = await request.json();
-    
-    const validated = preferencesSchema.parse(body);
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Non autorisé' },
+        { status: 401 }
+      );
     }
 
-    // Convertir camelCase en snake_case pour Postgres
-    const updateData: any = { updated_at: new Date().toISOString() };
-    if (validated.emailEnabled !== undefined) updateData.email_enabled = validated.emailEnabled;
-    if (validated.pushEnabled !== undefined) updateData.push_enabled = validated.pushEnabled;
-    if (validated.deadline7d !== undefined) updateData.deadline_7d = validated.deadline7d;
-    if (validated.deadline3d !== undefined) updateData.deadline_3d = validated.deadline3d;
-    if (validated.deadline24h !== undefined) updateData.deadline_24h = validated.deadline24h;
-    if (validated.tenderStatusChange !== undefined) updateData.tender_status_change = validated.tenderStatusChange;
-    if (validated.teamActivity !== undefined) updateData.team_activity = validated.teamActivity;
-    if (validated.marketing !== undefined) updateData.marketing = validated.marketing;
+    const body = await req.json();
+    const {
+      email_enabled,
+      push_enabled,
+      deadline_7d,
+      deadline_3d,
+      deadline_24h,
+      tender_status_change,
+      team_activity,
+      marketing,
+    } = body;
 
-    const { data, error } = await supabase
+    // Update preferences (upsert)
+    const { data: preferences, error } = await supabase
       .from('notification_preferences')
-      .update(updateData)
-      .eq('user_id', user.id)
+      .upsert({
+        user_id: user.id,
+        email_enabled,
+        push_enabled,
+        deadline_7d,
+        deadline_3d,
+        deadline_24h,
+        tender_status_change,
+        team_activity,
+        marketing,
+        updated_at: new Date().toISOString(),
+      })
       .select()
       .single();
 
-    if (error) throw error;
-
-    return NextResponse.json({ preferences: data });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
+    if (error) {
+      console.error('Error updating preferences:', error);
       return NextResponse.json(
-        { error: 'Données invalides', details: error.errors },
-        { status: 400 }
+        { error: 'Erreur lors de la mise à jour des préférences' },
+        { status: 500 }
       );
     }
-    console.error('Erreur mise à jour préférences:', error);
+
+    return NextResponse.json(preferences);
+  } catch (error) {
+    console.error('Error in POST /api/notifications/preferences:', error);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500 }

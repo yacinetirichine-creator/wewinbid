@@ -1,6 +1,6 @@
 'use client';
 
-import { NotificationCenter } from '@/components/notifications/NotificationCenter';
+import NotificationBell from '@/components/notifications/NotificationBell';
 import { Search, Settings } from 'lucide-react';
 
 interface TopBarProps {
@@ -28,7 +28,7 @@ export function TopBar({ showSearch = true }: TopBarProps) {
         {/* Actions du header */}
         <div className="flex items-center gap-3">
           {/* Centre de notifications */}
-          <NotificationCenter />
+          <NotificationBell />
 
           {/* Bouton paramètres */}
           <button
