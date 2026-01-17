@@ -320,10 +320,10 @@ CREATE POLICY "System can manage search suggestions"
 -- ============================================================
 
 -- Drop existing functions if they exist
-DROP FUNCTION IF EXISTS search_tenders(TEXT, JSONB, INTEGER, INTEGER);
-DROP FUNCTION IF EXISTS get_search_suggestions(TEXT, INTEGER);
-DROP FUNCTION IF EXISTS log_search(TEXT, JSONB, INTEGER);
-DROP FUNCTION IF EXISTS tenders_search_vector_update();
+DROP FUNCTION IF EXISTS search_tenders(TEXT, JSONB, INTEGER, INTEGER) CASCADE;
+DROP FUNCTION IF EXISTS get_search_suggestions(TEXT, INTEGER) CASCADE;
+DROP FUNCTION IF EXISTS log_search(TEXT, JSONB, INTEGER) CASCADE;
+DROP FUNCTION IF EXISTS tenders_search_vector_update() CASCADE;
 
 -- Function to search tenders with filters
 CREATE OR REPLACE FUNCTION search_tenders(
