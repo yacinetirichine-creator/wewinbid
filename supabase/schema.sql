@@ -115,7 +115,7 @@ CREATE TYPE notification_type AS ENUM (
 -- ===========================================
 
 -- Profils utilisateurs (extension de auth.users)
-CREATE TABLE profiles (
+CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT UNIQUE NOT NULL,
   full_name TEXT,
@@ -136,7 +136,7 @@ CREATE TABLE profiles (
 );
 
 -- Entreprises
-CREATE TABLE companies (
+CREATE TABLE IF NOT EXISTS companies (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   legal_name TEXT,
@@ -174,7 +174,7 @@ CREATE TABLE companies (
 );
 
 -- Relation utilisateur-entreprise
-CREATE TABLE company_members (
+CREATE TABLE IF NOT EXISTS company_members (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
@@ -185,7 +185,7 @@ CREATE TABLE company_members (
 );
 
 -- Appels d'offres
-CREATE TABLE tenders (
+CREATE TABLE IF NOT EXISTS tenders (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   reference TEXT NOT NULL,
   title TEXT NOT NULL,
@@ -228,7 +228,7 @@ CREATE TABLE tenders (
 );
 
 -- Documents
-CREATE TABLE documents (
+CREATE TABLE IF NOT EXISTS documents (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   type document_type,
@@ -249,7 +249,7 @@ CREATE TABLE documents (
 );
 
 -- Versions de documents (historique)
-CREATE TABLE document_versions (
+CREATE TABLE IF NOT EXISTS document_versions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   document_id UUID REFERENCES documents(id) ON DELETE CASCADE,
   version INTEGER NOT NULL,
@@ -261,7 +261,7 @@ CREATE TABLE document_versions (
 );
 
 -- Partenariats (Marketplace)
-CREATE TABLE partnerships (
+CREATE TABLE IF NOT EXISTS partnerships (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
   partner_id UUID REFERENCES companies(id) ON DELETE CASCADE,
@@ -274,7 +274,7 @@ CREATE TABLE partnerships (
 );
 
 -- Collaborations sur les AO
-CREATE TABLE collaborations (
+CREATE TABLE IF NOT EXISTS collaborations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   tender_id UUID REFERENCES tenders(id) ON DELETE CASCADE,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
@@ -285,7 +285,7 @@ CREATE TABLE collaborations (
 );
 
 -- Historique des prix
-CREATE TABLE price_history (
+CREATE TABLE IF NOT EXISTS price_history (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   tender_ref TEXT,
   tender_title TEXT,
@@ -301,7 +301,7 @@ CREATE TABLE price_history (
 );
 
 -- Analyse des gagnants
-CREATE TABLE winner_analysis (
+CREATE TABLE IF NOT EXISTS winner_analysis (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   tender_ref TEXT,
   tender_title TEXT,
@@ -318,7 +318,7 @@ CREATE TABLE winner_analysis (
 );
 
 -- Alertes AO
-CREATE TABLE tender_alerts (
+CREATE TABLE IF NOT EXISTS tender_alerts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   keywords TEXT[] DEFAULT '{}',
@@ -334,7 +334,7 @@ CREATE TABLE tender_alerts (
 );
 
 -- Contenu créatif (Studio)
-CREATE TABLE creative_contents (
+CREATE TABLE IF NOT EXISTS creative_contents (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   type content_type,
   title TEXT NOT NULL,
@@ -352,7 +352,7 @@ CREATE TABLE creative_contents (
 );
 
 -- Activités (logs)
-CREATE TABLE activities (
+CREATE TABLE IF NOT EXISTS activities (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   type activity_type NOT NULL,
   description TEXT,
@@ -364,7 +364,7 @@ CREATE TABLE activities (
 );
 
 -- Notifications
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   type notification_type NOT NULL,
   title TEXT NOT NULL,
@@ -376,7 +376,7 @@ CREATE TABLE notifications (
 );
 
 -- Références clients (générées par IA)
-CREATE TABLE client_references (
+CREATE TABLE IF NOT EXISTS client_references (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   client_name TEXT NOT NULL,
   project_title TEXT NOT NULL,
