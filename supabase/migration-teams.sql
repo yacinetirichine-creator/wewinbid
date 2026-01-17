@@ -136,7 +136,7 @@ CREATE INDEX IF NOT EXISTS idx_team_invitations_expires_at ON team_invitations(e
 
 CREATE TABLE IF NOT EXISTS tender_team_access (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tender_id UUID NOT NULL REFERENCES tenders(id) ON DELETE CASCADE,
+  tender_id UUID NOT NULL,
   team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
   
   -- Access level
@@ -156,6 +156,16 @@ CREATE TABLE IF NOT EXISTS tender_team_access (
   -- Constraints
   CONSTRAINT unique_tender_team_access UNIQUE(tender_id, team_id)
 );
+
+-- Add foreign key constraint to tenders if table exists
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'tenders') THEN
+    ALTER TABLE tender_team_access
+    ADD CONSTRAINT fk_tender_team_access_tender_id
+    FOREIGN KEY (tender_id) REFERENCES tenders(id) ON DELETE CASCADE;
+  END IF;
+END $$;
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_tender_team_access_tender_id ON tender_team_access(tender_id);
@@ -327,16 +337,26 @@ CREATE POLICY "Team members can view tender access"
     )
   );
 
--- Tender Team Access: Tender owner can share
-CREATE POLICY "Tender owners can share with teams"
-  ON tender_team_access FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM tenders 
-      WHERE tenders.id = tender_team_access.tender_id 
-        AND tenders.user_id = auth.uid()
-    )
-  );
+-- Tender Team Access: Tender owner can share (if tenders table exists)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'tenders') THEN
+    EXECUTE 'CREATE POLICY "Tender owners can share with teams"
+      ON tender_team_access FOR INSERT
+      WITH CHECK (
+        EXISTS (
+          SELECT 1 FROM tenders 
+          WHERE tenders.id = tender_team_access.tender_id 
+            AND tenders.user_id = auth.uid()
+        )
+      )';
+  ELSE
+    -- Temporary policy until tenders table is created
+    EXECUTE 'CREATE POLICY "Tender owners can share with teams"
+      ON tender_team_access FOR INSERT
+      WITH CHECK (true)';
+  END IF;
+END $$;
 
 -- Team Activity: Team members can view
 CREATE POLICY "Team members can view activity"
