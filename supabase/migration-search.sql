@@ -179,7 +179,7 @@ BEGIN
       EXECUTE 'ALTER TABLE tenders ADD COLUMN search_vector tsvector';
       
       -- Create GIN index for full-text search
-      EXECUTE 'CREATE INDEX idx_tenders_search_vector ON tenders USING gin(search_vector)';
+      EXECUTE 'CREATE INDEX IF NOT EXISTS idx_tenders_search_vector ON tenders USING gin(search_vector)';
       
       -- Update existing records
       EXECUTE '
@@ -189,29 +189,34 @@ BEGIN
           setweight(to_tsvector(''french'', COALESCE(organization, '''')), ''C'') ||
           setweight(to_tsvector(''french'', COALESCE(country, '''')), ''D'')
       ';
-      
-      -- Create trigger to auto-update search vector
-      EXECUTE '
-        CREATE OR REPLACE FUNCTION tenders_search_vector_update()
-        RETURNS TRIGGER AS $func$
-        BEGIN
-          NEW.search_vector := 
-            setweight(to_tsvector(''french'', COALESCE(NEW.title, '''')), ''A'') ||
-            setweight(to_tsvector(''french'', COALESCE(NEW.description, '''')), ''B'') ||
-            setweight(to_tsvector(''french'', COALESCE(NEW.organization, '''')), ''C'') ||
-            setweight(to_tsvector(''french'', COALESCE(NEW.country, '''')), ''D'');
-          RETURN NEW;
-        END;
-        $func$ LANGUAGE plpgsql
-      ';
-      
-      EXECUTE '
-        CREATE TRIGGER tenders_search_vector_trigger
-        BEFORE INSERT OR UPDATE ON tenders
-        FOR EACH ROW
-        EXECUTE FUNCTION tenders_search_vector_update()
-      ';
     END IF;
+    
+    -- Always recreate the function and trigger (drop first if exists)
+    EXECUTE 'DROP TRIGGER IF EXISTS tenders_search_vector_trigger ON tenders';
+    EXECUTE 'DROP FUNCTION IF EXISTS tenders_search_vector_update()';
+    
+    -- Create trigger function
+    EXECUTE '
+      CREATE FUNCTION tenders_search_vector_update()
+      RETURNS TRIGGER AS $func$
+      BEGIN
+        NEW.search_vector := 
+          setweight(to_tsvector(''french'', COALESCE(NEW.title, '''')), ''A'') ||
+          setweight(to_tsvector(''french'', COALESCE(NEW.description, '''')), ''B'') ||
+          setweight(to_tsvector(''french'', COALESCE(NEW.organization, '''')), ''C'') ||
+          setweight(to_tsvector(''french'', COALESCE(NEW.country, '''')), ''D'');
+        RETURN NEW;
+      END;
+      $func$ LANGUAGE plpgsql
+    ';
+    
+    -- Create trigger
+    EXECUTE '
+      CREATE TRIGGER tenders_search_vector_trigger
+      BEFORE INSERT OR UPDATE ON tenders
+      FOR EACH ROW
+      EXECUTE FUNCTION tenders_search_vector_update()
+    ';
   END IF;
 END $$;
 
