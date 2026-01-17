@@ -240,10 +240,10 @@ CREATE OR REPLACE FUNCTION get_upcoming_deadlines(
 )
 RETURNS TABLE (
   tender_id UUID,
-  tender_title VARCHAR,
+  tender_title TEXT,
   deadline DATE,
   days_remaining INTEGER,
-  status VARCHAR
+  status TEXT
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -261,7 +261,7 @@ BEGIN
     t.user_id = auth.uid()
     AND t.deadline >= CURRENT_DATE
     AND t.deadline <= CURRENT_DATE + p_days_ahead
-    AND t.status NOT IN ('CLOSED', 'CANCELLED')
+    AND t.status NOT IN ('ABANDONED', 'LOST', 'WON')
   ORDER BY t.deadline ASC;
 END;
 $$;
