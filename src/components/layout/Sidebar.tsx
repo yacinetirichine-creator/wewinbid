@@ -40,7 +40,8 @@ const mainNav: NavItem[] = [
   { name: 'Marketplace', href: '/marketplace', icon: Users },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Calendrier', href: '/calendar', icon: Calendar },
-  { name: 'Studio créatif', href: '/studio', icon: MessageSquare },
+  { name: 'Chat IA', href: '/chat', icon: MessageSquare },
+  { name: 'Studio créatif', href: '/studio', icon: Sparkles },
   { name: 'Alertes', href: '/alerts', icon: Bell, badge: 5 },
   { name: 'Documents', href: '/documents', icon: FolderOpen },
 ];
