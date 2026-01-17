@@ -168,12 +168,7 @@ CREATE POLICY "Users can view tender milestones"
     EXISTS (
       SELECT 1 FROM tenders 
       WHERE tenders.id = tender_milestones.tender_id 
-        AND (
-          tenders.user_id = auth.uid()
-          OR tenders.company_id IN (
-            SELECT company_id FROM company_members WHERE user_id = auth.uid()
-          )
-        )
+        AND tenders.user_id = auth.uid()
     )
   );
 
@@ -184,12 +179,7 @@ CREATE POLICY "Users can create tender milestones"
     EXISTS (
       SELECT 1 FROM tenders 
       WHERE tenders.id = tender_milestones.tender_id 
-        AND (
-          tenders.user_id = auth.uid()
-          OR tenders.company_id IN (
-            SELECT company_id FROM company_members WHERE user_id = auth.uid()
-          )
-        )
+        AND tenders.user_id = auth.uid()
     )
   );
 
@@ -200,12 +190,7 @@ CREATE POLICY "Users can update tender milestones"
     EXISTS (
       SELECT 1 FROM tenders 
       WHERE tenders.id = tender_milestones.tender_id 
-        AND (
-          tenders.user_id = auth.uid()
-          OR tenders.company_id IN (
-            SELECT company_id FROM company_members WHERE user_id = auth.uid()
-          )
-        )
+        AND tenders.user_id = auth.uid()
     )
   );
 
@@ -216,12 +201,7 @@ CREATE POLICY "Users can delete tender milestones"
     EXISTS (
       SELECT 1 FROM tenders 
       WHERE tenders.id = tender_milestones.tender_id 
-        AND (
-          tenders.user_id = auth.uid()
-          OR tenders.company_id IN (
-            SELECT company_id FROM company_members WHERE user_id = auth.uid()
-          )
-        )
+        AND tenders.user_id = auth.uid()
     )
   );
 
@@ -278,9 +258,7 @@ BEGIN
     t.status
   FROM tenders t
   WHERE 
-    (t.user_id = auth.uid() OR t.company_id IN (
-      SELECT company_id FROM company_members WHERE user_id = auth.uid()
-    ))
+    t.user_id = auth.uid()
     AND t.deadline >= CURRENT_DATE
     AND t.deadline <= CURRENT_DATE + p_days_ahead
     AND t.status NOT IN ('CLOSED', 'CANCELLED')
