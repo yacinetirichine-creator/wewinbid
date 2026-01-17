@@ -314,6 +314,12 @@ CREATE POLICY "System can manage search suggestions"
 -- 7. HELPER FUNCTIONS
 -- ============================================================
 
+-- Drop existing functions if they exist
+DROP FUNCTION IF EXISTS search_tenders(TEXT, JSONB, INTEGER, INTEGER);
+DROP FUNCTION IF EXISTS get_search_suggestions(TEXT, INTEGER);
+DROP FUNCTION IF EXISTS log_search(TEXT, JSONB, INTEGER);
+DROP FUNCTION IF EXISTS tenders_search_vector_update();
+
 -- Function to search tenders with filters
 CREATE OR REPLACE FUNCTION search_tenders(
   p_query TEXT DEFAULT NULL,
@@ -459,6 +465,12 @@ $$;
 -- ============================================================
 -- 8. TRIGGERS
 -- ============================================================
+
+-- Drop existing triggers if they exist
+DROP TRIGGER IF EXISTS update_saved_searches_updated_at ON saved_searches;
+DROP TRIGGER IF EXISTS update_search_filter_presets_updated_at ON search_filter_presets;
+DROP TRIGGER IF EXISTS update_search_suggestions_updated_at ON search_suggestions;
+DROP TRIGGER IF EXISTS tenders_search_vector_trigger ON tenders;
 
 -- Update updated_at timestamp
 CREATE TRIGGER update_saved_searches_updated_at
