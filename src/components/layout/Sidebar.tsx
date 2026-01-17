@@ -22,6 +22,7 @@ import {
   Menu,
   X,
   Calendar,
+  MessageSquare,
 } from 'lucide-react';
 import { Avatar } from '@/components/ui';
 import { TopBar } from '@/components/layout/TopBar';
@@ -39,7 +40,7 @@ const mainNav: NavItem[] = [
   { name: 'Marketplace', href: '/marketplace', icon: Users },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Calendrier', href: '/calendar', icon: Calendar },
-  { name: 'Studio créatif', href: '/studio', icon: Sparkles },
+  { name: 'Studio créatif', href: '/studio', icon: MessageSquare },
   { name: 'Alertes', href: '/alerts', icon: Bell, badge: 5 },
   { name: 'Documents', href: '/documents', icon: FolderOpen },
 ];
