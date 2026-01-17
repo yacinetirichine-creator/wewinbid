@@ -448,7 +448,7 @@ export default function StudioPage() {
         title="Studio Créatif"
         subtitle="Créez du contenu professionnel pour valoriser vos succès en marchés publics"
         actions={
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Button variant="outline">
               <Calendar className="w-4 h-4 mr-2" />
               Calendrier
@@ -461,9 +461,9 @@ export default function StudioPage() {
         }
       />
 
-      <div className="px-6 pb-6">
+      <div className="px-4 sm:px-6 pb-6">
         {/* Stats rapides */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardContent className="p-4 flex items-center gap-4">
               <div className="p-3 bg-primary-100 rounded-xl">

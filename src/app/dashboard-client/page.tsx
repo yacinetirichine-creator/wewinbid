@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   FileText, TrendingUp, Target, Users, CheckCircle, Clock, AlertTriangle,
-  Euro, Percent, Activity, ArrowUpRight, ArrowDownRight
+  Euro, Percent, Activity, ArrowUpRight, ArrowDownRight, Trophy
 } from 'lucide-react';
 import { AppLayout, PageHeader } from '@/components/layout/Sidebar';
 import { StatsCard } from '@/components/dashboard/StatsCard';

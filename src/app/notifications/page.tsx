@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AppLayout, PageHeader } from '@/components/layout/Sidebar';
 import { Card, Badge, Button } from '@/components/ui';
 import NotificationList from '@/components/notifications/NotificationList';
@@ -26,7 +26,7 @@ export default function NotificationsPage() {
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
   // Fetch notifications
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
       const unreadParam = filter === 'unread' ? '?unread=true' : '';
@@ -42,11 +42,11 @@ export default function NotificationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
 
   useEffect(() => {
     fetchNotifications();
-  }, [filter]);
+  }, [fetchNotifications]);
 
   // Mark notification as read
   const handleMarkAsRead = async (id: string) => {

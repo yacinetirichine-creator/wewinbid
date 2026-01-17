@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -12,8 +12,12 @@ import { AppLayout, PageHeader } from '@/components/layout/Sidebar';
 import { Card, CardContent, CardHeader, Badge, Progress, Button, Skeleton, ScoreGauge, Alert } from '@/components/ui';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { TendersTable } from '@/components/dashboard/TendersTable';
+import { MatchedTendersWidget } from '@/components/dashboard/MatchedTendersWidget';
+import { DashboardStatsWidget } from '@/components/dashboard/DashboardStatsWidget';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate, getDaysRemaining } from '@/lib/utils';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 // Types
 interface DashboardStats {
@@ -57,7 +61,7 @@ interface Notification {
 }
 
 // Stats Card Component
-function StatCard({ 
+function StatCard({
   icon: Icon, 
   label, 
   value, 
@@ -107,7 +111,7 @@ function StatCard({
 }
 
 // Tender Row Component
-function TenderRow({ tender }: { tender: RecentTender }) {
+function TenderRow({ tender, t }: { tender: RecentTender; t: (key: string) => string }) {
   const daysLeft = getDaysRemaining(tender.deadline);
   const isUrgent = daysLeft !== null && daysLeft <= 3 && daysLeft >= 0;
   
@@ -122,12 +126,12 @@ function TenderRow({ tender }: { tender: RecentTender }) {
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-medium text-slate-400">{tender.reference}</span>
             <Badge variant={tender.type === 'public' ? 'primary' : 'secondary'} size="sm">
-              {tender.type === 'public' ? 'Public' : 'Privé'}
+              {tender.type === 'public' ? t('dashboard.tenders.public') : t('dashboard.tenders.private')}
             </Badge>
             {isUrgent && (
               <Badge variant="danger" size="sm">
                 <Clock className="w-3 h-3 mr-1" />
-                Urgent
+                {t('dashboard.tenders.urgent')}
               </Badge>
             )}
           </div>
@@ -141,7 +145,7 @@ function TenderRow({ tender }: { tender: RecentTender }) {
           <p className="font-semibold text-slate-900">{formatCurrency(tender.estimated_value)}</p>
           <p className="text-sm text-slate-500">
             {daysLeft !== null ? (
-              daysLeft < 0 ? 'Expiré' : `${daysLeft}j restants`
+              daysLeft < 0 ? t('dashboard.tenders.expired') : t('dashboard.tenders.daysLeft').replace('{days}', String(daysLeft))
             ) : (
               formatDate(tender.deadline)
             )}
@@ -187,7 +191,48 @@ function ActivityItem({ activity }: { activity: RecentActivity }) {
 }
 
 export default function DashboardPage() {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
+  const { locale } = useLocale();
+
+  const entries = useMemo(
+    () => ({
+      'dashboard.title': 'Tableau de bord',
+      'dashboard.subtitle': "Vue d'ensemble de votre activité commerciale",
+      'dashboard.actions.newTender': "Nouvel appel d'offres",
+      'dashboard.welcome.title': 'Bienvenue sur WeWinBid !',
+      'dashboard.welcome.body': "Votre compte a été créé avec succès. Commencez par créer votre premier appel d'offres.",
+      'dashboard.stats.activeTenders': "Appels d'offres actifs",
+      'dashboard.stats.totalSuffix': '{count} au total',
+      'dashboard.stats.won': 'Marchés remportés',
+      'dashboard.stats.winRate': '{rate}% de réussite',
+      'dashboard.stats.revenue': 'CA généré',
+      'dashboard.stats.avgScore': 'Score moyen',
+      'dashboard.recent.title': "Appels d'offres récents",
+      'dashboard.recent.subtitle': 'Vos dernières opportunités',
+      'dashboard.recent.viewAll': 'Voir tout',
+      'dashboard.recent.empty.title': "Aucun appel d'offres",
+      'dashboard.recent.empty.body': "Commencez par créer votre premier appel d'offres",
+      'dashboard.recent.empty.cta': "Créer un appel d'offres",
+      'dashboard.notifications.title': 'Notifications',
+      'dashboard.activity.title': 'Activité récente',
+      'dashboard.activity.empty': 'Aucune activité récente',
+      'dashboard.help.title': "Besoin d'aide ?",
+      'dashboard.help.body': "Découvrez comment optimiser vos réponses aux appels d'offres",
+      'dashboard.help.cta': 'Guide de démarrage',
+      'dashboard.quick.pending': 'En attente de résultat',
+      'dashboard.quick.deadlines': 'Échéances cette semaine',
+      'dashboard.quick.winRate': 'Taux de réussite',
+      'dashboard.quick.total': 'Total des dossiers',
+      'dashboard.tenders.public': 'Public',
+      'dashboard.tenders.private': 'Privé',
+      'dashboard.tenders.urgent': 'Urgent',
+      'dashboard.tenders.expired': 'Expiré',
+      'dashboard.tenders.daysLeft': '{days}j restants',
+    }),
+    []
+  );
+
+  const { t } = useUiTranslations(locale, entries);
   
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -196,19 +241,7 @@ export default function DashboardPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showWelcome, setShowWelcome] = useState(false);
 
-  useEffect(() => {
-    // Check for welcome param
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('welcome') === 'true') {
-      setShowWelcome(true);
-      // Remove the param from URL
-      window.history.replaceState({}, '', '/dashboard');
-    }
-
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -295,7 +328,19 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [supabase]);
+
+  useEffect(() => {
+    // Check for welcome param
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('welcome') === 'true') {
+      setShowWelcome(true);
+      // Remove the param from URL
+      window.history.replaceState({}, '', '/dashboard');
+    }
+
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   const container = {
     hidden: { opacity: 0 },
@@ -312,16 +357,22 @@ export default function DashboardPage() {
     show: { opacity: 1, y: 0 }
   };
 
+  const formatTemplate = (template: string, values: Record<string, string | number>) => {
+    return Object.entries(values).reduce((acc, [key, value]) => {
+      return acc.replace(new RegExp(`\\{${key}\\}`, 'g'), String(value));
+    }, template);
+  };
+
   return (
     <AppLayout>
       <PageHeader
-        title="Tableau de bord"
-        description="Vue d'ensemble de votre activité commerciale"
+        title={t('dashboard.title')}
+        description={t('dashboard.subtitle')}
         actions={
           <Link href="/tenders/new">
             <Button variant="primary">
               <Plus className="w-4 h-4 mr-2" />
-              Nouvel appel d'offres
+              {t('dashboard.actions.newTender')}
             </Button>
           </Link>
         }
@@ -334,8 +385,7 @@ export default function DashboardPage() {
           className="mb-6"
         >
           <Alert variant="success" onClose={() => setShowWelcome(false)}>
-            <strong>Bienvenue sur WeWinBid !</strong> Votre compte a été créé avec succès. 
-            Commencez par créer votre premier appel d'offres.
+            <strong>{t('dashboard.welcome.title')}</strong> {t('dashboard.welcome.body')}
           </Alert>
         </motion.div>
       )}
@@ -359,32 +409,37 @@ export default function DashboardPage() {
           animate="show"
           className="space-y-6"
         >
+          {/* New: Dashboard Stats Widget */}
+          <motion.div variants={item}>
+            <DashboardStatsWidget />
+          </motion.div>
+
           {/* Stats Grid */}
           <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard
               icon={FileText}
-              label="Appels d'offres actifs"
+              label={t('dashboard.stats.activeTenders')}
               value={stats?.activeTenders || 0}
-              change={`${stats?.totalTenders || 0} au total`}
+              change={formatTemplate(t('dashboard.stats.totalSuffix'), { count: stats?.totalTenders || 0 })}
               color="indigo"
             />
             <StatCard
               icon={Trophy}
-              label="Marchés remportés"
+              label={t('dashboard.stats.won')}
               value={stats?.wonTenders || 0}
-              change={stats?.winRate ? `${stats.winRate}% de réussite` : undefined}
+              change={stats?.winRate ? formatTemplate(t('dashboard.stats.winRate'), { rate: stats.winRate }) : undefined}
               changeType="positive"
               color="emerald"
             />
             <StatCard
               icon={Euro}
-              label="CA généré"
+              label={t('dashboard.stats.revenue')}
               value={formatCurrency(stats?.totalRevenue || 0)}
               color="amber"
             />
             <StatCard
               icon={Target}
-              label="Score moyen"
+              label={t('dashboard.stats.avgScore')}
               value={`${stats?.avgScore || 0}%`}
               color="indigo"
             />
@@ -392,17 +447,22 @@ export default function DashboardPage() {
 
           {/* Main Content */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Matched Tenders Widget - New */}
+            <motion.div variants={item} className="lg:col-span-2">
+              <MatchedTendersWidget minScore={70} limit={10} />
+            </motion.div>
+
             {/* Recent Tenders */}
             <motion.div variants={item} className="lg:col-span-2">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
-                    <h3 className="font-semibold text-slate-900">Appels d'offres récents</h3>
-                    <p className="text-sm text-slate-500">Vos dernières opportunités</p>
+                    <h3 className="font-semibold text-slate-900">{t('dashboard.recent.title')}</h3>
+                    <p className="text-sm text-slate-500">{t('dashboard.recent.subtitle')}</p>
                   </div>
                   <Link href="/tenders">
                     <Button variant="ghost" size="sm">
-                      Voir tout
+                      {t('dashboard.recent.viewAll')}
                       <ArrowRight className="w-4 h-4 ml-1" />
                     </Button>
                   </Link>
@@ -411,20 +471,20 @@ export default function DashboardPage() {
                   {recentTenders.length > 0 ? (
                     <div className="divide-y divide-slate-100">
                       {recentTenders.map((tender) => (
-                        <TenderRow key={tender.id} tender={tender} />
+                        <TenderRow key={tender.id} tender={tender} t={t} />
                       ))}
                     </div>
                   ) : (
                     <div className="p-8 text-center">
                       <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                      <h4 className="font-medium text-slate-900 mb-2">Aucun appel d'offres</h4>
+                      <h4 className="font-medium text-slate-900 mb-2">{t('dashboard.recent.empty.title')}</h4>
                       <p className="text-sm text-slate-500 mb-4">
-                        Commencez par créer votre premier appel d'offres
+                        {t('dashboard.recent.empty.body')}
                       </p>
                       <Link href="/tenders/new">
                         <Button variant="primary" size="sm">
                           <Plus className="w-4 h-4 mr-2" />
-                          Créer un appel d'offres
+                          {t('dashboard.recent.empty.cta')}
                         </Button>
                       </Link>
                     </div>
@@ -442,7 +502,7 @@ export default function DashboardPage() {
                     <CardHeader className="flex flex-row items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Bell className="w-5 h-5 text-indigo-500" />
-                        <h3 className="font-semibold text-slate-900">Notifications</h3>
+                        <h3 className="font-semibold text-slate-900">{t('dashboard.notifications.title')}</h3>
                       </div>
                       <Badge variant="primary">{notifications.length}</Badge>
                     </CardHeader>
@@ -466,7 +526,7 @@ export default function DashboardPage() {
                   <CardHeader>
                     <div className="flex items-center gap-2">
                       <Activity className="w-5 h-5 text-indigo-500" />
-                      <h3 className="font-semibold text-slate-900">Activité récente</h3>
+                      <h3 className="font-semibold text-slate-900">{t('dashboard.activity.title')}</h3>
                     </div>
                   </CardHeader>
                   <CardContent className="p-0">
@@ -478,7 +538,7 @@ export default function DashboardPage() {
                       </div>
                     ) : (
                       <div className="p-6 text-center text-sm text-slate-500">
-                        Aucune activité récente
+                        {t('dashboard.activity.empty')}
                       </div>
                     )}
                   </CardContent>
@@ -489,12 +549,12 @@ export default function DashboardPage() {
               <motion.div variants={item}>
                 <Card className="bg-gradient-to-br from-indigo-500 to-violet-600 border-0">
                   <CardContent className="p-6">
-                    <h3 className="font-semibold text-white mb-2">Besoin d'aide ?</h3>
+                    <h3 className="font-semibold text-white mb-2">{t('dashboard.help.title')}</h3>
                     <p className="text-sm text-indigo-100 mb-4">
-                      Découvrez comment optimiser vos réponses aux appels d'offres
+                      {t('dashboard.help.body')}
                     </p>
                     <Button variant="secondary" size="sm" className="bg-white text-indigo-600 hover:bg-indigo-50">
-                      Guide de démarrage
+                      {t('dashboard.help.cta')}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </CardContent>
@@ -513,7 +573,7 @@ export default function DashboardPage() {
                       <Clock className="w-5 h-5 text-amber-500" />
                       <span className="text-2xl font-bold text-slate-900">{stats?.pendingTenders || 0}</span>
                     </div>
-                    <p className="text-sm text-slate-500">En attente de résultat</p>
+                    <p className="text-sm text-slate-500">{t('dashboard.quick.pending')}</p>
                   </div>
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-2 mb-2">
@@ -525,21 +585,21 @@ export default function DashboardPage() {
                         }).length}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-500">Échéances cette semaine</p>
+                    <p className="text-sm text-slate-500">{t('dashboard.quick.deadlines')}</p>
                   </div>
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <Percent className="w-5 h-5 text-emerald-500" />
                       <span className="text-2xl font-bold text-slate-900">{stats?.winRate || 0}%</span>
                     </div>
-                    <p className="text-sm text-slate-500">Taux de réussite</p>
+                    <p className="text-sm text-slate-500">{t('dashboard.quick.winRate')}</p>
                   </div>
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <Briefcase className="w-5 h-5 text-violet-500" />
                       <span className="text-2xl font-bold text-slate-900">{stats?.totalTenders || 0}</span>
                     </div>
-                    <p className="text-sm text-slate-500">Total des dossiers</p>
+                    <p className="text-sm text-slate-500">{t('dashboard.quick.total')}</p>
                   </div>
                 </div>
               </CardContent>

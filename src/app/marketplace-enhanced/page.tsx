@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { 
   Card, 
@@ -123,16 +123,8 @@ export default function EnhancedMarketplacePage() {
   const [showCreateAlert, setShowCreateAlert] = useState(false);
   const [selectedSavedSearch, setSelectedSavedSearch] = useState<string | null>(null);
 
-  // Fetch data on mount
-  useEffect(() => {
-    fetchTenders();
-    fetchSavedSearches();
-    fetchFavorites();
-    fetchRecommendations();
-  }, []);
-
   // Fetch tenders with filters
-  const fetchTenders = async () => {
+  const fetchTenders = useCallback(async () => {
     try {
       setLoading(true);
       let query = supabase
@@ -181,10 +173,10 @@ export default function EnhancedMarketplacePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, supabase]);
 
   // Fetch saved searches
-  const fetchSavedSearches = async () => {
+  const fetchSavedSearches = useCallback(async () => {
     try {
       const { data, error } = await fetch('/api/saved-searches').then((r) =>
         r.json()
@@ -193,10 +185,10 @@ export default function EnhancedMarketplacePage() {
     } catch (error) {
       console.error('Error fetching saved searches:', error);
     }
-  };
+  }, []);
 
   // Fetch favorites
-  const fetchFavorites = async () => {
+  const fetchFavorites = useCallback(async () => {
     try {
       const { data, error } = await fetch('/api/favorites').then((r) =>
         r.json()
@@ -208,10 +200,10 @@ export default function EnhancedMarketplacePage() {
     } catch (error) {
       console.error('Error fetching favorites:', error);
     }
-  };
+  }, []);
 
   // Fetch AI recommendations
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = useCallback(async () => {
     try {
       const { data, error } = await fetch('/api/recommendations?limit=5').then(
         (r) => r.json()
@@ -220,7 +212,15 @@ export default function EnhancedMarketplacePage() {
     } catch (error) {
       console.error('Error fetching recommendations:', error);
     }
-  };
+  }, []);
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchTenders();
+    fetchSavedSearches();
+    fetchFavorites();
+    fetchRecommendations();
+  }, [fetchTenders, fetchSavedSearches, fetchFavorites, fetchRecommendations]);
 
   // Generate new AI recommendations
   const generateRecommendations = async () => {
@@ -325,7 +325,7 @@ export default function EnhancedMarketplacePage() {
   // Apply filters
   useEffect(() => {
     fetchTenders();
-  }, [filters]);
+  }, [filters, fetchTenders]);
 
   // Count active filters
   const activeFilterCount = [
@@ -346,7 +346,7 @@ export default function EnhancedMarketplacePage() {
         title="Marketplace"
         subtitle="Recherchez et trouvez les meilleurs appels d'offres"
         actions={
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
               <Filter className="w-4 h-4 mr-2" />
               Filtres {activeFilterCount > 0 && `(${activeFilterCount})`}
@@ -359,7 +359,7 @@ export default function EnhancedMarketplacePage() {
         }
       />
 
-      <div className="px-6 pb-6">
+      <div className="px-4 sm:px-6 pb-6">
         {/* AI Recommendations Section */}
         {recommendations.length > 0 && (
           <Card className="mb-6 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">

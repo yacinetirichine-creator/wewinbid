@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Loader2, ThumbsUp, ThumbsDown, Sparkles, Copy, Check } from 'lucide-react';
 
 interface Message {
@@ -43,14 +43,7 @@ export default function ChatInterface({ sessionId, tenderId, onSessionCreated }:
     scrollToBottom();
   }, [messages]);
 
-  useEffect(() => {
-    if (sessionId) {
-      loadMessages();
-    }
-    loadSuggestions();
-  }, [sessionId, tenderId]);
-
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     if (!sessionId) return;
 
     try {
@@ -62,9 +55,9 @@ export default function ChatInterface({ sessionId, tenderId, onSessionCreated }:
     } catch (error) {
       console.error('Error loading messages:', error);
     }
-  };
+  }, [sessionId]);
 
-  const loadSuggestions = async () => {
+  const loadSuggestions = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (sessionId) params.append('session_id', sessionId);
@@ -78,7 +71,14 @@ export default function ChatInterface({ sessionId, tenderId, onSessionCreated }:
     } catch (error) {
       console.error('Error loading suggestions:', error);
     }
-  };
+  }, [sessionId, tenderId]);
+
+  useEffect(() => {
+    if (sessionId) {
+      loadMessages();
+    }
+    loadSuggestions();
+  }, [sessionId, loadMessages, loadSuggestions]);
 
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;

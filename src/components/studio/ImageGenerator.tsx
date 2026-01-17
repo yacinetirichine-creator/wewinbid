@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Sparkles, Download, Copy, Loader2, Wand2, Image as ImageIcon } from 'lucide-react';
 import { Button, Input, Card, Badge } from '@/components/ui';
@@ -275,10 +276,13 @@ export default function ImageGenerator() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="space-y-4"
               >
-                <img
+                <Image
                   src={generatedImage.imageUrl}
                   alt="Generated"
-                  className="w-full rounded-lg shadow-lg"
+                  width={1024}
+                  height={1024}
+                  sizes="100vw"
+                  className="w-full h-auto rounded-lg shadow-lg"
                 />
 
                 <div className="flex gap-2">

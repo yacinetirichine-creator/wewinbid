@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import {
   Card,
@@ -30,6 +30,7 @@ import {
 import { formatDistance } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import dynamic from 'next/dynamic';
+import { LOCALES, LOCALE_NAMES, LOCALE_FLAGS } from '@/lib/i18n';
 
 // Dynamically import React Quill to avoid SSR issues
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
@@ -86,15 +87,7 @@ export default function DocumentsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('');
 
-  useEffect(() => {
-    if (activeTab === 'documents') {
-      fetchDocuments();
-    } else {
-      fetchTemplates();
-    }
-  }, [activeTab, categoryFilter, statusFilter]);
-
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     try {
       setLoading(true);
       let url = '/api/documents/generate?';
@@ -108,9 +101,9 @@ export default function DocumentsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [categoryFilter, statusFilter]);
 
-  const fetchTemplates = async () => {
+  const fetchTemplates = useCallback(async () => {
     try {
       setLoading(true);
       let url = '/api/documents/templates?';
@@ -123,7 +116,15 @@ export default function DocumentsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [categoryFilter]);
+
+  useEffect(() => {
+    if (activeTab === 'documents') {
+      fetchDocuments();
+    } else {
+      fetchTemplates();
+    }
+  }, [activeTab, fetchDocuments, fetchTemplates]);
 
   const handleCreateDocument = () => {
     setSelectedDocument(null);
@@ -183,7 +184,7 @@ export default function DocumentsPage() {
         title="Génération de Documents"
         subtitle="Créez et gérez vos documents professionnels avec l'aide de l'IA"
         actions={
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Button variant="outline" onClick={() => setShowAIGenerator(true)}>
               <Sparkles className="w-4 h-4 mr-2" />
               Générer avec IA
@@ -203,9 +204,9 @@ export default function DocumentsPage() {
         }
       />
 
-      <div className="px-6 pb-6">
+      <div className="px-4 sm:px-6 pb-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
@@ -581,8 +582,14 @@ function DocumentEditor({
 }) {
   const [title, setTitle] = useState(document?.title || '');
   const [category, setCategory] = useState(document?.category || 'proposal');
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState(document?.content?.sections?.[0]?.content || '');
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (document?.content?.sections?.length) {
+      setContent(document.content.sections[0]?.content || '');
+    }
+  }, [document]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -732,17 +739,19 @@ function AIGenerator({
 }) {
   const [prompt, setPrompt] = useState('');
   const [generationType, setGenerationType] = useState('proposal');
+  const [language, setLanguage] = useState('fr');
   const [generating, setGenerating] = useState(false);
 
   const handleGenerate = async () => {
     setGenerating(true);
     try {
-      const { content } = await fetch('/api/documents/ai-generate', {
+      const { content, model } = await fetch('/api/documents/ai-generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           generation_type: generationType,
           prompt,
+          language,
           context: {},
         }),
       }).then((r) => r.json());
@@ -759,7 +768,10 @@ function AIGenerator({
           },
           ai_generated: true,
           ai_prompt: prompt,
-          ai_model: 'mock-gpt-4',
+          ai_model: model || 'gpt-4o-mini',
+          variables_data: {
+            language,
+          },
         }),
       });
 
@@ -794,6 +806,23 @@ function AIGenerator({
               {CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>
                   {cat.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Langue de génération
+            </label>
+            <select
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+            >
+              {LOCALES.map((locale) => (
+                <option key={locale} value={locale}>
+                  {LOCALE_FLAGS[locale]} {LOCALE_NAMES[locale]}
                 </option>
               ))}
             </select>

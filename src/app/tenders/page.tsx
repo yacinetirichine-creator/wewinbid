@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { 
@@ -20,20 +20,30 @@ import { AppLayout, PageHeader } from '@/components/layout/Sidebar';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate, getDaysRemaining, getScoreColor } from '@/lib/utils';
 import type { Tender, TenderStatus, TenderType } from '@/types/database';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 // Colonnes du Kanban
-const KANBAN_COLUMNS: { status: TenderStatus; label: string; color: string }[] = [
-  { status: 'DRAFT', label: 'Brouillon', color: 'bg-slate-100' },
-  { status: 'ANALYSIS', label: 'Analyse', color: 'bg-blue-50' },
-  { status: 'IN_PROGRESS', label: 'En cours', color: 'bg-amber-50' },
-  { status: 'REVIEW', label: 'Révision', color: 'bg-purple-50' },
-  { status: 'SUBMITTED', label: 'Soumis', color: 'bg-cyan-50' },
-  { status: 'WON', label: 'Gagné', color: 'bg-emerald-50' },
-  { status: 'LOST', label: 'Perdu', color: 'bg-rose-50' },
+const KANBAN_COLUMNS: { status: TenderStatus; labelKey: string; color: string }[] = [
+  { status: 'DRAFT', labelKey: 'tenders.kanban.draft', color: 'bg-slate-100' },
+  { status: 'ANALYSIS', labelKey: 'tenders.kanban.analysis', color: 'bg-blue-50' },
+  { status: 'IN_PROGRESS', labelKey: 'tenders.kanban.inProgress', color: 'bg-amber-50' },
+  { status: 'REVIEW', labelKey: 'tenders.kanban.review', color: 'bg-purple-50' },
+  { status: 'SUBMITTED', labelKey: 'tenders.kanban.submitted', color: 'bg-cyan-50' },
+  { status: 'WON', labelKey: 'tenders.kanban.won', color: 'bg-emerald-50' },
+  { status: 'LOST', labelKey: 'tenders.kanban.lost', color: 'bg-rose-50' },
 ];
 
 // Composant Carte Tender
-function TenderCard({ tender, onStatusChange }: { tender: Tender; onStatusChange: (id: string, status: TenderStatus) => void }) {
+function TenderCard({
+  tender,
+  onStatusChange,
+  t,
+}: {
+  tender: Tender;
+  onStatusChange: (id: string, status: TenderStatus) => void;
+  t: (key: string) => string;
+}) {
   const [showMenu, setShowMenu] = useState(false);
   const daysRemaining = tender.deadline ? getDaysRemaining(tender.deadline) : null;
   const isUrgent = daysRemaining !== null && daysRemaining <= 7 && daysRemaining >= 0;
@@ -56,7 +66,7 @@ function TenderCard({ tender, onStatusChange }: { tender: Tender; onStatusChange
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xs font-medium text-slate-500">{tender.reference}</span>
                 <Badge variant={tender.type === 'PUBLIC' ? 'info' : 'secondary'} size="sm">
-                  {tender.type === 'PUBLIC' ? 'Public' : 'Privé'}
+                  {tender.type === 'PUBLIC' ? t('tenders.badge.public') : t('tenders.badge.private')}
                 </Badge>
               </div>
               <h4 className="font-semibold text-slate-900 line-clamp-2 text-sm">
@@ -95,8 +105,8 @@ function TenderCard({ tender, onStatusChange }: { tender: Tender; onStatusChange
               <CalendarIcon className="w-3.5 h-3.5" />
               <span>
                 {formatDate(tender.deadline)}
-                {isOverdue && ' (Expiré)'}
-                {isUrgent && !isOverdue && ` (J-${daysRemaining})`}
+                {isOverdue && t('tenders.deadline.expired')}
+                {isUrgent && !isOverdue && t('tenders.deadline.daysLeft').replace('{days}', String(daysRemaining))}
               </span>
             </div>
           )}
@@ -104,7 +114,7 @@ function TenderCard({ tender, onStatusChange }: { tender: Tender; onStatusChange
           {/* Score IA */}
           {tender.ai_score !== null && (
             <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-              <span className="text-xs text-slate-500">Score IA</span>
+              <span className="text-xs text-slate-500">{t('tenders.aiScore')}</span>
               <div className="flex items-center gap-2">
                 <div className={`w-16 h-1.5 rounded-full bg-slate-200 overflow-hidden`}>
                   <div 
@@ -128,17 +138,19 @@ function TenderCard({ tender, onStatusChange }: { tender: Tender; onStatusChange
 function KanbanColumn({ 
   column, 
   tenders, 
-  onStatusChange 
+  onStatusChange,
+  t,
 }: { 
-  column: typeof KANBAN_COLUMNS[0]; 
-  tenders: Tender[]; 
+  column: typeof KANBAN_COLUMNS[0];
+  tenders: Tender[];
   onStatusChange: (id: string, status: TenderStatus) => void;
+  t: (key: string) => string;
 }) {
   return (
     <div className="kanban-column">
       <div className={`sticky top-0 z-10 px-3 py-2 rounded-t-lg ${column.color}`}>
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-slate-700 text-sm">{column.label}</h3>
+          <h3 className="font-semibold text-slate-700 text-sm">{t(column.labelKey)}</h3>
           <Badge variant="secondary" size="sm">{tenders.length}</Badge>
         </div>
       </div>
@@ -150,13 +162,14 @@ function KanbanColumn({
               key={tender.id} 
               tender={tender} 
               onStatusChange={onStatusChange}
+              t={t}
             />
           ))}
         </AnimatePresence>
         
         {tenders.length === 0 && (
           <div className="flex items-center justify-center h-24 text-slate-400 text-sm">
-            Aucun AO
+            {t('tenders.kanban.empty')}
           </div>
         )}
       </div>
@@ -166,18 +179,51 @@ function KanbanColumn({
 
 // Page principale
 export default function TendersPage() {
+  const supabase = useMemo(() => createClient(), []);
+  const { locale } = useLocale();
   const [tenders, setTenders] = useState<Tender[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<TenderType | 'ALL'>('ALL');
   const [showFilters, setShowFilters] = useState(false);
-  const supabase = createClient();
 
-  useEffect(() => {
-    fetchTenders();
-  }, []);
+  const entries = useMemo(
+    () => ({
+      'tenders.title': "Appels d'offres",
+      'tenders.subtitle': '{total} AO au total • {won} gagnés',
+      'tenders.actions.filters': 'Filtres',
+      'tenders.actions.new': 'Nouvel AO',
+      'tenders.stats.total': 'Total AO',
+      'tenders.stats.inProgress': 'En cours',
+      'tenders.stats.won': 'Gagnés',
+      'tenders.stats.revenue': 'CA gagné',
+      'tenders.search.placeholder': 'Rechercher par titre, référence, acheteur...',
+      'tenders.filters.all': 'Tous les types',
+      'tenders.filters.public': 'Marchés publics',
+      'tenders.filters.private': 'Marchés privés',
+      'tenders.empty.title': "Aucun appel d'offres",
+      'tenders.empty.description': "Créez votre premier appel d'offres pour commencer à suivre vos opportunités commerciales.",
+      'tenders.empty.cta': 'Créer un AO',
+      'tenders.badge.public': 'Public',
+      'tenders.badge.private': 'Privé',
+      'tenders.deadline.expired': ' (Expiré)',
+      'tenders.deadline.daysLeft': ' (J-{days})',
+      'tenders.aiScore': 'Score IA',
+      'tenders.kanban.draft': 'Brouillon',
+      'tenders.kanban.analysis': 'Analyse',
+      'tenders.kanban.inProgress': 'En cours',
+      'tenders.kanban.review': 'Révision',
+      'tenders.kanban.submitted': 'Soumis',
+      'tenders.kanban.won': 'Gagné',
+      'tenders.kanban.lost': 'Perdu',
+      'tenders.kanban.empty': 'Aucun AO',
+    }),
+    []
+  );
 
-  async function fetchTenders() {
+  const { t } = useUiTranslations(locale, entries);
+
+  const fetchTenders = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('tenders')
@@ -191,7 +237,11 @@ export default function TendersPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [supabase]);
+
+  useEffect(() => {
+    fetchTenders();
+  }, [fetchTenders]);
 
   async function handleStatusChange(tenderId: string, newStatus: TenderStatus) {
     try {
@@ -252,22 +302,24 @@ export default function TendersPage() {
   return (
     <AppLayout>
       <PageHeader 
-        title="Appels d'offres"
-        subtitle={`${stats.total} AO au total • ${stats.won} gagnés`}
+        title={t('tenders.title')}
+        subtitle={t('tenders.subtitle')
+          .replace('{total}', String(stats.total))
+          .replace('{won}', String(stats.won))}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowFilters(!showFilters)}
           >
             <FunnelIcon className="w-4 h-4 mr-2" />
-            Filtres
+            {t('tenders.actions.filters')}
           </Button>
           <Link href="/tenders/new">
             <Button size="sm">
               <PlusIcon className="w-4 h-4 mr-2" />
-              Nouvel AO
+              {t('tenders.actions.new')}
             </Button>
           </Link>
         </div>
@@ -282,7 +334,7 @@ export default function TendersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
-              <p className="text-xs text-slate-500">Total AO</p>
+              <p className="text-xs text-slate-500">{t('tenders.stats.total')}</p>
             </div>
           </div>
         </Card>
@@ -293,7 +345,7 @@ export default function TendersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-slate-900">{stats.inProgress}</p>
-              <p className="text-xs text-slate-500">En cours</p>
+              <p className="text-xs text-slate-500">{t('tenders.stats.inProgress')}</p>
             </div>
           </div>
         </Card>
@@ -304,7 +356,7 @@ export default function TendersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-slate-900">{stats.won}</p>
-              <p className="text-xs text-slate-500">Gagnés</p>
+              <p className="text-xs text-slate-500">{t('tenders.stats.won')}</p>
             </div>
           </div>
         </Card>
@@ -315,7 +367,7 @@ export default function TendersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-slate-900">{formatCurrency(stats.totalValue, 'EUR', 'fr-FR', true)}</p>
-              <p className="text-xs text-slate-500">CA gagné</p>
+              <p className="text-xs text-slate-500">{t('tenders.stats.revenue')}</p>
             </div>
           </div>
         </Card>
@@ -334,7 +386,7 @@ export default function TendersPage() {
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1">
                   <Input
-                    placeholder="Rechercher par titre, référence, acheteur..."
+                    placeholder={t('tenders.search.placeholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     icon={<MagnifyingGlassIcon className="w-4 h-4" />}
@@ -345,9 +397,9 @@ export default function TendersPage() {
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value as TenderType | 'ALL')}
                     options={[
-                      { value: 'ALL', label: 'Tous les types' },
-                      { value: 'PUBLIC', label: 'Marchés publics' },
-                      { value: 'PRIVATE', label: 'Marchés privés' },
+                      { value: 'ALL', label: t('tenders.filters.all') },
+                      { value: 'PUBLIC', label: t('tenders.filters.public') },
+                      { value: 'PRIVATE', label: t('tenders.filters.private') },
                     ]}
                   />
                 </div>
@@ -361,13 +413,13 @@ export default function TendersPage() {
       {filteredTenders.length === 0 ? (
         <EmptyState
           icon={<DocumentTextIcon className="w-12 h-12" />}
-          title="Aucun appel d'offres"
-          description="Créez votre premier appel d'offres pour commencer à suivre vos opportunités commerciales."
+          title={t('tenders.empty.title')}
+          description={t('tenders.empty.description')}
           action={
             <Link href="/tenders/new">
               <Button>
                 <PlusIcon className="w-4 h-4 mr-2" />
-                Créer un AO
+                {t('tenders.empty.cta')}
               </Button>
             </Link>
           }
@@ -381,6 +433,7 @@ export default function TendersPage() {
                 column={column}
                 tenders={tendersByStatus[column.status] || []}
                 onStatusChange={handleStatusChange}
+                t={t}
               />
             ))}
           </div>

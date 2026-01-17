@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Filter, Download, Settings } from 'lucide-react';
 
 type ViewMode = 'month' | 'week' | 'day' | 'agenda';
@@ -42,11 +42,41 @@ export default function CalendarView({
   const [filterType, setFilterType] = useState<string>('all');
   const [showTeamEvents, setShowTeamEvents] = useState(true);
 
-  useEffect(() => {
-    loadEvents();
-  }, [currentDate, viewMode, filterType, showTeamEvents]);
+  const getDateRange = useCallback(() => {
+    const start = new Date(currentDate);
+    const end = new Date(currentDate);
 
-  const loadEvents = async () => {
+    switch (viewMode) {
+      case 'month':
+        start.setDate(1);
+        start.setHours(0, 0, 0, 0);
+        end.setMonth(end.getMonth() + 1);
+        end.setDate(0);
+        end.setHours(23, 59, 59, 999);
+        break;
+      case 'week': {
+        const day = start.getDay();
+        start.setDate(start.getDate() - day + 1); // Monday
+        start.setHours(0, 0, 0, 0);
+        end.setDate(start.getDate() + 6);
+        end.setHours(23, 59, 59, 999);
+        break;
+      }
+      case 'day':
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+        break;
+      case 'agenda':
+        start.setHours(0, 0, 0, 0);
+        end.setDate(end.getDate() + 30); // Next 30 days
+        end.setHours(23, 59, 59, 999);
+        break;
+    }
+
+    return { start, end };
+  }, [currentDate, viewMode]);
+
+  const loadEvents = useCallback(async () => {
     setLoading(true);
     try {
       const { start, end } = getDateRange();
@@ -71,40 +101,11 @@ export default function CalendarView({
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterType, getDateRange, showTeamEvents]);
 
-  const getDateRange = () => {
-    const start = new Date(currentDate);
-    const end = new Date(currentDate);
-
-    switch (viewMode) {
-      case 'month':
-        start.setDate(1);
-        start.setHours(0, 0, 0, 0);
-        end.setMonth(end.getMonth() + 1);
-        end.setDate(0);
-        end.setHours(23, 59, 59, 999);
-        break;
-      case 'week':
-        const day = start.getDay();
-        start.setDate(start.getDate() - day + 1); // Monday
-        start.setHours(0, 0, 0, 0);
-        end.setDate(start.getDate() + 6);
-        end.setHours(23, 59, 59, 999);
-        break;
-      case 'day':
-        start.setHours(0, 0, 0, 0);
-        end.setHours(23, 59, 59, 999);
-        break;
-      case 'agenda':
-        start.setHours(0, 0, 0, 0);
-        end.setDate(end.getDate() + 30); // Next 30 days
-        end.setHours(23, 59, 59, 999);
-        break;
-    }
-
-    return { start, end };
-  };
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
 
   const navigateDate = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);

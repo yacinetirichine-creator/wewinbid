@@ -23,7 +23,7 @@ DROP TABLE IF EXISTS chat_context CASCADE;
 -- ============================================================================
 
 CREATE TABLE chat_sessions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     
     -- Session metadata
@@ -73,7 +73,7 @@ END $$;
 -- ============================================================================
 
 CREATE TABLE chat_messages (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     session_id UUID NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
     
     -- Message details
@@ -114,7 +114,7 @@ CREATE INDEX idx_chat_messages_role ON chat_messages(session_id, role);
 -- ============================================================================
 
 CREATE TABLE chat_context (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     session_id UUID NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
     
     -- Context type

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,29 +26,31 @@ import {
 } from 'lucide-react';
 import { Avatar } from '@/components/ui';
 import { TopBar } from '@/components/layout/TopBar';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 interface NavItem {
-  name: string;
+  labelKey: string;
   href: string;
   icon: React.ElementType;
   badge?: number;
 }
 
 const mainNav: NavItem[] = [
-  { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Appels d\'offres', href: '/tenders', icon: FileText, badge: 3 },
-  { name: 'Marketplace', href: '/marketplace', icon: Users },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-  { name: 'Calendrier', href: '/calendar', icon: Calendar },
-  { name: 'Chat IA', href: '/chat', icon: MessageSquare },
-  { name: 'Studio créatif', href: '/studio', icon: Sparkles },
-  { name: 'Alertes', href: '/alerts', icon: Bell, badge: 5 },
-  { name: 'Documents', href: '/documents', icon: FolderOpen },
+  { labelKey: 'nav.dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { labelKey: 'nav.tenders', href: '/tenders', icon: FileText, badge: 3 },
+  { labelKey: 'nav.marketplace', href: '/marketplace', icon: Users },
+  { labelKey: 'nav.analytics', href: '/analytics', icon: BarChart3 },
+  { labelKey: 'nav.calendar', href: '/calendar', icon: Calendar },
+  { labelKey: 'nav.aiChat', href: '/chat', icon: MessageSquare },
+  { labelKey: 'nav.studio', href: '/studio', icon: Sparkles },
+  { labelKey: 'nav.alerts', href: '/alerts', icon: Bell, badge: 5 },
+  { labelKey: 'nav.documents', href: '/documents', icon: FolderOpen },
 ];
 
 const secondaryNav: NavItem[] = [
-  { name: 'Paramètres', href: '/settings', icon: Settings },
-  { name: 'Aide', href: '/help', icon: HelpCircle },
+  { labelKey: 'nav.settings', href: '/settings', icon: Settings },
+  { labelKey: 'nav.help', href: '/help', icon: HelpCircle },
 ];
 
 interface SidebarProps {
@@ -67,6 +69,26 @@ export function Sidebar({ user, company }: SidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { locale } = useLocale();
+
+  const entries = useMemo(
+    () => ({
+      'nav.dashboard': 'Tableau de bord',
+      'nav.tenders': "Appels d'offres",
+      'nav.marketplace': 'Marketplace',
+      'nav.analytics': 'Analytics',
+      'nav.calendar': 'Calendrier',
+      'nav.aiChat': 'Chat IA',
+      'nav.studio': 'Studio créatif',
+      'nav.alerts': 'Alertes',
+      'nav.documents': 'Documents',
+      'nav.settings': 'Paramètres',
+      'nav.help': 'Aide',
+    }),
+    []
+  );
+
+  const { t } = useUiTranslations(locale, entries);
 
   const NavLink = ({ item }: { item: NavItem }) => {
     const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
@@ -93,7 +115,7 @@ export function Sidebar({ user, company }: SidebarProps) {
               exit={{ opacity: 0, width: 0 }}
               className="font-medium truncate"
             >
-              {item.name}
+              {t(item.labelKey)}
             </motion.span>
           )}
         </AnimatePresence>

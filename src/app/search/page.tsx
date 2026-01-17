@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AppLayout from '@/components/layout/AppLayout';
 import PageHeader from '@/components/ui/PageHeader';
@@ -48,15 +48,7 @@ export default function SearchPage() {
   const [saveName, setSaveName] = useState('');
   const [saveDescription, setSaveDescription] = useState('');
 
-  // Execute search on mount if URL has params
-  useEffect(() => {
-    const urlQuery = searchParams.get('q');
-    if (urlQuery) {
-      performSearch(urlQuery, {});
-    }
-  }, []);
-
-  const performSearch = async (searchQuery: string, searchFilters: SearchFilters, page: number = 1) => {
+  const performSearch = useCallback(async (searchQuery: string, searchFilters: SearchFilters, page: number = 1) => {
     setIsLoading(true);
     setQuery(searchQuery);
     setFilters(searchFilters);
@@ -96,7 +88,15 @@ export default function SearchPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router]);
+
+  // Execute search on mount if URL has params
+  useEffect(() => {
+    const urlQuery = searchParams.get('q');
+    if (urlQuery) {
+      performSearch(urlQuery, {});
+    }
+  }, [performSearch, searchParams]);
 
   const handleSearch = (searchQuery: string) => {
     performSearch(searchQuery, filters, 1);

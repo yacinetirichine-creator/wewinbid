@@ -180,7 +180,6 @@ describe('validation schemas', () => {
 
       const result = DocumentSchema.safeParse(invalidDocument);
       expect(result.success).toBe(false);
-    });xpect(result.success).toBe(false);
     });
   });
 
@@ -216,8 +215,6 @@ describe('validation schemas', () => {
     });
   });
 
-  describe('RegisterSchema', () => {
-    it('should validate correct registration data', () => {
   describe('RegisterSchema', () => {
     it('should validate correct registration data', () => {
       const validRegister = {

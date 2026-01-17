@@ -1,6 +1,7 @@
 'use client';
 
 import { Users, Calendar, Crown, Settings, Trash2 } from 'lucide-react';
+import Image from 'next/image';
 import { Card } from '@/components/ui';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -45,9 +46,11 @@ export default function TeamCard({ team, onDelete }: TeamCardProps) {
             {/* Team Avatar */}
             <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold text-2xl flex-shrink-0">
               {team.team_avatar_url ? (
-                <img
+                <Image
                   src={team.team_avatar_url}
                   alt={team.team_name}
+                  width={64}
+                  height={64}
                   className="w-full h-full rounded-xl object-cover"
                 />
               ) : (

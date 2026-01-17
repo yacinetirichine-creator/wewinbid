@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Send, Edit2, Trash2, Reply, AtSign } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -35,11 +35,7 @@ export function CommentsThread({ tenderId, currentUserId }: CommentsThreadProps)
   const [sending, setSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    fetchComments();
-  }, [tenderId]);
-
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       const response = await fetch(`/api/tenders/comments?tenderId=${tenderId}`);
       if (!response.ok) throw new Error('Erreur fetch');
@@ -51,7 +47,11 @@ export function CommentsThread({ tenderId, currentUserId }: CommentsThreadProps)
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenderId]);
+
+  useEffect(() => {
+    fetchComments();
+  }, [fetchComments]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

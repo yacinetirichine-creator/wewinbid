@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { X, Check, AlertCircle, Info, AlertTriangle, Loader2 } from 'lucide-react';
@@ -338,10 +339,21 @@ export function Avatar({ src, name, size = 'md', className }: AvatarProps) {
   };
 
   if (src) {
+    const pixelSizes = {
+      sm: 32,
+      md: 40,
+      lg: 48,
+      xl: 64,
+    };
+
+    const dimension = pixelSizes[size];
+
     return (
-      <img
+      <Image
         src={src}
         alt={name}
+        width={dimension}
+        height={dimension}
         className={cn('rounded-full object-cover', sizes[size], className)}
       />
     );

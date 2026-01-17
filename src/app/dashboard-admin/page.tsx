@@ -344,7 +344,7 @@ export default function AdminDashboard() {
               <h3 className="text-lg font-semibold text-gray-900">Évolution (6 derniers mois)</h3>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[640px]">
                 <thead>
                   <tr className="border-b text-left text-sm text-gray-600">
                     <th className="pb-3">Mois</th>
@@ -382,7 +382,7 @@ export default function AdminDashboard() {
               <h3 className="text-lg font-semibold text-gray-900">Top 10 Entreprises</h3>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[640px]">
                 <thead>
                   <tr className="border-b text-left text-sm text-gray-600">
                     <th className="pb-3">Entreprise</th>

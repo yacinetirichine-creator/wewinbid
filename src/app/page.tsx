@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
@@ -21,77 +21,196 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { Button, Card, Badge } from '@/components/ui';
+import { DEFAULT_LOCALE, isRTL, LOCALES, LOCALE_FLAGS, LOCALE_NAMES, type Locale } from '@/lib/i18n';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 const features = [
   {
     icon: Sparkles,
-    title: 'Score de compatibilité IA',
-    description: 'Analysez vos chances de succès avant de candidater grâce à notre algorithme prédictif.',
+    titleKey: 'landing.features.aiScore.title',
+    descriptionKey: 'landing.features.aiScore.description',
     color: 'from-violet-500 to-purple-600',
   },
   {
     icon: BarChart3,
-    title: 'Analyse des attributaires',
-    description: 'Consultez l\'historique des gagnants, leurs prix et stratégies pour mieux vous positionner.',
+    titleKey: 'landing.features.winners.title',
+    descriptionKey: 'landing.features.winners.description',
     color: 'from-blue-500 to-cyan-500',
   },
   {
     icon: Users,
-    title: 'Marketplace partenaires',
-    description: 'Trouvez des partenaires pour répondre en groupement et décrocher les gros marchés.',
+    titleKey: 'landing.features.marketplace.title',
+    descriptionKey: 'landing.features.marketplace.description',
     color: 'from-emerald-500 to-teal-500',
   },
   {
     icon: FileText,
-    title: 'Génération automatique',
-    description: 'Créez vos mémoires techniques, DC1, DC2 et autres documents en quelques clics.',
+    titleKey: 'landing.features.generation.title',
+    descriptionKey: 'landing.features.generation.description',
     color: 'from-amber-500 to-orange-500',
   },
   {
     icon: Clock,
-    title: 'Alertes intelligentes',
-    description: 'Recevez les AO correspondant à votre profil en temps réel sur votre canal préféré.',
+    titleKey: 'landing.features.alerts.title',
+    descriptionKey: 'landing.features.alerts.description',
     color: 'from-pink-500 to-rose-500',
   },
   {
     icon: Target,
-    title: 'Tableau de bord ROI',
-    description: 'Mesurez votre performance, analysez vos stats et optimisez votre stratégie.',
+    titleKey: 'landing.features.roi.title',
+    descriptionKey: 'landing.features.roi.description',
     color: 'from-indigo-500 to-blue-600',
   },
 ];
 
 const stats = [
-  { value: '233 Mds €', label: 'Marché français annuel', icon: Building2 },
-  { value: '+45%', label: 'Taux de réussite moyen', icon: TrendingUp },
-  { value: '-60%', label: 'Temps de préparation', icon: Clock },
-  { value: '15+', label: 'Secteurs couverts', icon: Target },
+  { value: '233 Mds €', labelKey: 'landing.stats.market', icon: Building2 },
+  { value: '+45%', labelKey: 'landing.stats.success', icon: TrendingUp },
+  { value: '-60%', labelKey: 'landing.stats.time', icon: Clock },
+  { value: '15+', labelKey: 'landing.stats.sectors', icon: Target },
 ];
 
 const testimonials = [
   {
-    quote: "WeWinBid a transformé notre approche des marchés publics. Notre taux de succès a doublé en 6 mois.",
+    quoteKey: 'landing.testimonials.quote1',
     author: 'Marie Lefort',
-    role: 'DG, Sécurité Plus SARL',
+    roleKey: 'landing.testimonials.role1',
     avatar: '/images/testimonials/marie.jpg',
   },
   {
-    quote: "Le score IA nous permet de prioriser nos efforts sur les AO où nous avons vraiment nos chances.",
+    quoteKey: 'landing.testimonials.quote2',
     author: 'Thomas Durand',
-    role: 'Responsable commercial, BatiPro',
+    roleKey: 'landing.testimonials.role2',
     avatar: '/images/testimonials/thomas.jpg',
   },
   {
-    quote: "La marketplace nous a permis de remporter notre premier marché de plus d'1M€ en groupement.",
+    quoteKey: 'landing.testimonials.quote3',
     author: 'Sophie Martin',
-    role: 'CEO, CleanTech Solutions',
+    roleKey: 'landing.testimonials.role3',
     avatar: '/images/testimonials/sophie.jpg',
   },
 ];
 
 export default function LandingPage() {
+  const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE);
+
+  const entries = useMemo(
+    () => ({
+      'landing.nav.features': 'Fonctionnalités',
+      'landing.nav.pricing': 'Tarifs',
+      'landing.nav.testimonials': 'Témoignages',
+      'landing.nav.login': 'Connexion',
+      'landing.nav.trial': 'Essai gratuit',
+      'landing.hero.badge': 'Nouveau: Score IA v2.0',
+      'landing.hero.titlePrefix': "Remportez plus d'",
+      'landing.hero.titleHighlight': "appels d'offres",
+      'landing.hero.subtitle':
+        "Automatisez vos réponses, analysez la concurrence et augmentez votre taux de réussite grâce à l'intelligence artificielle.",
+      'landing.hero.ctaStart': 'Démarrer gratuitement',
+      'landing.hero.ctaDemo': 'Voir la démo',
+      'landing.hero.trust.freeTrial': 'Essai gratuit 14 jours',
+      'landing.hero.trust.noCommitment': 'Sans engagement',
+      'landing.hero.trust.gdpr': 'RGPD compliant',
+      'landing.hero.preview': "[Capture d'écran du tableau de bord]",
+      'landing.stats.market': 'Marché français annuel',
+      'landing.stats.success': 'Taux de réussite moyen',
+      'landing.stats.time': 'Temps de préparation',
+      'landing.stats.sectors': 'Secteurs couverts',
+      'landing.features.badge': 'Fonctionnalités',
+      'landing.features.title': 'Tout ce dont vous avez besoin pour gagner',
+      'landing.features.subtitle':
+        "Une suite complète d'outils pour maximiser vos chances de succès sur les marchés publics et privés.",
+      'landing.features.aiScore.title': 'Score de compatibilité IA',
+      'landing.features.aiScore.description':
+        'Analysez vos chances de succès avant de candidater grâce à notre algorithme prédictif.',
+      'landing.features.winners.title': 'Analyse des attributaires',
+      'landing.features.winners.description':
+        "Consultez l'historique des gagnants, leurs prix et stratégies pour mieux vous positionner.",
+      'landing.features.marketplace.title': 'Marketplace partenaires',
+      'landing.features.marketplace.description':
+        'Trouvez des partenaires pour répondre en groupement et décrocher les gros marchés.',
+      'landing.features.generation.title': 'Génération automatique',
+      'landing.features.generation.description':
+        'Créez vos mémoires techniques, DC1, DC2 et autres documents en quelques clics.',
+      'landing.features.alerts.title': 'Alertes intelligentes',
+      'landing.features.alerts.description':
+        'Recevez les AO correspondant à votre profil en temps réel sur votre canal préféré.',
+      'landing.features.roi.title': 'Tableau de bord ROI',
+      'landing.features.roi.description': 'Mesurez votre performance, analysez vos stats et optimisez votre stratégie.',
+      'landing.cta.title': 'Prêt à remporter plus de marchés ?',
+      'landing.cta.subtitle':
+        'Rejoignez les entreprises qui ont déjà multiplié leur taux de succès avec WeWinBid.',
+      'landing.cta.primary': 'Commencer gratuitement',
+      'landing.cta.secondary': "Contacter l'équipe",
+      'landing.footer.about': "La plateforme qui vous aide à remporter plus d'appels d'offres.",
+      'landing.footer.product': 'Produit',
+      'landing.footer.company': 'Entreprise',
+      'landing.footer.legal': 'Légal',
+      'landing.footer.links.features': 'Fonctionnalités',
+      'landing.footer.links.pricing': 'Tarifs',
+      'landing.footer.links.integrations': 'Intégrations',
+      'landing.footer.links.api': 'API',
+      'landing.footer.links.about': 'À propos',
+      'landing.footer.links.blog': 'Blog',
+      'landing.footer.links.careers': 'Carrières',
+      'landing.footer.links.contact': 'Contact',
+      'landing.footer.links.privacy': 'Confidentialité',
+      'landing.footer.links.terms': 'CGU',
+      'landing.footer.links.cookies': 'Cookies',
+      'landing.footer.links.mentions': 'Mentions légales',
+      'landing.footer.copyright': '© 2025 WeWinBid. Commercialisé par JARVIS SAS. Tous droits réservés.',
+      'landing.testimonials.quote1':
+        'WeWinBid a transformé notre approche des marchés publics. Notre taux de succès a doublé en 6 mois.',
+      'landing.testimonials.role1': 'DG, Sécurité Plus SARL',
+      'landing.testimonials.quote2':
+        'Le score IA nous permet de prioriser nos efforts sur les AO où nous avons vraiment nos chances.',
+      'landing.testimonials.role2': 'Responsable commercial, BatiPro',
+      'landing.testimonials.quote3':
+        "La marketplace nous a permis de remporter notre premier marché de plus d'1M€ en groupement.",
+      'landing.testimonials.role3': 'CEO, CleanTech Solutions',
+    }),
+    []
+  );
+
+  const context = useMemo(
+    () => ({
+      'landing.stats.market': 'Label under 233 Mds € market stat',
+      'landing.stats.success': 'Label under +45% stat',
+      'landing.stats.time': 'Label under -60% stat',
+      'landing.stats.sectors': 'Label under 15+ stat',
+      'landing.hero.titleHighlight': 'Highlight word(s) for hero title',
+    }),
+    []
+  );
+
+  const { t } = useUiTranslations(locale, entries, context);
+
+  const normalizeLocale = (value?: string | null): Locale => {
+    if (!value) return DEFAULT_LOCALE;
+    const normalized = value.toLowerCase();
+    if (normalized === 'ar-ma' || normalized.startsWith('ar')) return 'ar-MA';
+    const base = normalized.split('-')[0];
+    if (LOCALES.includes(base as Locale)) return base as Locale;
+    if (LOCALES.includes(normalized as Locale)) return normalized as Locale;
+    return DEFAULT_LOCALE;
+  };
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem('locale') || window.localStorage.getItem('language');
+    const browser = navigator.language;
+    setLocale(normalizeLocale(saved || browser));
+  }, []);
+
+  const handleLocaleChange = (next: Locale) => {
+    setLocale(next);
+    window.localStorage.setItem('locale', next);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-surface-50 via-white to-surface-50">
+    <div
+      className="min-h-screen bg-gradient-to-b from-surface-50 via-white to-surface-50"
+      dir={isRTL(locale) ? 'rtl' : 'ltr'}
+    >
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-surface-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -104,22 +223,22 @@ export default function LandingPage() {
             </div>
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-surface-600 hover:text-primary-600 transition-colors">
-                Fonctionnalités
+                {t('landing.nav.features')}
               </a>
               <a href="#pricing" className="text-surface-600 hover:text-primary-600 transition-colors">
-                Tarifs
+                {t('landing.nav.pricing')}
               </a>
               <a href="#testimonials" className="text-surface-600 hover:text-primary-600 transition-colors">
-                Témoignages
+                {t('landing.nav.testimonials')}
               </a>
             </div>
             <div className="flex items-center gap-4">
               <Link href="/auth/login">
-                <Button variant="ghost">Connexion</Button>
+                <Button variant="ghost">{t('landing.nav.login')}</Button>
               </Link>
               <Link href="/auth/register">
                 <Button rightIcon={<ArrowRight className="w-4 h-4" />}>
-                  Essai gratuit
+                  {t('landing.nav.trial')}
                 </Button>
               </Link>
             </div>
@@ -139,41 +258,40 @@ export default function LandingPage() {
               <div className="flex items-center justify-center gap-2 mb-6">
                 <Badge variant="primary" className="px-4 py-1.5">
                   <Sparkles className="w-4 h-4 mr-1" />
-                  Nouveau: Score IA v2.0
+                  {t('landing.hero.badge')}
                 </Badge>
               </div>
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-display font-bold text-surface-900 mb-6">
-                Remportez plus d&apos;
-                <span className="text-gradient">appels d&apos;offres</span>
+                {t('landing.hero.titlePrefix')}
+                <span className="text-gradient">{t('landing.hero.titleHighlight')}</span>
               </h1>
               <p className="text-xl text-surface-600 mb-8 max-w-2xl mx-auto">
-                Automatisez vos réponses, analysez la concurrence et augmentez votre taux de réussite 
-                grâce à l&apos;intelligence artificielle.
+                {t('landing.hero.subtitle')}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link href="/auth/register">
                   <Button size="lg" className="btn-gradient" rightIcon={<ArrowRight className="w-5 h-5" />}>
-                    Démarrer gratuitement
+                    {t('landing.hero.ctaStart')}
                   </Button>
                 </Link>
                 <Link href="#demo">
                   <Button size="lg" variant="outline">
-                    Voir la démo
+                    {t('landing.hero.ctaDemo')}
                   </Button>
                 </Link>
               </div>
               <div className="flex items-center justify-center gap-6 mt-8 text-sm text-surface-500">
                 <span className="flex items-center gap-1.5">
                   <CheckCircle className="w-4 h-4 text-success-500" />
-                  Essai gratuit 14 jours
+                  {t('landing.hero.trust.freeTrial')}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <CheckCircle className="w-4 h-4 text-success-500" />
-                  Sans engagement
+                  {t('landing.hero.trust.noCommitment')}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Shield className="w-4 h-4 text-success-500" />
-                  RGPD compliant
+                  {t('landing.hero.trust.gdpr')}
                 </span>
               </div>
             </motion.div>
@@ -200,7 +318,7 @@ export default function LandingPage() {
               </div>
               <div className="bg-surface-100 aspect-video flex items-center justify-center">
                 <div className="text-surface-400 text-lg">
-                  [Capture d&apos;écran du tableau de bord]
+                  {t('landing.hero.preview')}
                 </div>
               </div>
             </div>
@@ -225,7 +343,7 @@ export default function LandingPage() {
                   <stat.icon className="w-6 h-6 text-primary-400" />
                 </div>
                 <div className="text-3xl sm:text-4xl font-bold text-white mb-1">{stat.value}</div>
-                <div className="text-surface-400">{stat.label}</div>
+                <div className="text-surface-400">{t(stat.labelKey)}</div>
               </motion.div>
             ))}
           </div>
@@ -236,12 +354,12 @@ export default function LandingPage() {
       <section id="features" className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <Badge variant="secondary" className="mb-4">Fonctionnalités</Badge>
+            <Badge variant="secondary" className="mb-4">{t('landing.features.badge')}</Badge>
             <h2 className="text-4xl font-display font-bold text-surface-900 mb-4">
-              Tout ce dont vous avez besoin pour gagner
+              {t('landing.features.title')}
             </h2>
             <p className="text-xl text-surface-600 max-w-2xl mx-auto">
-              Une suite complète d&apos;outils pour maximiser vos chances de succès sur les marchés publics et privés.
+              {t('landing.features.subtitle')}
             </p>
           </div>
 
@@ -258,8 +376,8 @@ export default function LandingPage() {
                   <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4`}>
                     <feature.icon className="w-6 h-6 text-white" />
                   </div>
-                  <h3 className="text-xl font-semibold text-surface-900 mb-2">{feature.title}</h3>
-                  <p className="text-surface-600">{feature.description}</p>
+                  <h3 className="text-xl font-semibold text-surface-900 mb-2">{t(feature.titleKey)}</h3>
+                  <p className="text-surface-600">{t(feature.descriptionKey)}</p>
                 </Card>
               </motion.div>
             ))}
@@ -271,21 +389,21 @@ export default function LandingPage() {
       <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-primary-600 to-secondary-600">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl font-display font-bold text-white mb-6">
-            Prêt à remporter plus de marchés ?
+            {t('landing.cta.title')}
           </h2>
           <p className="text-xl text-white/80 mb-8">
-            Rejoignez les entreprises qui ont déjà multiplié leur taux de succès avec WeWinBid.
+            {t('landing.cta.subtitle')}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/auth/register">
               <Button size="lg" className="bg-white text-primary-600 hover:bg-surface-100">
-                Commencer gratuitement
+                {t('landing.cta.primary')}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
             <Link href="/contact">
               <Button size="lg" variant="ghost" className="text-white border-white/30 hover:bg-white/10">
-                Contacter l&apos;équipe
+                {t('landing.cta.secondary')}
               </Button>
             </Link>
           </div>
@@ -304,48 +422,53 @@ export default function LandingPage() {
                 <span className="font-display font-bold text-xl text-white">WeWinBid</span>
               </div>
               <p className="text-surface-400 text-sm">
-                La plateforme qui vous aide à remporter plus d&apos;appels d&apos;offres.
+                {t('landing.footer.about')}
               </p>
             </div>
             <div>
-              <h4 className="font-semibold text-white mb-4">Produit</h4>
+              <h4 className="font-semibold text-white mb-4">{t('landing.footer.product')}</h4>
               <ul className="space-y-2 text-surface-400">
-                <li><a href="#features" className="hover:text-white transition-colors">Fonctionnalités</a></li>
-                <li><a href="#pricing" className="hover:text-white transition-colors">Tarifs</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Intégrations</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">API</a></li>
+                <li><a href="#features" className="hover:text-white transition-colors">{t('landing.footer.links.features')}</a></li>
+                <li><a href="#pricing" className="hover:text-white transition-colors">{t('landing.footer.links.pricing')}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('landing.footer.links.integrations')}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('landing.footer.links.api')}</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-white mb-4">Entreprise</h4>
+              <h4 className="font-semibold text-white mb-4">{t('landing.footer.company')}</h4>
               <ul className="space-y-2 text-surface-400">
-                <li><a href="#" className="hover:text-white transition-colors">À propos</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Carrières</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('landing.footer.links.about')}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('landing.footer.links.blog')}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('landing.footer.links.careers')}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('landing.footer.links.contact')}</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-white mb-4">Légal</h4>
+              <h4 className="font-semibold text-white mb-4">{t('landing.footer.legal')}</h4>
               <ul className="space-y-2 text-surface-400">
-                <li><a href="/legal/privacy" className="hover:text-white transition-colors">Confidentialité</a></li>
-                <li><a href="/legal/terms" className="hover:text-white transition-colors">CGU</a></li>
-                <li><a href="/legal/cookies" className="hover:text-white transition-colors">Cookies</a></li>
-                <li><a href="/legal/mentions" className="hover:text-white transition-colors">Mentions légales</a></li>
+                <li><a href="/legal/privacy" className="hover:text-white transition-colors">{t('landing.footer.links.privacy')}</a></li>
+                <li><a href="/legal/terms" className="hover:text-white transition-colors">{t('landing.footer.links.terms')}</a></li>
+                <li><a href="/legal/cookies" className="hover:text-white transition-colors">{t('landing.footer.links.cookies')}</a></li>
+                <li><a href="/legal/mentions" className="hover:text-white transition-colors">{t('landing.footer.links.mentions')}</a></li>
               </ul>
             </div>
           </div>
           <div className="pt-8 border-t border-surface-800 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-surface-500 text-sm">
-              © 2025 WeWinBid. Commercialisé par JARVIS SAS. Tous droits réservés.
+              {t('landing.footer.copyright')}
             </p>
             <div className="flex items-center gap-4">
               <Globe className="w-5 h-5 text-surface-500" />
-              <select className="bg-transparent text-surface-400 text-sm border-none focus:ring-0">
-                <option value="fr">Français</option>
-                <option value="en">English</option>
-                <option value="de">Deutsch</option>
-                <option value="es">Español</option>
+              <select
+                className="bg-transparent text-surface-400 text-sm border-none focus:ring-0"
+                value={locale}
+                onChange={(event) => handleLocaleChange(event.target.value as Locale)}
+              >
+                {LOCALES.map((option) => (
+                  <option key={option} value={option}>
+                    {LOCALE_FLAGS[option]} {LOCALE_NAMES[option]}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, XCircle, Mail, Building2, Clock, Shield } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -30,16 +30,7 @@ export default function AcceptInvitationPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    if (token) {
-      verifyInvitation();
-    } else {
-      setError('Lien d\'invitation invalide');
-      setLoading(false);
-    }
-  }, [token]);
-
-  const verifyInvitation = async () => {
+  const verifyInvitation = useCallback(async () => {
     try {
       const supabase = createClient();
 
@@ -79,7 +70,16 @@ export default function AcceptInvitationPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (token) {
+      verifyInvitation();
+    } else {
+      setError('Lien d\'invitation invalide');
+      setLoading(false);
+    }
+  }, [token, verifyInvitation]);
 
   const handleAccept = async () => {
     if (!invitation || processing) return;

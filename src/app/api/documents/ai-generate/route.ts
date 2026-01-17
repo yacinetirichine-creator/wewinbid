@@ -39,7 +39,8 @@ export async function POST(req: NextRequest) {
       generation_type,
       prompt,
       tender_id,
-      context 
+        context,
+        language = 'fr'
     } = body;
 
     if (!generation_type || !prompt) {
@@ -49,157 +50,82 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Mock AI generation (in production, call OpenAI API)
-    const startTime = Date.now();
-    
-    let generatedContent = '';
-    
-    // Simulate AI response based on type
-    switch (generation_type) {
-      case 'proposal':
-        generatedContent = `# Proposition Technique et Financière
-
-## 1. Introduction
-Nous sommes ravis de vous présenter notre proposition pour ce projet. Notre équipe possède une expertise reconnue dans le domaine ${context?.sector || 'concerné'}.
-
-## 2. Compréhension du besoin
-Nous avons analysé votre cahier des charges et identifié les points clés suivants :
-- Mise en place d'une solution ${context?.type || 'complète'}
-- Respect des délais et du budget
-- Garantie de qualité et performance
-
-## 3. Notre approche
-Notre méthodologie éprouvée comprend :
-1. Phase d'analyse et de cadrage
-2. Conception et développement
-3. Tests et validation
-4. Déploiement et formation
-5. Support et maintenance
-
-## 4. Équipe projet
-Une équipe dédiée de ${context?.team_size || '5'} experts sera mobilisée :
-- Chef de projet certifié
-- Développeurs seniors
-- Testeurs qualifiés
-- Support technique
-
-## 5. Planning prévisionnel
-Durée estimée : ${context?.duration || '3 mois'}
-Jalons principaux :
-- J+15 : Cadrage finalisé
-- J+30 : Conception validée
-- J+60 : Développement terminé
-- J+90 : Déploiement complet
-
-## 6. Proposition financière
-Budget global : ${context?.budget || '50 000'} € HT
-Incluant :
-- Prestations de développement
-- Formation des utilisateurs
-- Garantie 12 mois
-- Support technique
-
-## 7. Conclusion
-Nous sommes convaincus que notre expérience et notre approche répondent parfaitement à vos attentes. Nous restons à votre disposition pour toute précision.`;
-        break;
-
-      case 'cover_letter':
-        generatedContent = `Objet : Réponse à l'appel d'offres ${context?.reference || '[REF]'}
-
-Madame, Monsieur,
-
-Nous avons pris connaissance avec le plus grand intérêt de votre appel d'offres concernant ${context?.title || 'votre projet'}.
-
-Notre société, forte de ${context?.experience || '10'} années d'expérience dans le secteur ${context?.sector || 'concerné'}, souhaite vous présenter sa candidature pour la réalisation de ce projet.
-
-Nous disposons des compétences et des ressources nécessaires pour mener à bien cette mission dans les meilleures conditions de qualité, de délai et de coût.
-
-Notre proposition technique et financière ci-jointe détaille notre compréhension de vos besoins ainsi que notre approche de réalisation.
-
-Nous restons à votre entière disposition pour toute information complémentaire et pour vous rencontrer afin de vous présenter plus en détail notre offre.
-
-Dans l'attente de votre retour, nous vous prions d'agréer, Madame, Monsieur, l'expression de nos salutations distinguées.`;
-        break;
-
-      case 'technical_response':
-        generatedContent = `# Réponse Technique
-
-## 1. Architecture technique
-Notre solution s'appuie sur une architecture ${context?.architecture || 'moderne et scalable'} :
-- Technologies : ${context?.technologies || 'React, Node.js, PostgreSQL'}
-- Infrastructure : ${context?.infrastructure || 'Cloud (AWS/Azure)'}
-- Sécurité : ${context?.security || 'Chiffrement end-to-end, authentification multi-facteurs'}
-
-## 2. Fonctionnalités
-Les fonctionnalités clés incluent :
-- Interface utilisateur intuitive
-- API REST sécurisée
-- Base de données performante
-- Système de backup automatique
-- Monitoring en temps réel
-
-## 3. Performance
-Nos garanties de performance :
-- Disponibilité : 99.9%
-- Temps de réponse : < 200ms
-- Capacité : ${context?.users || '10,000'} utilisateurs simultanés
-
-## 4. Conformité
-Respect des normes et réglementations :
-- RGPD
-- ISO 27001
-- Accessibilité WCAG 2.1
-
-## 5. Maintenance et évolutions
-Support continu et évolutions programmées :
-- Mises à jour de sécurité mensuelles
-- Évolutions fonctionnelles trimestrielles
-- Support technique 7j/7`;
-        break;
-
-      case 'section':
-        generatedContent = `${prompt}
-
-Ce contenu a été généré automatiquement. Veuillez l'adapter selon vos besoins spécifiques et vérifier qu'il correspond bien à vos exigences.`;
-        break;
-
-      default:
-        generatedContent = `Contenu généré pour : ${prompt}`;
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'OpenAI API key not configured' },
+        { status: 500 }
+      );
     }
 
-    const generationTime = Date.now() - startTime;
-    const tokensUsed = Math.floor(generatedContent.length / 4); // Approximation
+    const languageNames: Record<string, string> = {
+      fr: 'Français',
+      en: 'English',
+      de: 'Deutsch',
+      es: 'Español',
+      it: 'Italiano',
+      pt: 'Português',
+      nl: 'Nederlands',
+      'ar-MA': 'Darija marocaine (الدارجة المغربية)',
+    };
 
-    // Save to AI generation history
-    const { error: historyError } = await supabase
-      .from('ai_generation_history')
-      .insert({
-        company_id: member.company_id,
-        user_id: user.id,
-        tender_id: tender_id || null,
-        generation_type,
-        prompt,
-        model: 'mock-gpt-4', // In production: 'gpt-4', 'claude-3', etc.
-        generated_content: generatedContent,
-        tokens_used: tokensUsed,
-        generation_time_ms: generationTime,
-      });
+    const targetLanguage = languageNames[language] || language;
 
-    if (historyError) {
-      console.error('Error saving AI history:', historyError);
+    const docTypeInstructions: Record<string, string> = {
+      proposal: 'Proposition technique et financière structurée pour un appel d’offres.',
+      cover_letter: 'Lettre de candidature formelle et concise.',
+      technical_response: 'Réponse technique détaillée, structurée par sections.',
+      cv: 'Présentation/CV professionnel de l’entreprise.',
+      other: 'Document professionnel conforme au besoin.',
+    };
+
+    const baseInstruction = docTypeInstructions[generation_type] || docTypeInstructions.other;
+
+    const systemPrompt = `Tu es un expert en rédaction de dossiers d'appels d'offres.
+Rédige un document professionnel, clair et structuré.
+Réponds en ${targetLanguage}.
+Si la langue est Darija marocaine, utilise la darija naturelle (pas d’arabe classique).
+Respecte le ton formel/professionnel et les conventions locales.`;
+
+    const userPrompt = `Type de document: ${generation_type}
+Instruction: ${baseInstruction}
+Contexte: ${JSON.stringify(context || {})}
+Demande utilisateur: ${prompt}`;
+
+    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.4,
+      }),
+    });
+
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      return NextResponse.json(
+        { error: 'AI generation failed', details: errorText },
+        { status: 500 }
+      );
     }
+
+    const aiData = await aiResponse.json();
+    const generatedContent = aiData?.choices?.[0]?.message?.content?.trim() || '';
 
     return NextResponse.json({
       content: generatedContent,
-      tokens_used: tokensUsed,
-      generation_time_ms: generationTime,
-      model: 'mock-gpt-4',
+      model: 'gpt-4o-mini',
+      language,
     });
   } catch (error) {
     console.error('AI generation error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

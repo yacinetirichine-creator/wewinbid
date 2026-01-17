@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import { AnalyticsProvider } from '@/components/providers/AnalyticsProvider';
+import { LocaleHtmlUpdater } from '@/components/providers/LocaleHtmlUpdater';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
@@ -72,6 +73,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="WeWinBid" />
       </head>
       <body className="min-h-screen bg-surface-50 antialiased">
+        <LocaleHtmlUpdater />
         <ErrorBoundary>
           <QueryProvider>
             <AnalyticsProvider>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus,
@@ -52,11 +52,7 @@ export default function LibraryPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
 
-  useEffect(() => {
-    fetchTemplates();
-  }, [searchQuery, filterCategory, filterFavorite, sortBy]);
-
-  const fetchTemplates = async () => {
+  const fetchTemplates = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (searchQuery) params.set('query', searchQuery);
@@ -74,7 +70,11 @@ export default function LibraryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery, filterCategory, filterFavorite, sortBy]);
+
+  useEffect(() => {
+    fetchTemplates();
+  }, [fetchTemplates]);
 
   const toggleFavorite = async (templateId: string, currentState: boolean) => {
     try {
@@ -119,9 +119,9 @@ export default function LibraryPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Bibliothèque de Réponses</h1>
           <p className="text-gray-600 mt-1">
@@ -138,7 +138,7 @@ export default function LibraryPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">

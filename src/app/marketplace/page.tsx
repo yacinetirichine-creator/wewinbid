@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { 
   Card, 
@@ -28,6 +28,8 @@ import {
   Heart,
   Send,
 } from 'lucide-react';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 // Types
 interface Partner {
@@ -197,7 +199,15 @@ const REGIONS = [
 ];
 
 // Composant carte partenaire
-function PartnerCard({ partner, onContact }: { partner: Partner; onContact: (p: Partner) => void }) {
+function PartnerCard({
+  partner,
+  onContact,
+  t,
+}: {
+  partner: Partner;
+  onContact: (p: Partner) => void;
+  t: (key: string) => string;
+}) {
   const [isFavorite, setIsFavorite] = useState(false);
 
   return (
@@ -213,10 +223,10 @@ function PartnerCard({ partner, onContact }: { partner: Partner; onContact: (p: 
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-lg text-gray-900">{partner.company_name}</h3>
                 {partner.verified && (
-                  <CheckCircle2 className="w-5 h-5 text-green-500" title="Vérifié" />
+                  <CheckCircle2 className="w-5 h-5 text-green-500" title={t('marketplace.partner.verified')} />
                 )}
                 {partner.premium && (
-                  <Badge variant="warning" className="text-xs">Premium</Badge>
+                  <Badge variant="warning" className="text-xs">{t('marketplace.partner.premium')}</Badge>
                 )}
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
@@ -271,21 +281,23 @@ function PartnerCard({ partner, onContact }: { partner: Partner; onContact: (p: 
               <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
               <span className="font-semibold text-gray-900">{partner.rating}</span>
             </div>
-            <span className="text-xs text-gray-500">{partner.reviews_count} avis</span>
+            <span className="text-xs text-gray-500">
+              {t('marketplace.partner.reviews').replace('{count}', String(partner.reviews_count))}
+            </span>
           </div>
           <div className="text-center">
             <div className="flex items-center justify-center gap-1">
               <Briefcase className="w-4 h-4 text-gray-400" />
               <span className="font-semibold text-gray-900">{partner.completed_projects}</span>
             </div>
-            <span className="text-xs text-gray-500">projets</span>
+            <span className="text-xs text-gray-500">{t('marketplace.partner.projects')}</span>
           </div>
           <div className="text-center">
             <div className="flex items-center justify-center gap-1">
               <Clock className="w-4 h-4 text-gray-400" />
               <span className="font-semibold text-gray-900">{partner.response_time}</span>
             </div>
-            <span className="text-xs text-gray-500">réponse</span>
+            <span className="text-xs text-gray-500">{t('marketplace.partner.response')}</span>
           </div>
         </div>
 
@@ -297,7 +309,7 @@ function PartnerCard({ partner, onContact }: { partner: Partner; onContact: (p: 
             onClick={() => onContact(partner)}
           >
             <MessageSquare className="w-4 h-4 mr-2" />
-            Contacter
+            {t('marketplace.partner.contact')}
           </Button>
           {partner.website && (
             <Button
@@ -317,11 +329,13 @@ function PartnerCard({ partner, onContact }: { partner: Partner; onContact: (p: 
 function ContactModal({ 
   partner, 
   onClose,
-  onSend 
+  onSend,
+  t,
 }: { 
   partner: Partner; 
   onClose: () => void;
   onSend: (message: string) => void;
+  t: (key: string) => string;
 }) {
   const [message, setMessage] = useState('');
   const [tenderRef, setTenderRef] = useState('');
@@ -331,31 +345,31 @@ function ContactModal({
       <div className="bg-white rounded-2xl w-full max-w-lg">
         <div className="p-6 border-b border-gray-100">
           <h2 className="text-xl font-semibold text-gray-900">
-            Contacter {partner.company_name}
+            {t('marketplace.contact.title').replace('{name}', partner.company_name)}
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            Envoyez une demande de collaboration
+            {t('marketplace.contact.subtitle')}
           </p>
         </div>
         <div className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Référence AO (optionnel)
+              {t('marketplace.contact.refLabel')}
             </label>
             <Input
-              placeholder="Ex: AO-2024-0042"
+              placeholder={t('marketplace.contact.refPlaceholder')}
               value={tenderRef}
               onChange={(e) => setTenderRef(e.target.value)}
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Votre message
+              {t('marketplace.contact.messageLabel')}
             </label>
             <textarea
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
               rows={5}
-              placeholder="Décrivez votre besoin de sous-traitance ou de partenariat..."
+              placeholder={t('marketplace.contact.messagePlaceholder')}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
             />
@@ -363,7 +377,7 @@ function ContactModal({
         </div>
         <div className="p-6 border-t border-gray-100 flex gap-3">
           <Button variant="outline" className="flex-1" onClick={onClose}>
-            Annuler
+            {t('marketplace.contact.cancel')}
           </Button>
           <Button 
             variant="primary" 
@@ -372,7 +386,7 @@ function ContactModal({
             disabled={!message.trim()}
           >
             <Send className="w-4 h-4 mr-2" />
-            Envoyer
+            {t('marketplace.contact.send')}
           </Button>
         </div>
       </div>
@@ -382,6 +396,41 @@ function ContactModal({
 
 // Page principale
 export default function MarketplacePage() {
+  const { locale } = useLocale();
+  const entries = useMemo(
+    () => ({
+      'marketplace.title': 'Marketplace Partenaires',
+      'marketplace.subtitle': "Trouvez des sous-traitants et partenaires qualifiés pour vos appels d'offres",
+      'marketplace.cta.becomePartner': 'Devenir partenaire',
+      'marketplace.stats.partners': 'Partenaires',
+      'marketplace.stats.verified': 'Vérifiés',
+      'marketplace.stats.premium': 'Premium',
+      'marketplace.stats.projects': 'Projets réalisés',
+      'marketplace.search.placeholder': 'Rechercher un partenaire, un secteur...',
+      'marketplace.filters.verifiedOnly': 'Vérifiés uniquement',
+      'marketplace.empty.title': 'Aucun partenaire trouvé',
+      'marketplace.empty.subtitle': 'Essayez de modifier vos critères de recherche',
+      'marketplace.empty.reset': 'Réinitialiser les filtres',
+      'marketplace.partner.verified': 'Vérifié',
+      'marketplace.partner.premium': 'Premium',
+      'marketplace.partner.reviews': '{count} avis',
+      'marketplace.partner.projects': 'projets',
+      'marketplace.partner.response': 'réponse',
+      'marketplace.partner.contact': 'Contacter',
+      'marketplace.contact.title': 'Contacter {name}',
+      'marketplace.contact.subtitle': 'Envoyez une demande de collaboration',
+      'marketplace.contact.refLabel': 'Référence AO (optionnel)',
+      'marketplace.contact.refPlaceholder': 'Ex: AO-2024-0042',
+      'marketplace.contact.messageLabel': 'Votre message',
+      'marketplace.contact.messagePlaceholder': 'Décrivez votre besoin de sous-traitance ou de partenariat...',
+      'marketplace.contact.cancel': 'Annuler',
+      'marketplace.contact.send': 'Envoyer',
+      'marketplace.filters.allSectors': 'Tous les secteurs',
+      'marketplace.filters.allRegions': 'Toutes les régions',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
   const [partners, setPartners] = useState<Partner[]>(DEMO_PARTNERS);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSector, setSelectedSector] = useState('Tous les secteurs');
@@ -421,19 +470,19 @@ export default function MarketplacePage() {
   return (
     <AppLayout>
       <PageHeader
-        title="Marketplace Partenaires"
-        subtitle="Trouvez des sous-traitants et partenaires qualifiés pour vos appels d'offres"
+        title={t('marketplace.title')}
+        subtitle={t('marketplace.subtitle')}
         actions={
           <Button variant="primary">
             <Building2 className="w-4 h-4 mr-2" />
-            Devenir partenaire
+            {t('marketplace.cta.becomePartner')}
           </Button>
         }
       />
 
-      <div className="px-6 pb-6">
+      <div className="px-4 sm:px-6 pb-6">
         {/* Stats rapides */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardContent className="p-4 flex items-center gap-4">
               <div className="p-3 bg-primary-100 rounded-xl">
@@ -441,7 +490,7 @@ export default function MarketplacePage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900">{partners.length}</p>
-                <p className="text-sm text-gray-500">Partenaires</p>
+                <p className="text-sm text-gray-500">{t('marketplace.stats.partners')}</p>
               </div>
             </CardContent>
           </Card>
@@ -454,7 +503,7 @@ export default function MarketplacePage() {
                 <p className="text-2xl font-bold text-gray-900">
                   {partners.filter(p => p.verified).length}
                 </p>
-                <p className="text-sm text-gray-500">Vérifiés</p>
+                <p className="text-sm text-gray-500">{t('marketplace.stats.verified')}</p>
               </div>
             </CardContent>
           </Card>
@@ -467,7 +516,7 @@ export default function MarketplacePage() {
                 <p className="text-2xl font-bold text-gray-900">
                   {partners.filter(p => p.premium).length}
                 </p>
-                <p className="text-sm text-gray-500">Premium</p>
+                <p className="text-sm text-gray-500">{t('marketplace.stats.premium')}</p>
               </div>
             </CardContent>
           </Card>
@@ -480,7 +529,7 @@ export default function MarketplacePage() {
                 <p className="text-2xl font-bold text-gray-900">
                   {partners.reduce((acc, p) => acc + p.completed_projects, 0)}
                 </p>
-                <p className="text-sm text-gray-500">Projets réalisés</p>
+                <p className="text-sm text-gray-500">{t('marketplace.stats.projects')}</p>
               </div>
             </CardContent>
           </Card>
@@ -495,7 +544,7 @@ export default function MarketplacePage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <Input
                     type="text"
-                    placeholder="Rechercher un partenaire, un secteur..."
+                    placeholder={t('marketplace.search.placeholder')}
                     className="pl-10"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -508,7 +557,9 @@ export default function MarketplacePage() {
                 onChange={(e) => setSelectedSector(e.target.value)}
               >
                 {SECTORS.map((sector) => (
-                  <option key={sector} value={sector}>{sector}</option>
+                  <option key={sector} value={sector}>
+                    {sector === 'Tous les secteurs' ? t('marketplace.filters.allSectors') : sector}
+                  </option>
                 ))}
               </select>
               <select
@@ -517,7 +568,9 @@ export default function MarketplacePage() {
                 onChange={(e) => setSelectedRegion(e.target.value)}
               >
                 {REGIONS.map((region) => (
-                  <option key={region} value={region}>{region}</option>
+                  <option key={region} value={region}>
+                    {region === 'Toutes les régions' ? t('marketplace.filters.allRegions') : region}
+                  </option>
                 ))}
               </select>
               <label className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
@@ -527,7 +580,7 @@ export default function MarketplacePage() {
                   onChange={(e) => setShowVerifiedOnly(e.target.checked)}
                   className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                 />
-                <span className="text-sm text-gray-700">Vérifiés uniquement</span>
+                <span className="text-sm text-gray-700">{t('marketplace.filters.verifiedOnly')}</span>
               </label>
             </div>
           </CardContent>
@@ -541,10 +594,10 @@ export default function MarketplacePage() {
                 <Search className="w-8 h-8 text-gray-400" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Aucun partenaire trouvé
+                {t('marketplace.empty.title')}
               </h3>
               <p className="text-gray-500 mb-4">
-                Essayez de modifier vos critères de recherche
+                {t('marketplace.empty.subtitle')}
               </p>
               <Button variant="outline" onClick={() => {
                 setSearchQuery('');
@@ -552,7 +605,7 @@ export default function MarketplacePage() {
                 setSelectedRegion('Toutes les régions');
                 setShowVerifiedOnly(false);
               }}>
-                Réinitialiser les filtres
+                {t('marketplace.empty.reset')}
               </Button>
             </CardContent>
           </Card>
@@ -563,6 +616,7 @@ export default function MarketplacePage() {
                 key={partner.id}
                 partner={partner}
                 onContact={handleContact}
+                t={t}
               />
             ))}
           </div>
@@ -575,6 +629,7 @@ export default function MarketplacePage() {
           partner={contactPartner}
           onClose={() => setContactPartner(null)}
           onSend={handleSendMessage}
+          t={t}
         />
       )}
     </AppLayout>

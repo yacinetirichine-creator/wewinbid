@@ -1,9 +1,9 @@
 // Configuration i18n pour WeWinBid
 // 8 langues supportées
 
-export type Locale = 'fr' | 'en' | 'de' | 'es' | 'it' | 'pt' | 'nl' | 'ar';
+export type Locale = 'fr' | 'en' | 'de' | 'es' | 'it' | 'pt' | 'nl' | 'ar-MA';
 
-export const LOCALES: Locale[] = ['fr', 'en', 'de', 'es', 'it', 'pt', 'nl', 'ar'];
+export const LOCALES: Locale[] = ['fr', 'en', 'de', 'es', 'it', 'pt', 'nl', 'ar-MA'];
 
 export const LOCALE_NAMES: Record<Locale, string> = {
   fr: 'Français',
@@ -13,7 +13,7 @@ export const LOCALE_NAMES: Record<Locale, string> = {
   it: 'Italiano',
   pt: 'Português',
   nl: 'Nederlands',
-  ar: 'العربية',
+  'ar-MA': 'Darija (Maroc)',
 };
 
 export const LOCALE_FLAGS: Record<Locale, string> = {
@@ -24,10 +24,10 @@ export const LOCALE_FLAGS: Record<Locale, string> = {
   it: '🇮🇹',
   pt: '🇵🇹',
   nl: '🇳🇱',
-  ar: '🇸🇦',
+  'ar-MA': '🇲🇦',
 };
 
-export const RTL_LOCALES: Locale[] = ['ar'];
+export const RTL_LOCALES: Locale[] = ['ar-MA'];
 
 export const isRTL = (locale: Locale): boolean => RTL_LOCALES.includes(locale);
 
@@ -826,7 +826,7 @@ const translations: Record<Locale, Translations> = {
       serverError: 'Serverfout',
     },
   },
-  ar: {
+  'ar-MA': {
     common: {
       loading: 'جاري التحميل...',
       error: 'خطأ',

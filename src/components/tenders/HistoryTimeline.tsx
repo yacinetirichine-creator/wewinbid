@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   Clock,
@@ -41,11 +41,7 @@ export function HistoryTimeline({ tenderId }: HistoryTimelineProps) {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
 
-  useEffect(() => {
-    fetchHistory();
-  }, [tenderId]);
-
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     try {
       const response = await fetch(`/api/tenders/history?tenderId=${tenderId}`);
       if (!response.ok) throw new Error('Erreur fetch');
@@ -57,7 +53,11 @@ export function HistoryTimeline({ tenderId }: HistoryTimelineProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenderId]);
+
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
 
   const getActionIcon = (action: string) => {
     switch (action) {

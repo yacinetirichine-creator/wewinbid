@@ -51,7 +51,7 @@ export const PresentationGenerationSchema = z.object({
   slideCount: z.number().min(3).max(20).default(5),
   style: z.enum(['professional', 'creative', 'technical', 'minimal']).default('professional'),
   includeImages: z.boolean().default(true),
-  language: z.enum(['fr', 'en', 'de', 'es', 'it', 'pt', 'nl', 'ar']).default('fr'),
+  language: z.enum(['fr', 'en', 'de', 'es', 'it', 'pt', 'nl', 'ar-MA']).default('fr'),
 });
 
 /**

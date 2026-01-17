@@ -208,6 +208,23 @@ ALTER TABLE team_invitations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tender_team_access ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_activity ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies
+DROP POLICY IF EXISTS "Users can view teams they belong to" ON teams;
+DROP POLICY IF EXISTS "Users can create teams" ON teams;
+DROP POLICY IF EXISTS "Team owners and admins can update teams" ON teams;
+DROP POLICY IF EXISTS "Only team owners can delete teams" ON teams;
+DROP POLICY IF EXISTS "Team members can view other members" ON team_members;
+DROP POLICY IF EXISTS "Owners and admins can add members" ON team_members;
+DROP POLICY IF EXISTS "Owners and admins can update members" ON team_members;
+DROP POLICY IF EXISTS "Owners and admins can remove members" ON team_members;
+DROP POLICY IF EXISTS "Team members can view invitations" ON team_invitations;
+DROP POLICY IF EXISTS "Owners and admins can create invitations" ON team_invitations;
+DROP POLICY IF EXISTS "Can update invitations" ON team_invitations;
+DROP POLICY IF EXISTS "Team members can view tender access" ON tender_team_access;
+DROP POLICY IF EXISTS "Tender owners can share with teams" ON tender_team_access;
+DROP POLICY IF EXISTS "Team members can view activity" ON team_activity;
+DROP POLICY IF EXISTS "System can log activity" ON team_activity;
+
 -- Teams: Users can see teams they own or are members of
 CREATE POLICY "Users can view teams they belong to"
   ON teams FOR SELECT
@@ -347,7 +364,7 @@ BEGIN
         EXISTS (
           SELECT 1 FROM tenders 
           WHERE tenders.id = tender_team_access.tender_id 
-            AND tenders.user_id = auth.uid()
+            AND tenders.created_by = auth.uid()
         )
       )';
   ELSE
@@ -480,16 +497,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_teams_updated_at ON teams;
 CREATE TRIGGER update_teams_updated_at
   BEFORE UPDATE ON teams
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_team_members_updated_at ON team_members;
 CREATE TRIGGER update_team_members_updated_at
   BEFORE UPDATE ON team_members
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_team_invitations_updated_at ON team_invitations;
 CREATE TRIGGER update_team_invitations_updated_at
   BEFORE UPDATE ON team_invitations
   FOR EACH ROW
@@ -515,6 +535,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS on_team_created ON teams;
 CREATE TRIGGER on_team_created
   AFTER INSERT ON teams
   FOR EACH ROW
@@ -536,6 +557,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS on_member_added ON team_members;
 CREATE TRIGGER on_member_added
   AFTER INSERT ON team_members
   FOR EACH ROW

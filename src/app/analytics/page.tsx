@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { 
   Card, 
@@ -52,6 +52,8 @@ import {
   Sparkles,
   RefreshCw,
 } from 'lucide-react';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 import {
   LineChart,
   Line,
@@ -294,6 +296,27 @@ function ProgressBar({ value, max, color = 'primary' }: { value: number; max: nu
 
 // Page principale
 export default function AnalyticsPage() {
+  const { locale } = useLocale();
+  const entries = useMemo(
+    () => ({
+      'analytics.title': 'Analytiques',
+      'analytics.subtitle': 'Suivez vos performances et optimisez votre taux de réussite',
+      'analytics.period.3m': '3 derniers mois',
+      'analytics.period.6m': '6 derniers mois',
+      'analytics.period.12m': '12 derniers mois',
+      'analytics.period.all': 'Depuis le début',
+      'analytics.export': 'Exporter',
+      'analytics.stat.totalSubmitted': 'Total AO soumis',
+      'analytics.stat.won': 'AO gagnés',
+      'analytics.stat.revenue': "Chiffre d'affaires",
+      'analytics.stat.winRate': 'Taux de réussite',
+      'analytics.chart.monthlyTrend': 'Tendance mensuelle (Interactif)',
+      'analytics.chart.submitted': 'Soumis',
+      'analytics.chart.won': 'Gagnés',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
   const [data, setData] = useState<AnalyticsData>(DEMO_DATA);
   const [period, setPeriod] = useState('12m');
   const [loading, setLoading] = useState(false);
@@ -313,51 +336,51 @@ export default function AnalyticsPage() {
   return (
     <AppLayout>
       <PageHeader
-        title="Analytiques"
-        subtitle="Suivez vos performances et optimisez votre taux de réussite"
+        title={t('analytics.title')}
+        subtitle={t('analytics.subtitle')}
         actions={
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <select
               className="px-4 py-2 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-primary-500"
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
             >
-              <option value="3m">3 derniers mois</option>
-              <option value="6m">6 derniers mois</option>
-              <option value="12m">12 derniers mois</option>
-              <option value="all">Depuis le début</option>
+              <option value="3m">{t('analytics.period.3m')}</option>
+              <option value="6m">{t('analytics.period.6m')}</option>
+              <option value="12m">{t('analytics.period.12m')}</option>
+              <option value="all">{t('analytics.period.all')}</option>
             </select>
             <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
-              Exporter
+              {t('analytics.export')}
             </Button>
           </div>
         }
       />
 
-      <div className="px-6 pb-6 space-y-6">
+      <div className="px-4 sm:px-6 pb-6 space-y-6">
         {/* Cartes principales */}
-        <div className="grid grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            title="Total AO soumis"
+            title={t('analytics.stat.totalSubmitted')}
             value={data.overview.totalTenders}
             change={data.overview.tendersChange}
             icon={FileText}
           />
           <StatCard
-            title="AO gagnés"
+            title={t('analytics.stat.won')}
             value={data.overview.wonTenders}
             change={data.overview.wonChange}
             icon={Trophy}
           />
           <StatCard
-            title="Chiffre d'affaires"
+            title={t('analytics.stat.revenue')}
             value={formatCurrency(data.overview.totalRevenue)}
             change={data.overview.revenueChange}
             icon={Euro}
           />
           <StatCard
-            title="Taux de réussite"
+            title={t('analytics.stat.winRate')}
             value={data.overview.winRate}
             suffix="%"
             change={data.overview.winRateChange}
@@ -366,20 +389,20 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Graphiques Recharts améliorés */}
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Tendance mensuelle avec Recharts */}
-          <Card className="col-span-2">
+          <Card className="col-span-1 lg:col-span-2">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="font-semibold text-gray-900">Tendance mensuelle (Interactif)</h3>
+                <h3 className="font-semibold text-gray-900">{t('analytics.chart.monthlyTrend')}</h3>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-blue-500" />
-                    <span className="text-sm text-gray-500">Soumis</span>
+                    <span className="text-sm text-gray-500">{t('analytics.chart.submitted')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-green-500" />
-                    <span className="text-sm text-gray-500">Gagnés</span>
+                    <span className="text-sm text-gray-500">{t('analytics.chart.won')}</span>
                   </div>
                 </div>
               </div>
@@ -665,7 +688,7 @@ export default function AnalyticsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-100">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Appel d'offres</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Appel d&apos;offres</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Attributaire</th>
                     <th className="text-right py-3 px-4 text-sm font-medium text-gray-500">Prix gagnant</th>
                     <th className="text-right py-3 px-4 text-sm font-medium text-gray-500">Votre prix</th>
