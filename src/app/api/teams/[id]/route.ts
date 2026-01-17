@@ -1,0 +1,215 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+
+// ============================================================
+// GET /api/teams/[id] - Get team details
+// ============================================================
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Non autorisé' },
+        { status: 401 }
+      );
+    }
+
+    const teamId = params.id;
+
+    // Check if user is team member
+    const { data: isMember } = await supabase.rpc('is_team_member', {
+      p_team_id: teamId,
+      p_user_id: user.id,
+    });
+
+    if (!isMember) {
+      return NextResponse.json(
+        { error: 'Accès refusé' },
+        { status: 403 }
+      );
+    }
+
+    // Get team details
+    const { data: team, error } = await supabase
+      .from('teams')
+      .select(`
+        *,
+        team_members (
+          id,
+          user_id,
+          role,
+          is_active,
+          joined_at
+        )
+      `)
+      .eq('id', teamId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching team:', error);
+      return NextResponse.json(
+        { error: 'Erreur lors de la récupération de l\'équipe' },
+        { status: 500 }
+      );
+    }
+
+    if (!team) {
+      return NextResponse.json(
+        { error: 'Équipe non trouvée' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(team);
+  } catch (error) {
+    console.error('Error in GET /api/teams/[id]:', error);
+    return NextResponse.json(
+      { error: 'Erreur serveur' },
+      { status: 500 }
+    );
+  }
+}
+
+// ============================================================
+// PATCH /api/teams/[id] - Update team
+// ============================================================
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Non autorisé' },
+        { status: 401 }
+      );
+    }
+
+    const teamId = params.id;
+    const body = await req.json();
+    const { name, description, avatar_url, color, is_active } = body;
+
+    // Check if user is owner or admin
+    const { data: member } = await supabase
+      .from('team_members')
+      .select('role')
+      .eq('team_id', teamId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (!member || !['OWNER', 'ADMIN'].includes(member.role)) {
+      return NextResponse.json(
+        { error: 'Permission refusée' },
+        { status: 403 }
+      );
+    }
+
+    // Update team
+    const { data: team, error } = await supabase
+      .from('teams')
+      .update({
+        ...(name && { name: name.trim() }),
+        ...(description !== undefined && { description: description?.trim() || null }),
+        ...(avatar_url !== undefined && { avatar_url }),
+        ...(color && { color }),
+        ...(typeof is_active === 'boolean' && { is_active }),
+      })
+      .eq('id', teamId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating team:', error);
+      return NextResponse.json(
+        { error: 'Erreur lors de la mise à jour' },
+        { status: 500 }
+      );
+    }
+
+    // Log activity
+    await supabase.rpc('log_team_activity', {
+      p_team_id: teamId,
+      p_action: 'TEAM_UPDATED',
+      p_entity_type: 'team',
+      p_entity_id: teamId,
+      p_description: 'Team settings updated',
+    });
+
+    return NextResponse.json(team);
+  } catch (error) {
+    console.error('Error in PATCH /api/teams/[id]:', error);
+    return NextResponse.json(
+      { error: 'Erreur serveur' },
+      { status: 500 }
+    );
+  }
+}
+
+// ============================================================
+// DELETE /api/teams/[id] - Delete team
+// ============================================================
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Non autorisé' },
+        { status: 401 }
+      );
+    }
+
+    const teamId = params.id;
+
+    // Check if user is owner
+    const { data: team } = await supabase
+      .from('teams')
+      .select('owner_id')
+      .eq('id', teamId)
+      .single();
+
+    if (!team || team.owner_id !== user.id) {
+      return NextResponse.json(
+        { error: 'Seul le propriétaire peut supprimer l\'équipe' },
+        { status: 403 }
+      );
+    }
+
+    // Delete team (cascade will handle members, invitations, etc.)
+    const { error } = await supabase
+      .from('teams')
+      .delete()
+      .eq('id', teamId);
+
+    if (error) {
+      console.error('Error deleting team:', error);
+      return NextResponse.json(
+        { error: 'Erreur lors de la suppression' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error in DELETE /api/teams/[id]:', error);
+    return NextResponse.json(
+      { error: 'Erreur serveur' },
+      { status: 500 }
+    );
+  }
+}
