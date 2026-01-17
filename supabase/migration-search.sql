@@ -224,6 +224,20 @@ ALTER TABLE search_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE search_filter_presets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE search_suggestions ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view own and public saved searches" ON saved_searches;
+DROP POLICY IF EXISTS "Users can create saved searches" ON saved_searches;
+DROP POLICY IF EXISTS "Users can update own saved searches" ON saved_searches;
+DROP POLICY IF EXISTS "Users can delete own saved searches" ON saved_searches;
+DROP POLICY IF EXISTS "Users can view own search history" ON search_history;
+DROP POLICY IF EXISTS "System can log search history" ON search_history;
+DROP POLICY IF EXISTS "Users can view filter presets" ON search_filter_presets;
+DROP POLICY IF EXISTS "Users can create custom filter presets" ON search_filter_presets;
+DROP POLICY IF EXISTS "Users can update own filter presets" ON search_filter_presets;
+DROP POLICY IF EXISTS "Users can delete own filter presets" ON search_filter_presets;
+DROP POLICY IF EXISTS "Everyone can view search suggestions" ON search_suggestions;
+DROP POLICY IF EXISTS "System can manage search suggestions" ON search_suggestions;
+
 -- Saved Searches: Users can view their own and public searches
 CREATE POLICY "Users can view own and public saved searches"
   ON saved_searches FOR SELECT
