@@ -99,6 +99,18 @@ const nextConfig = {
   // Webpack optimization
   webpack: (config, { isServer }) => {
     if (!isServer) {
+      // Add fallbacks for Node.js core modules
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        'async_hooks': false,
+        'fs': false,
+        'net': false,
+        'tls': false,
+        'dns': false,
+        'child_process': false,
+        'http2': false,
+      };
+
       // Code splitting optimization
       config.optimization.splitChunks = {
         chunks: 'all',
