@@ -173,6 +173,7 @@ function Hero3DCard({ children }: { children: React.ReactNode }) {
 
 export default function LandingPage() {
   const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE);
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const { scrollY } = useScroll();
   const headerOpacity = useTransform(scrollY, [0, 100], [0, 1]);
   const headerY = useTransform(scrollY, [0, 100], [-20, 0]);
@@ -220,6 +221,12 @@ export default function LandingPage() {
         'Recevez les AO correspondant à votre profil en temps réel sur votre canal préféré.',
       'landing.features.roi.title': 'Tableau de bord ROI',
       'landing.features.roi.description': 'Mesurez votre performance, analysez vos stats et optimisez votre stratégie.',
+      'landing.pricing.badge': 'Tarifs',
+      'landing.pricing.title': 'Des plans pour toutes les tailles',
+      'landing.pricing.subtitle': 'Commencez gratuitement, passez à Pro quand vous êtes prêt.',
+      'landing.pricing.monthly': 'Mensuel',
+      'landing.pricing.yearly': 'Annuel',
+      'landing.pricing.popular': 'Populaire',
       'landing.cta.title': 'Prêt à remporter plus de marchés ?',
       'landing.cta.subtitle':
         'Rejoignez les entreprises qui ont déjà multiplié leur taux de succès avec WeWinBid.',
@@ -289,6 +296,17 @@ export default function LandingPage() {
     window.localStorage.setItem('locale', next);
   };
 
+  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    e.preventDefault();
+    const element = document.getElementById(targetId);
+    if (element) {
+      const offset = 80; // hauteur du header
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+      const offsetPosition = elementPosition - offset;
+      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div
       className="min-h-screen bg-surface-50 overflow-x-hidden selection:bg-primary-500/30"
@@ -310,10 +328,18 @@ export default function LandingPage() {
               <span className="font-display font-bold text-2xl text-surface-900 tracking-tight">WeWinBid</span>
             </div>
             <div className="hidden md:flex items-center gap-10">
-              <a href="#features" className="text-sm font-medium text-surface-600 hover:text-primary-600 transition-colors">
+              <a 
+                href="#features" 
+                onClick={(e) => handleSmoothScroll(e, 'features')}
+                className="text-sm font-medium text-surface-600 hover:text-primary-600 transition-colors cursor-pointer"
+              >
                 {t('landing.nav.features')}
               </a>
-              <a href="#pricing" className="text-sm font-medium text-surface-600 hover:text-primary-600 transition-colors">
+              <a 
+                href="#pricing" 
+                onClick={(e) => handleSmoothScroll(e, 'pricing')}
+                className="text-sm font-medium text-surface-600 hover:text-primary-600 transition-colors cursor-pointer"
+              >
                 {t('landing.nav.pricing')}
               </a>
               <a href="#testimonials" className="text-sm font-medium text-surface-600 hover:text-primary-600 transition-colors">
@@ -543,6 +569,238 @@ export default function LandingPage() {
               <BentoItem key={index} feature={feature} index={index} t={t} />
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-surface-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+            <Badge variant="secondary" className="mb-4">
+              {t('landing.pricing.badge')}
+            </Badge>
+            <h2 className="text-4xl sm:text-5xl font-display font-bold text-surface-900 mb-6 tracking-tight">
+              {t('landing.pricing.title')}
+            </h2>
+            <p className="text-xl text-surface-600 max-w-2xl mx-auto">
+              {t('landing.pricing.subtitle')}
+            </p>
+            
+            {/* Billing Toggle */}
+            <div className="mt-8 inline-flex items-center gap-4 bg-surface-100 p-1.5 rounded-full">
+              <button
+                onClick={() => setBillingPeriod('monthly')}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                  billingPeriod === 'monthly'
+                    ? 'bg-white text-surface-900 shadow-md'
+                    : 'text-surface-600 hover:text-surface-900'
+                }`}
+              >
+                {t('landing.pricing.monthly')}
+              </button>
+              <button
+                onClick={() => setBillingPeriod('yearly')}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                  billingPeriod === 'yearly'
+                    ? 'bg-white text-surface-900 shadow-md'
+                    : 'text-surface-600 hover:text-surface-900'
+                }`}
+              >
+                {t('landing.pricing.yearly')}
+                <span className="ml-2 text-xs bg-success-100 text-success-700 px-2 py-0.5 rounded-full">
+                  -17%
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {/* Free Plan */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0 }}
+              className="relative rounded-3xl border-2 border-surface-200 bg-white p-8 hover:border-surface-300 transition-all"
+            >
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-surface-900 mb-2">Gratuit</h3>
+                <p className="text-surface-500">Pour découvrir WeWinBid</p>
+              </div>
+              <div className="mb-8">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl font-bold text-surface-900">0€</span>
+                  <span className="text-surface-500">/ mois</span>
+                </div>
+              </div>
+              <Link href="/auth/register">
+                <Button variant="outline" className="w-full mb-8" size="lg">
+                  Commencer gratuitement
+                </Button>
+              </Link>
+              <ul className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-surface-700">2 réponses AO / mois</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-surface-700">1 collaborateur</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-surface-700">100 MB de stockage</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-surface-300 flex-shrink-0 mt-0.5" />
+                  <span className="text-surface-400">Support email</span>
+                </li>
+              </ul>
+            </motion.div>
+
+            {/* Pro Plan */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="relative rounded-3xl border-2 border-primary-500 bg-white p-8 shadow-2xl shadow-primary-500/20 scale-105 z-10"
+            >
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                <Badge className="bg-primary-500 text-white px-4 py-1">
+                  {t('landing.pricing.popular')}
+                </Badge>
+              </div>
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-surface-900 mb-2">Pro</h3>
+                <p className="text-surface-500">Pour les TPE/PME actives</p>
+              </div>
+              <div className="mb-8">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl font-bold text-surface-900">
+                    {billingPeriod === 'monthly' ? '49€' : '41€'}
+                  </span>
+                  <span className="text-surface-500">/ mois</span>
+                </div>
+                {billingPeriod === 'yearly' && (
+                  <p className="text-sm text-surface-500 mt-2">490€ facturés annuellement</p>
+                )}
+              </div>
+              <Link href="/auth/register?plan=pro">
+                <Button className="w-full mb-8" size="lg">
+                  Essayer gratuitement
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </Link>
+              <ul className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-surface-700 font-medium">20 réponses AO / mois</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-surface-700 font-medium">5 collaborateurs</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-surface-700 font-medium">5 GB de stockage</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-surface-700">Score IA + Analyse gagnants</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-surface-700">Marketplace partenaires</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-surface-700">Support prioritaire</span>
+                </li>
+              </ul>
+            </motion.div>
+
+            {/* Business Plan */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="relative rounded-3xl border-2 border-surface-200 bg-white p-8 hover:border-surface-300 transition-all"
+            >
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-surface-900 mb-2">Business</h3>
+                <p className="text-surface-500">Pour les équipes commerciales</p>
+              </div>
+              <div className="mb-8">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl font-bold text-surface-900">
+                    {billingPeriod === 'monthly' ? '149€' : '124€'}
+                  </span>
+                  <span className="text-surface-500">/ mois</span>
+                </div>
+                {billingPeriod === 'yearly' && (
+                  <p className="text-sm text-surface-500 mt-2">1490€ facturés annuellement</p>
+                )}
+              </div>
+              <Link href="/auth/register?plan=business">
+                <Button variant="outline" className="w-full mb-8" size="lg">
+                  Demander une démo
+                </Button>
+              </Link>
+              <ul className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-surface-700 font-medium">Réponses illimitées</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-surface-700 font-medium">20 collaborateurs</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-surface-700 font-medium">50 GB de stockage</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-surface-700">Tout Pro +</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-surface-700">Co-rédaction temps réel</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-surface-700">Studio créatif + API</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-surface-700">Support dédié</span>
+                </li>
+              </ul>
+            </motion.div>
+          </div>
+
+          {/* Enterprise CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="mt-12 text-center bg-surface-900 rounded-3xl p-12 text-white"
+          >
+            <Building2 className="w-12 h-12 mx-auto mb-4 text-primary-400" />
+            <h3 className="text-2xl font-bold mb-4">Vous êtes une grande entreprise ?</h3>
+            <p className="text-surface-300 mb-6 max-w-2xl mx-auto">
+              Bénéficiez d'une solution sur mesure avec collaborateurs illimités, SSO, SLA garanti et un Account Manager dédié.
+            </p>
+            <Link href="/contact?type=enterprise">
+              <Button size="lg" variant="outline" className="text-white border-white/20 hover:bg-white/10">
+                Contactez notre équipe
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
+          </motion.div>
         </div>
       </section>
 
