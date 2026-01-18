@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AppLayout from '@/components/layout/AppLayout';
-import PageHeader from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/layout/PageHeader';
 import SearchBar from '@/components/search/SearchBar';
 import FilterPanel, { SearchFilters } from '@/components/search/FilterPanel';
 import SearchResults from '@/components/search/SearchResults';

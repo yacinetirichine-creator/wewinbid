@@ -9,21 +9,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Primary - Indigo/Violet gradient
+        // Primary - Deep Blue / Indigo (Modern SaaS)
         primary: {
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
-          950: '#1e1b4b',
+          50: '#eff4ff',
+          100: '#dbe6fe',
+          200: '#bfd3fe',
+          300: '#93bbfd',
+          400: '#609afa',
+          500: '#3b82f6',
+          600: '#2563eb',
+          700: '#1d4ed8',
+          800: '#1e40af',
+          900: '#1e3a8a',
+          950: '#172554',
         },
-        // Secondary - Violet
+        // Secondary - Vibrant Purple/Violet
         secondary: {
           50: '#f5f3ff',
           100: '#ede9fe',
@@ -36,6 +36,20 @@ const config: Config = {
           800: '#5b21b6',
           900: '#4c1d95',
           950: '#2e1065',
+        },
+        // Accent - Electric Cyan (for 3D glows)
+        accent: {
+          50: '#ecfeff',
+          100: '#cffafe',
+          200: '#a5f3fc',
+          300: '#67e8f9',
+          400: '#22d3ee',
+          500: '#06b6d4',
+          600: '#0891b2',
+          700: '#0e7490',
+          800: '#155e75',
+          900: '#164e63',
+          950: '#083344',
         },
         // Success - Emerald (pour victoires/validations)
         success: {

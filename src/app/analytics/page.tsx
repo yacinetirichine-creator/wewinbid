@@ -13,7 +13,7 @@ import { PageHeader } from '@/components/layout/Sidebar';
 import {
   LineChart,
   Line,
-  BarChart,
+  BarChart as RechartsBarChart,
   Bar,
   PieChart as RechartsPieChart,
   Pie,
@@ -21,7 +21,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
+  Tooltip as RechartsTooltip,
   Legend,
   ResponsiveContainer,
   Area,
@@ -54,23 +54,6 @@ import {
 } from 'lucide-react';
 import { useLocale } from '@/hooks/useLocale';
 import { useUiTranslations } from '@/hooks/useUiTranslations';
-import {
-  LineChart,
-  Line,
-  BarChart as RechartsBarChart,
-  Bar,
-  PieChart as RechartsPieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend,
-  ResponsiveContainer,
-  Area,
-  AreaChart,
-} from 'recharts';
 
 // Types
 interface AnalyticsData {

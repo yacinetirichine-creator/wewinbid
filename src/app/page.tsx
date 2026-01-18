@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
 import {
   ArrowRight,
   CheckCircle,
@@ -19,6 +19,10 @@ import {
   Target,
   Building2,
   ChevronRight,
+  MousePointer2,
+  Layers,
+  Search,
+  Bot
 } from 'lucide-react';
 import { Button, Card, Badge } from '@/components/ui';
 import { DEFAULT_LOCALE, isRTL, LOCALES, LOCALE_FLAGS, LOCALE_NAMES, type Locale } from '@/lib/i18n';
@@ -91,8 +95,87 @@ const testimonials = [
   },
 ];
 
+const BentoItem = ({ feature, index, t }: { feature: any, index: number, t: any }) => {
+  const isLarge = index === 0 || index === 3;
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.1 }}
+      className={`${isLarge ? 'md:col-span-2' : 'md:col-span-1'} group`}
+    >
+      <div className="h-full p-8 rounded-3xl bg-white/50 backdrop-blur-sm border border-surface-200 shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 relative overflow-hidden group-hover:border-primary-200">
+        <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br ${feature.color} opacity-[0.03] rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110 duration-700`} />
+        
+        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-6 shadow-lg shadow-primary-500/20 group-hover:scale-110 transition-transform duration-300`}>
+          <feature.icon className="w-7 h-7 text-white" />
+        </div>
+        
+        <h3 className="text-2xl font-bold text-surface-900 mb-3 font-display">
+          {t(feature.titleKey)}
+        </h3>
+        <p className="text-surface-600 leading-relaxed text-lg">
+          {t(feature.descriptionKey)}
+        </p>
+        
+        <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-x-2 group-hover:translate-x-0">
+          <div className={`w-8 h-8 rounded-full bg-surface-100 flex items-center justify-center text-primary-600`}>
+            <ArrowRight className="w-4 h-4" />
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+function Hero3DCard({ children }: { children: React.ReactNode }) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const rotateX = useTransform(y, [-100, 100], [5, -5]);
+  const rotateY = useTransform(x, [-100, 100], [-5, 5]);
+
+  function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+    const xPos = mouseX - width / 2;
+    const yPos = mouseY - height / 2;
+    x.set(xPos);
+    y.set(yPos);
+  }
+
+  function handleMouseLeave() {
+    x.set(0);
+    y.set(0);
+  }
+
+  return (
+    <motion.div
+      style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+      className="perspective-1000 w-full"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+       <motion.div 
+         className="relative rounded-2xl shadow-2xl border border-surface-200/50 bg-white/40 backdrop-blur-md overflow-hidden transform-gpu ring-1 ring-white/50"
+         style={{ transformStyle: "preserve-3d" }}
+       >
+         {children}
+         <div className="absolute inset-0 bg-gradient-to-tr from-white/40 via-transparent to-transparent pointer-events-none mix-blend-overlay" />
+         <div className="absolute -inset-[100%] bg-gradient-to-r from-transparent via-white/10 to-transparent rotate-45 pointer-events-none animate-shimmer" style={{ backgroundSize: '50% 100%' }} />
+       </motion.div>
+    </motion.div>
+  );
+}
+
 export default function LandingPage() {
   const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE);
+  const { scrollY } = useScroll();
+  const headerOpacity = useTransform(scrollY, [0, 100], [0, 1]);
+  const headerY = useTransform(scrollY, [0, 100], [-20, 0]);
 
   const entries = useMemo(
     () => ({
@@ -208,154 +291,246 @@ export default function LandingPage() {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-b from-surface-50 via-white to-surface-50"
+      className="min-h-screen bg-surface-50 overflow-x-hidden selection:bg-primary-500/30"
       dir={isRTL(locale) ? 'rtl' : 'ltr'}
     >
+      <div className="fixed inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
+      
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-surface-200">
+      <motion.nav 
+        style={{ backgroundColor: "rgba(255,255,255,0.8)", backdropFilter: "blur(12px)" }}
+        className="fixed top-0 left-0 right-0 z-50 border-b border-surface-200/50"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold text-lg">
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-secondary-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-primary-500/30">
                 W
               </div>
-              <span className="font-display font-bold text-xl text-surface-900">WeWinBid</span>
+              <span className="font-display font-bold text-2xl text-surface-900 tracking-tight">WeWinBid</span>
             </div>
-            <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-surface-600 hover:text-primary-600 transition-colors">
+            <div className="hidden md:flex items-center gap-10">
+              <a href="#features" className="text-sm font-medium text-surface-600 hover:text-primary-600 transition-colors">
                 {t('landing.nav.features')}
               </a>
-              <a href="#pricing" className="text-surface-600 hover:text-primary-600 transition-colors">
+              <a href="#pricing" className="text-sm font-medium text-surface-600 hover:text-primary-600 transition-colors">
                 {t('landing.nav.pricing')}
               </a>
-              <a href="#testimonials" className="text-surface-600 hover:text-primary-600 transition-colors">
+              <a href="#testimonials" className="text-sm font-medium text-surface-600 hover:text-primary-600 transition-colors">
                 {t('landing.nav.testimonials')}
               </a>
             </div>
             <div className="flex items-center gap-4">
               <Link href="/auth/login">
-                <Button variant="ghost">{t('landing.nav.login')}</Button>
+                <Button variant="ghost" className="font-medium text-surface-600 hover:text-surface-900">{t('landing.nav.login')}</Button>
               </Link>
               <Link href="/auth/register">
-                <Button rightIcon={<ArrowRight className="w-4 h-4" />}>
+                <Button className="btn-gradient shadow-lg shadow-primary-500/25 rounded-full px-6">
                   {t('landing.nav.trial')}
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
             </div>
           </div>
         </div>
-      </nav>
+      </motion.nav>
 
       {/* Hero */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-4xl mx-auto">
+      <section className="relative pt-40 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {/* Background blobs */}
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-primary-400/20 blur-[120px] rounded-full mix-blend-multiply opacity-50 animate-pulse-soft" />
+        <div className="absolute top-40 left-1/4 w-[600px] h-[400px] bg-secondary-400/20 blur-[100px] rounded-full mix-blend-multiply opacity-50 animate-float" />
+        
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            
+            {/* Left Content */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-left"
             >
-              <div className="flex items-center justify-center gap-2 mb-6">
-                <Badge variant="primary" className="px-4 py-1.5">
-                  <Sparkles className="w-4 h-4 mr-1" />
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 border border-surface-200 shadow-sm backdrop-blur-sm mb-8"
+              >
+                <Badge variant="primary" className="rounded-full px-3 py-0.5 text-xs shadow-none">NEW</Badge>
+                <span className="text-sm font-medium text-surface-600 flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-primary-500" />
                   {t('landing.hero.badge')}
-                </Badge>
-              </div>
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-display font-bold text-surface-900 mb-6">
-                {t('landing.hero.titlePrefix')}
-                <span className="text-gradient">{t('landing.hero.titleHighlight')}</span>
+                </span>
+              </motion.div>
+              
+              <h1 className="text-6xl sm:text-7xl font-display font-bold text-surface-900 mb-8 leading-[1.1] tracking-tight">
+                {t('landing.hero.titlePrefix')}{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 via-secondary-500 to-primary-600 animate-shimmer bg-[length:200%_auto]">
+                  {t('landing.hero.titleHighlight')}
+                </span>
               </h1>
-              <p className="text-xl text-surface-600 mb-8 max-w-2xl mx-auto">
+              
+              <p className="text-xl text-surface-600 mb-10 max-w-lg leading-relaxed">
                 {t('landing.hero.subtitle')}
               </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link href="/auth/register">
-                  <Button size="lg" className="btn-gradient" rightIcon={<ArrowRight className="w-5 h-5" />}>
+              
+              <div className="flex flex-col sm:flex-row items-center gap-4 mb-12">
+                <Link href="/auth/register" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto btn-gradient h-14 px-8 text-lg rounded-full shadow-xl shadow-primary-500/20 hover:scale-105 transition-transform duration-200">
                     {t('landing.hero.ctaStart')}
+                    <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                 </Link>
-                <Link href="#demo">
-                  <Button size="lg" variant="outline">
+                <Link href="#demo" className="w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 text-lg rounded-full bg-white/50 border-surface-200 hover:bg-white transition-all">
                     {t('landing.hero.ctaDemo')}
                   </Button>
                 </Link>
               </div>
-              <div className="flex items-center justify-center gap-6 mt-8 text-sm text-surface-500">
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle className="w-4 h-4 text-success-500" />
+
+              <div className="flex items-center gap-8 text-sm font-medium text-surface-500">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-full bg-success-100 flex items-center justify-center text-success-600">
+                    <CheckCircle className="w-3 h-3" />
+                  </div>
                   {t('landing.hero.trust.freeTrial')}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle className="w-4 h-4 text-success-500" />
-                  {t('landing.hero.trust.noCommitment')}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Shield className="w-4 h-4 text-success-500" />
+                </div>
+                <div className="flex items-center gap-2">
+                   <div className="w-5 h-5 rounded-full bg-success-100 flex items-center justify-center text-success-600">
+                    <Shield className="w-3 h-3" />
+                  </div>
                   {t('landing.hero.trust.gdpr')}
-                </span>
+                </div>
               </div>
             </motion.div>
-          </div>
 
-          {/* Hero Image/Dashboard Preview */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="mt-16 relative"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-primary-500/20 to-secondary-500/20 blur-3xl -z-10" />
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-surface-200">
-              <div className="bg-surface-900 px-4 py-3 flex items-center gap-2">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-danger-500" />
-                  <div className="w-3 h-3 rounded-full bg-warning-500" />
-                  <div className="w-3 h-3 rounded-full bg-success-500" />
+            {/* Right 3D Visual */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, rotate: -5 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="relative"
+            >
+              <Hero3DCard>
+                <div className="bg-surface-50 aspect-[4/3] p-1">
+                  {/* Mock Dashboard UI */}
+                  <div className="w-full h-full bg-white rounded-xl overflow-hidden flex flex-col">
+                    <div className="h-10 border-b border-surface-100 flex items-center px-4 gap-2 bg-surface-50">
+                      <div className="flex gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-danger-400" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-warning-400" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-success-400" />
+                      </div>
+                      <div className="px-3 py-1 rounded-md bg-white border border-surface-200 text-xs text-surface-400 font-mono ml-4 flex-1 text-center">
+                        wewinbid.ai/dashboard
+                      </div>
+                    </div>
+                    <div className="flex-1 p-6 flex gap-6">
+                      <div className="w-48 hidden sm:flex flex-col gap-3 border-r border-surface-100 pr-4">
+                        <div className="h-8 w-24 bg-surface-100 rounded-md mb-4" />
+                        <div className="h-6 w-full bg-primary-50 rounded-md text-primary-600 text-xs flex items-center px-2 font-medium">Dashboard</div>
+                        <div className="h-6 w-full hover:bg-surface-50 rounded-md text-surface-400 text-xs flex items-center px-2">Tenders</div>
+                        <div className="h-6 w-full hover:bg-surface-50 rounded-md text-surface-400 text-xs flex items-center px-2">Analytics</div>
+                      </div>
+                      <div className="flex-1 flex flex-col gap-4">
+                        <div className="flex gap-4">
+                          <div className="h-24 flex-1 bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl p-3">
+                             <div className="h-6 w-6 rounded-lg bg-primary-500/20 mb-2" />
+                             <div className="h-4 w-12 bg-white/50 rounded-md" />
+                          </div>
+                          <div className="h-24 flex-1 bg-surface-50 rounded-xl p-3">
+                             <div className="h-6 w-6 rounded-lg bg-surface-200 mb-2" />
+                             <div className="h-4 w-12 bg-surface-200/50 rounded-md" />
+                          </div>
+                          <div className="h-24 flex-1 bg-surface-50 rounded-xl p-3">
+                            <div className="h-6 w-6 rounded-lg bg-surface-200 mb-2" />
+                            <div className="h-4 w-12 bg-surface-200/50 rounded-md" />
+                          </div>
+                        </div>
+                        <div className="flex-1 bg-surface-50 rounded-xl border border-dashed border-surface-200 flex items-center justify-center text-surface-400 text-sm">
+                           {t('landing.hero.preview')}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1 text-center">
-                  <span className="text-sm text-surface-400">app.wewinbid.com</span>
-                </div>
-              </div>
-              <div className="bg-surface-100 aspect-video flex items-center justify-center">
-                <div className="text-surface-400 text-lg">
-                  {t('landing.hero.preview')}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Stats */}
-      <section className="py-16 bg-surface-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="text-center"
+              </Hero3DCard>
+              
+              {/* Floating Elements */}
+              <motion.div 
+                animate={{ y: [0, -10, 0] }}
+                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                className="absolute -top-6 -right-6 bg-white p-3 rounded-xl shadow-xl border border-surface-100 z-20"
               >
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white/10 mb-4">
-                  <stat.icon className="w-6 h-6 text-primary-400" />
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                    <TrendingUp className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-surface-500">Success Rate</div>
+                    <div className="text-lg font-bold text-surface-900">+45%</div>
+                  </div>
                 </div>
-                <div className="text-3xl sm:text-4xl font-bold text-white mb-1">{stat.value}</div>
-                <div className="text-surface-400">{t(stat.labelKey)}</div>
               </motion.div>
-            ))}
+
+              <motion.div 
+                animate={{ y: [0, 10, 0] }}
+                transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 1 }}
+                className="absolute -bottom-8 -left-8 bg-white p-3 rounded-xl shadow-xl border border-surface-100 z-20"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                    <Bot className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-surface-500">AI Analysis</div>
+                    <div className="text-lg font-bold text-surface-900">Ready</div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" className="py-24 px-4 sm:px-6 lg:px-8">
+      {/* Stats with Glassmorphism */}
+      <section className="py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative rounded-3xl bg-surface-900 overflow-hidden px-8 py-12 shadow-2xl">
+             <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 bg-repeat" />
+             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-500/30 blur-[100px] rounded-full mix-blend-overlay" />
+             
+             <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-8">
+              {stats.map((stat, index) => (
+                <motion.div
+                  key={stat.labelKey}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  className="text-center group"
+                >
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/10 mb-4 group-hover:bg-white/20 transition-colors backdrop-blur-md">
+                    <stat.icon className="w-7 h-7 text-primary-300" />
+                  </div>
+                  <div className="text-4xl font-display font-bold text-white mb-2 tracking-tight">{stat.value}</div>
+                  <div className="text-surface-400 font-medium">{t(stat.labelKey)}</div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Bento Grid */}
+      <section id="features" className="py-32 px-4 sm:px-6 lg:px-8 relative">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <Badge variant="secondary" className="mb-4">{t('landing.features.badge')}</Badge>
-            <h2 className="text-4xl font-display font-bold text-surface-900 mb-4">
+          <div className="text-center mb-20">
+            <Badge variant="secondary" className="mb-4">
+              {t('landing.features.badge')}
+            </Badge>
+            <h2 className="text-4xl sm:text-5xl font-display font-bold text-surface-900 mb-6 tracking-tight">
               {t('landing.features.title')}
             </h2>
             <p className="text-xl text-surface-600 max-w-2xl mx-auto">
@@ -363,46 +538,38 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-6 auto-rows-fr">
             {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Card hover className="h-full">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4`}>
-                    <feature.icon className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-surface-900 mb-2">{t(feature.titleKey)}</h3>
-                  <p className="text-surface-600">{t(feature.descriptionKey)}</p>
-                </Card>
-              </motion.div>
+              <BentoItem key={index} feature={feature} index={index} t={t} />
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-primary-600 to-secondary-600">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-display font-bold text-white mb-6">
+      <section className="py-32 px-4 sm:px-6 lg:px-8 bg-surface-900 relative overflow-hidden">
+        <div className="absolute inset-0">
+           <div className="absolute inset-0 bg-gradient-to-r from-primary-900 to-surface-900" />
+           <div className="absolute right-0 top-0 w-[800px] h-[800px] bg-primary-600/20 blur-[120px] rounded-full" />
+           <div className="absolute left-0 bottom-0 w-[600px] h-[600px] bg-secondary-600/20 blur-[100px] rounded-full" />
+        </div>
+        
+        <div className="max-w-5xl mx-auto text-center relative z-10">
+          <h2 className="text-5xl sm:text-6xl font-display font-bold text-white mb-8 tracking-tight">
             {t('landing.cta.title')}
           </h2>
-          <p className="text-xl text-white/80 mb-8">
+          <p className="text-2xl text-surface-300 mb-12 max-w-2xl mx-auto font-light">
             {t('landing.cta.subtitle')}
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
             <Link href="/auth/register">
-              <Button size="lg" className="bg-white text-primary-600 hover:bg-surface-100">
+              <Button size="lg" className="h-16 px-10 text-lg bg-white text-surface-900 hover:bg-surface-50 rounded-full shadow-2xl shadow-white/10 hover:scale-105 transition-transform">
                 {t('landing.cta.primary')}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
             <Link href="/contact">
-              <Button size="lg" variant="ghost" className="text-white border-white/30 hover:bg-white/10">
+              <Button size="lg" variant="ghost" className="h-16 px-10 text-lg text-white border border-white/20 hover:bg-white/10 rounded-full">
                 {t('landing.cta.secondary')}
               </Button>
             </Link>
@@ -411,56 +578,66 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-16 px-4 sm:px-6 lg:px-8 bg-surface-900">
+      <footer className="py-20 px-4 sm:px-6 lg:px-8 bg-surface-50 border-t border-surface-200">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8 mb-12">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold">
+          <div className="grid md:grid-cols-4 gap-12 mb-16">
+            <div className="col-span-1 md:col-span-1">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-600 to-secondary-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
                   W
                 </div>
-                <span className="font-display font-bold text-xl text-white">WeWinBid</span>
+                <span className="font-display font-bold text-2xl text-surface-900">WeWinBid</span>
               </div>
-              <p className="text-surface-400 text-sm">
+              <p className="text-surface-500 leading-relaxed mb-6">
                 {t('landing.footer.about')}
               </p>
+              <div className="flex gap-4">
+                 {/* Social icons placeholders */}
+                 <div className="w-8 h-8 rounded-full bg-surface-200 hover:bg-primary-100 hover:text-primary-600 transition-colors cursor-pointer" />
+                 <div className="w-8 h-8 rounded-full bg-surface-200 hover:bg-primary-100 hover:text-primary-600 transition-colors cursor-pointer" />
+                 <div className="w-8 h-8 rounded-full bg-surface-200 hover:bg-primary-100 hover:text-primary-600 transition-colors cursor-pointer" />
+              </div>
             </div>
+            
             <div>
-              <h4 className="font-semibold text-white mb-4">{t('landing.footer.product')}</h4>
-              <ul className="space-y-2 text-surface-400">
-                <li><a href="#features" className="hover:text-white transition-colors">{t('landing.footer.links.features')}</a></li>
-                <li><a href="#pricing" className="hover:text-white transition-colors">{t('landing.footer.links.pricing')}</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">{t('landing.footer.links.integrations')}</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">{t('landing.footer.links.api')}</a></li>
+              <h4 className="font-bold text-surface-900 mb-6">{t('landing.footer.product')}</h4>
+              <ul className="space-y-4 text-surface-500">
+                <li><a href="#features" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.features')}</a></li>
+                <li><a href="#pricing" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.pricing')}</a></li>
+                <li><a href="#" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.integrations')}</a></li>
+                <li><a href="#" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.api')}</a></li>
               </ul>
             </div>
+            
             <div>
-              <h4 className="font-semibold text-white mb-4">{t('landing.footer.company')}</h4>
-              <ul className="space-y-2 text-surface-400">
-                <li><a href="#" className="hover:text-white transition-colors">{t('landing.footer.links.about')}</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">{t('landing.footer.links.blog')}</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">{t('landing.footer.links.careers')}</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">{t('landing.footer.links.contact')}</a></li>
+              <h4 className="font-bold text-surface-900 mb-6">{t('landing.footer.company')}</h4>
+              <ul className="space-y-4 text-surface-500">
+                <li><a href="#" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.about')}</a></li>
+                <li><a href="#" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.blog')}</a></li>
+                <li><a href="#" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.careers')}</a></li>
+                <li><a href="#" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.contact')}</a></li>
               </ul>
             </div>
+            
             <div>
-              <h4 className="font-semibold text-white mb-4">{t('landing.footer.legal')}</h4>
-              <ul className="space-y-2 text-surface-400">
-                <li><a href="/legal/privacy" className="hover:text-white transition-colors">{t('landing.footer.links.privacy')}</a></li>
-                <li><a href="/legal/terms" className="hover:text-white transition-colors">{t('landing.footer.links.terms')}</a></li>
-                <li><a href="/legal/cookies" className="hover:text-white transition-colors">{t('landing.footer.links.cookies')}</a></li>
-                <li><a href="/legal/mentions" className="hover:text-white transition-colors">{t('landing.footer.links.mentions')}</a></li>
+              <h4 className="font-bold text-surface-900 mb-6">{t('landing.footer.legal')}</h4>
+              <ul className="space-y-4 text-surface-500">
+                <li><a href="/legal/privacy" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.privacy')}</a></li>
+                <li><a href="/legal/terms" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.terms')}</a></li>
+                <li><a href="/legal/cookies" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.cookies')}</a></li>
+                <li><a href="/legal/mentions" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.mentions')}</a></li>
               </ul>
             </div>
           </div>
-          <div className="pt-8 border-t border-surface-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-surface-500 text-sm">
+          
+          <div className="pt-8 border-t border-surface-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-surface-400 text-sm">
               {t('landing.footer.copyright')}
             </p>
-            <div className="flex items-center gap-4">
-              <Globe className="w-5 h-5 text-surface-500" />
+            <div className="flex items-center gap-4 bg-surface-100 px-3 py-1.5 rounded-full">
+              <Globe className="w-4 h-4 text-surface-500" />
               <select
-                className="bg-transparent text-surface-400 text-sm border-none focus:ring-0"
+                className="bg-transparent text-surface-600 text-sm border-none focus:ring-0 cursor-pointer outline-none"
                 value={locale}
                 onChange={(event) => handleLocaleChange(event.target.value as Locale)}
               >
