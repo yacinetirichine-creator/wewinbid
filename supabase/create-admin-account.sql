@@ -12,47 +12,61 @@
 BEGIN;
 
 -- 1. Créer l'utilisateur dans auth.users
--- Note: Vous devrez confirmer l'email manuellement dans le dashboard Supabase
--- ou exécuter: UPDATE auth.users SET email_confirmed_at = NOW() WHERE email = 'contact@wewinbid.com';
+-- Note: On utilise une approche qui évite les conflits
 
-INSERT INTO auth.users (
-  instance_id,
-  id,
-  aud,
-  role,
-  email,
-  encrypted_password,
-  email_confirmed_at,
-  recovery_sent_at,
-  last_sign_in_at,
-  raw_app_meta_data,
-  raw_user_meta_data,
-  created_at,
-  updated_at,
-  confirmation_token,
-  email_change,
-  email_change_token_new,
-  recovery_token
-) VALUES (
-  '00000000-0000-0000-0000-000000000000',
-  gen_random_uuid(),
-  'authenticated',
-  'authenticated',
-  'contact@wewinbid.com',
-  crypt('WeWinBid2026@Admin!Secure', gen_salt('bf')), -- Mot de passe hashé
-  NOW(),
-  NULL,
-  NULL,
-  '{"provider":"email","providers":["email"],"role":"admin"}',
-  '{"full_name":"WeWinBid Admin","role":"admin"}',
-  NOW(),
-  NOW(),
-  '',
-  '',
-  '',
-  ''
-) ON CONFLICT (email) DO NOTHING
-RETURNING id;
+-- Vérifier si l'utilisateur existe déjà
+DO $$
+DECLARE
+  existing_user_count INTEGER;
+BEGIN
+  SELECT COUNT(*) INTO existing_user_count
+  FROM auth.users
+  WHERE email = 'contact@wewinbid.com';
+  
+  IF existing_user_count = 0 THEN
+    -- L'utilisateur n'existe pas, on le crée
+    INSERT INTO auth.users (
+      instance_id,
+      id,
+      aud,
+      role,
+      email,
+      encrypted_password,
+      email_confirmed_at,
+      recovery_sent_at,
+      last_sign_in_at,
+      raw_app_meta_data,
+      raw_user_meta_data,
+      created_at,
+      updated_at,
+      confirmation_token,
+      email_change,
+      email_change_token_new,
+      recovery_token
+    ) VALUES (
+      '00000000-0000-0000-0000-000000000000',
+      gen_random_uuid(),
+      'authenticated',
+      'authenticated',
+      'contact@wewinbid.com',
+      crypt('WeWinBid2026@Admin!Secure', gen_salt('bf')), -- Mot de passe hashé
+      NOW(),
+      NULL,
+      NULL,
+      '{"provider":"email","providers":["email"],"role":"admin"}',
+      '{"full_name":"WeWinBid Admin","role":"admin"}',
+      NOW(),
+      NOW(),
+      '',
+      '',
+      '',
+      ''
+    );
+    RAISE NOTICE 'Utilisateur créé avec succès';
+  ELSE
+    RAISE NOTICE 'Utilisateur existe déjà - script ignoré pour auth.users';
+  END IF;
+END $$;
 
 -- Stocker l'ID de l'utilisateur créé
 DO $$
