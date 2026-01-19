@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     // Create new session if none provided
     if (!sessionId) {
-      const { data: newSession, error: sessionError } = await supabase
+      const { data: newSession, error: sessionError } = await (supabase as any)
         .from('chat_sessions')
         .insert({
           user_id: session.user.id,
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify session belongs to user
-    const { data: sessionData, error: sessionCheckError } = await supabase
+    const { data: sessionData, error: sessionCheckError } = await (supabase as any)
       .from('chat_sessions')
       .select('*')
       .eq('id', sessionId)
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get previous messages for context
-    const { data: previousMessages } = await supabase
+    const { data: previousMessages } = await (supabase as any)
       .from('chat_messages')
       .select('role, content')
       .eq('session_id', sessionId)
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     // Save user message
     const startTime = Date.now();
-    const { data: userMessage, error: userMessageError } = await supabase
+    const { data: userMessage, error: userMessageError } = await (supabase as any)
       .from('chat_messages')
       .insert({
         session_id: sessionId,
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
 You provide clear, actionable advice on tender requirements, deadlines, and submission strategies.
 Be concise, professional, and helpful. If you're not sure about something, say so.`,
       },
-      ...(previousMessages || []).map(msg => ({
+      ...(previousMessages || []).map((msg: any) => ({
         role: msg.role as 'user' | 'assistant',
         content: msg.content,
       })),
@@ -113,7 +113,7 @@ Be concise, professional, and helpful. If you're not sure about something, say s
     const aiResponse = completion.choices[0].message.content || '';
 
     // Save AI response
-    const { data: assistantMessage, error: assistantMessageError } = await supabase
+    const { data: assistantMessage, error: assistantMessageError } = await (supabase as any)
       .from('chat_messages')
       .insert({
         session_id: sessionId,
@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .rpc('get_user_chat_sessions', {
         user_id_param: session.user.id,
         limit_param: limit,

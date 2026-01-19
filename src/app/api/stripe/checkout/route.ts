@@ -20,7 +20,7 @@ async function handler(req: NextRequest) {
   const { plan, interval } = CheckoutSchema.parse(body);
 
   // Get authenticated user
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
@@ -31,7 +31,7 @@ async function handler(req: NextRequest) {
   }
 
   // Get or create Stripe customer
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('stripe_customer_id')
     .eq('id', user.id)
@@ -51,7 +51,7 @@ async function handler(req: NextRequest) {
     customerId = customer.id;
 
     // Save customer ID to database
-    await supabase
+    await (supabase as any)
       .from('profiles')
       .update({ stripe_customer_id: customerId })
       .eq('id', user.id);
@@ -98,4 +98,4 @@ async function handler(req: NextRequest) {
   });
 }
 
-export const POST = withErrorHandler(handler);
+export const POST = withErrorHandler(handler as any);

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import AppLayout from '@/components/layout/AppLayout';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { AppLayout } from '@/components/layout/Sidebar';
+import { PageHeader } from '@/components/layout/Sidebar';
 import SearchBar from '@/components/search/SearchBar';
 import FilterPanel, { SearchFilters } from '@/components/search/FilterPanel';
 import SearchResults from '@/components/search/SearchResults';
@@ -33,7 +33,7 @@ interface SavedSearch {
   created_at: string;
 }
 
-export default function SearchPage() {
+function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -154,8 +154,7 @@ export default function SearchPage() {
     <AppLayout>
       <PageHeader
         title="Recherche Avancée"
-        subtitle="Trouvez les appels d'offres qui correspondent à vos critères"
-        icon={Search}
+        description="Trouvez les appels d'offres qui correspondent à vos critères"
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -336,5 +335,19 @@ export default function SearchPage() {
         </div>
       )}
     </AppLayout>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <AppLayout>
+        <div className="flex items-center justify-center h-96">
+          <Search className="h-8 w-8 animate-pulse text-gray-400" />
+        </div>
+      </AppLayout>
+    }>
+      <SearchContent />
+    </Suspense>
   );
 }

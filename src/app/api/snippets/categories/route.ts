@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's company
-    const { data: teamMember } = await supabase
+    const { data: teamMember } = await (supabase as any)
       .from('team_members')
       .select('company_id')
       .eq('user_id', user.id)
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch categories
-    const { data: categories, error } = await supabase
+    const { data: categories, error } = await (supabase as any)
       .from('snippet_categories')
       .select(
         `
@@ -71,8 +71,8 @@ export async function GET(request: NextRequest) {
 
     // Get snippet count for each category
     const categoriesWithCount = await Promise.all(
-      (categories || []).map(async (category) => {
-        const { count } = await supabase
+      (categories || []).map(async (category: any) => {
+        const { count } = await (supabase as any)
           .from('snippets')
           .select('id', { count: 'exact', head: true })
           .eq('category_id', category.id)
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's company
-    const { data: teamMember } = await supabase
+    const { data: teamMember } = await (supabase as any)
       .from('team_members')
       .select('company_id, role')
       .eq('user_id', user.id)
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
     const validated = CreateCategorySchema.parse(body);
 
     // Check if name is unique for this company
-    const { data: existing } = await supabase
+    const { data: existing } = await (supabase as any)
       .from('snippet_categories')
       .select('id')
       .eq('company_id', teamMember.company_id)
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create category
-    const { data: category, error } = await supabase
+    const { data: category, error } = await (supabase as any)
       .from('snippet_categories')
       .insert({
         company_id: teamMember.company_id,
@@ -218,7 +218,7 @@ export async function PATCH(request: NextRequest) {
 
     // Check name uniqueness if changing it
     if (validated.name) {
-      const { data: existing } = await supabase
+      const { data: existing } = await (supabase as any)
         .from('snippet_categories')
         .select('id, company_id')
         .eq('name', validated.name)
@@ -234,7 +234,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update category (RLS handles permissions)
-    const { data: category, error } = await supabase
+    const { data: category, error } = await (supabase as any)
       .from('snippet_categories')
       .update(validated)
       .eq('id', categoryId)
@@ -295,7 +295,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check if category has snippets
-    const { count } = await supabase
+    const { count } = await (supabase as any)
       .from('snippets')
       .select('id', { count: 'exact', head: true })
       .eq('category_id', categoryId)
@@ -312,7 +312,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete category
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('snippet_categories')
       .delete()
       .eq('id', categoryId);

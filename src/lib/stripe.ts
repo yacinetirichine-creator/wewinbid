@@ -14,7 +14,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
  * Used in API routes and webhooks.
  */
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-12-18.acacia',
+  apiVersion: '2024-06-20' as any,
   typescript: true,
   appInfo: {
     name: 'WeWinBid',

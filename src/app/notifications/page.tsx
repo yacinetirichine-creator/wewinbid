@@ -126,7 +126,7 @@ export default function NotificationsPage() {
     <AppLayout>
       <PageHeader
         title="Notifications"
-        subtitle="Gérez vos notifications et préférences"
+        description="Gérez vos notifications et préférences"
       />
 
       <div className="max-w-5xl">

@@ -37,7 +37,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   // Update user profile
-  await supabase
+  await (supabase as any)
     .from('profiles')
     .update({
       subscription_plan: plan,
@@ -66,7 +66,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const interval = subscription.metadata?.interval;
 
   // Update subscription status
-  await supabase
+  await (supabase as any)
     .from('profiles')
     .update({
       subscription_status: status,
@@ -92,7 +92,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   }
 
   // Revert to free plan
-  await supabase
+  await (supabase as any)
     .from('profiles')
     .update({
       subscription_plan: 'free',
@@ -113,7 +113,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   const customerId = invoice.customer as string;
 
   // Get user from customer ID
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('id, email')
     .eq('stripe_customer_id', customerId)
@@ -121,7 +121,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 
   if (profile) {
     // Update status
-    await supabase
+    await (supabase as any)
       .from('profiles')
       .update({
         subscription_status: 'past_due',
@@ -139,7 +139,8 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
  */
 export async function POST(req: NextRequest) {
   const body = await req.text();
-  const signature = headers().get('stripe-signature');
+  const headersList = await headers();
+  const signature = headersList.get('stripe-signature');
 
   if (!signature) {
     return NextResponse.json(

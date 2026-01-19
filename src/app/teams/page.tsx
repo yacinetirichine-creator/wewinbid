@@ -101,7 +101,7 @@ export default function TeamsPage() {
     <AppLayout>
       <PageHeader
         title="Équipes"
-        subtitle="Collaborez avec votre équipe sur les appels d'offres"
+        description="Collaborez avec votre équipe sur les appels d'offres"
         actions={
           <Button onClick={() => setShowCreateModal(true)}>
             <Plus className="w-4 h-4 mr-2" />

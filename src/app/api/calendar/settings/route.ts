@@ -12,7 +12,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const { data: settings, error } = await supabase
+    const { data: settings, error } = await (supabase as any)
       .from('calendar_settings')
       .select('*')
       .eq('user_id', user.id)
@@ -88,7 +88,7 @@ export async function PATCH(request: Request) {
     if (body.showTeamEvents !== undefined) updateData.show_team_events = body.showTeamEvents;
     if (body.showTeammatesEvents !== undefined) updateData.show_teammates_events = body.showTeammatesEvents;
     
-    const { data: settings, error } = await supabase
+    const { data: settings, error } = await (supabase as any)
       .from('calendar_settings')
       .upsert({
         user_id: user.id,

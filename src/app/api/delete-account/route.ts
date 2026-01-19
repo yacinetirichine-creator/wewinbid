@@ -18,7 +18,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Récupérer le profil pour avoir le company_id
-    const { data: profile } = await supabase
+    const { data: profile } = await (supabase as any)
       .from('profiles')
       .select('company_id')
       .eq('id', user.id)
@@ -42,14 +42,14 @@ export async function DELETE(request: NextRequest) {
     // 1. Supprimer tous les fichiers stockés
     if (profile.company_id) {
       // Récupérer tous les chemins de fichiers
-      const { data: documents } = await supabase
+      const { data: documents } = await (supabase as any)
         .from('documents')
         .select('file_path')
         .eq('company_id', profile.company_id);
 
       // Supprimer chaque fichier du storage
       if (documents && documents.length > 0) {
-        const filePaths = documents.map(doc => doc.file_path);
+        const filePaths = documents.map((doc: any) => doc.file_path);
         const { error: storageError } = await supabase.storage
           .from('documents')
           .remove(filePaths);
@@ -60,37 +60,37 @@ export async function DELETE(request: NextRequest) {
       }
 
       // 2. Supprimer les documents de la base de données
-      await supabase
+      await (supabase as any)
         .from('documents')
         .delete()
         .eq('company_id', profile.company_id);
 
       // 3. Supprimer les réponses aux tenders
-      await supabase
+      await (supabase as any)
         .from('tender_responses')
         .delete()
         .eq('user_id', user.id);
 
       // 4. Supprimer les tenders
-      await supabase
+      await (supabase as any)
         .from('tenders')
         .delete()
         .eq('user_id', user.id);
 
       // 5. Supprimer les notifications
-      await supabase
+      await (supabase as any)
         .from('notifications')
         .delete()
         .eq('user_id', user.id);
 
       // 6. Supprimer les logs d'activité (si table existe)
-      await supabase
+      await (supabase as any)
         .from('activity_logs')
         .delete()
         .eq('user_id', user.id);
 
       // 7. Supprimer l'abonnement Stripe (si existe)
-      const { data: subscription } = await supabase
+      const { data: subscription } = await (supabase as any)
         .from('subscriptions')
         .select('stripe_subscription_id')
         .eq('company_id', profile.company_id)
@@ -112,20 +112,20 @@ export async function DELETE(request: NextRequest) {
       }
 
       // 8. Supprimer l'abonnement de la base
-      await supabase
+      await (supabase as any)
         .from('subscriptions')
         .delete()
         .eq('company_id', profile.company_id);
 
       // 9. Supprimer l'entreprise
-      await supabase
+      await (supabase as any)
         .from('companies')
         .delete()
         .eq('id', profile.company_id);
     }
 
     // 10. Supprimer le profil
-    await supabase
+    await (supabase as any)
       .from('profiles')
       .delete()
       .eq('id', user.id);

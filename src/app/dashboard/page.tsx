@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -234,7 +234,6 @@ export default function DashboardPage() {
   );
 
   const { t } = useUiTranslations(locale, entries);
-  const supabase = createClient();
   
   const [showWelcome, setShowWelcome] = useState(false);
 
@@ -246,30 +245,30 @@ export default function DashboardPage() {
       if (!user) throw new Error('Not authenticated');
 
       // Get user's company
-      const { data: profile } = await supabase
+      const { data: profile } = await (supabase as any)
         .from('profiles')
         .select('company_id')
         .eq('id', user.id)
         .single();
 
-      if (!profile?.company_id) return null;
+      if (!(profile as any)?.company_id) return null;
 
       // Load stats
-      const { data: tenders } = await supabase
+      const { data: tenders } = await (supabase as any)
         .from('tenders')
         .select('status, estimated_value, compatibility_score')
-        .eq('company_id', profile.company_id);
+        .eq('company_id', (profile as any).company_id);
 
       let stats: DashboardStats | null = null;
       if (tenders) {
         const totalTenders = tenders.length;
-        const activeTenders = tenders.filter(t => ['draft', 'in_progress', 'submitted'].includes(t.status)).length;
-        const wonTenders = tenders.filter(t => t.status === 'won').length;
-        const lostTenders = tenders.filter(t => t.status === 'lost').length;
-        const pendingTenders = tenders.filter(t => t.status === 'submitted').length;
-        const totalRevenue = tenders.filter(t => t.status === 'won').reduce((sum, t) => sum + (t.estimated_value || 0), 0);
-        const scores = tenders.filter(t => t.compatibility_score !== null).map(t => t.compatibility_score as number);
-        const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+        const activeTenders = tenders.filter((t: any) => ['draft', 'in_progress', 'submitted'].includes(t.status)).length;
+        const wonTenders = tenders.filter((t: any) => t.status === 'won').length;
+        const lostTenders = tenders.filter((t: any) => t.status === 'lost').length;
+        const pendingTenders = tenders.filter((t: any) => t.status === 'submitted').length;
+        const totalRevenue = tenders.filter((t: any) => t.status === 'won').reduce((sum: any, t: any) => sum + (t.estimated_value || 0), 0);
+        const scores = tenders.filter((t: any) => t.compatibility_score !== null).map((t: any) => t.compatibility_score as number);
+        const avgScore = scores.length > 0 ? Math.round(scores.reduce((a: any, b: any) => a + b, 0) / scores.length) : 0;
         const winRate = totalTenders > 0 ? Math.round((wonTenders / (wonTenders + lostTenders)) * 100) || 0 : 0;
 
         stats = {
@@ -326,11 +325,13 @@ export default function DashboardPage() {
   const notifications = dashboardData?.notifications || [];
 
   // Check for welcome message on mount
-  useMemo(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('welcome') === 'true') {
-      setShowWelcome(true);
-      window.history.replaceState({}, '', '/dashboard');
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('welcome') === 'true') {
+        setShowWelcome(true);
+        window.history.replaceState({}, '', '/dashboard');
+      }
     }
   }, []);
 
@@ -376,7 +377,7 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <Alert variant="success" onClose={() => setShowWelcome(false)}>
+          <Alert type="success" dismissible onDismiss={() => setShowWelcome(false)}>
             <strong>{t('dashboard.welcome.title')}</strong> {t('dashboard.welcome.body')}
           </Alert>
         </motion.div>
@@ -462,7 +463,7 @@ export default function DashboardPage() {
                 <CardContent className="p-0">
                   {recentTenders.length > 0 ? (
                     <div className="divide-y divide-slate-100">
-                      {recentTenders.map((tender) => (
+                      {recentTenders.map((tender: any) => (
                         <TenderRow key={tender.id} tender={tender} t={t} />
                       ))}
                     </div>
@@ -500,7 +501,7 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent className="p-0">
                       <div className="divide-y divide-slate-100">
-                        {notifications.slice(0, 3).map((notif) => (
+                        {notifications.slice(0, 3).map((notif: any) => (
                           <div key={notif.id} className="p-4">
                             <h4 className="font-medium text-slate-900 text-sm">{notif.title}</h4>
                             <p className="text-xs text-slate-500 mt-1">{notif.message}</p>
@@ -524,7 +525,7 @@ export default function DashboardPage() {
                   <CardContent className="p-0">
                     {activities.length > 0 ? (
                       <div className="divide-y divide-slate-100">
-                        {activities.slice(0, 5).map((activity) => (
+                        {activities.slice(0, 5).map((activity: any) => (
                           <ActivityItem key={activity.id} activity={activity} />
                         ))}
                       </div>
@@ -571,7 +572,7 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <Calendar className="w-5 h-5 text-indigo-500" />
                       <span className="text-2xl font-bold text-slate-900">
-                        {recentTenders.filter(t => {
+                        {recentTenders.filter((t: any) => {
                           const days = getDaysRemaining(t.deadline);
                           return days !== null && days <= 7 && days >= 0;
                         }).length}

@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create saved search
-    const { data: savedSearch, error: insertError } = await supabase
+    const { data: savedSearch, error: insertError } = await (supabase as any)
       .from('saved_searches')
       .insert({
         user_id: user.id,

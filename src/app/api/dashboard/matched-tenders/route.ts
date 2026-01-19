@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
 
     // Call the database function to get matched tenders
-    const { data, error } = await supabase.rpc('get_user_matched_tenders', {
+    const { data, error } = await (supabase as any).rpc('get_user_matched_tenders', {
       p_user_id: user.id,
       p_min_score: minScore,
       p_limit: limit

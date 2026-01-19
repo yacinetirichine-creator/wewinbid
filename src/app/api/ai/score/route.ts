@@ -353,7 +353,7 @@ async function postHandler(request: NextRequest) {
   const { tender_id } = ScoreRequestSchema.parse(body);
 
     // Get user's profile and company
-    const { data: profile } = await supabase
+    const { data: profile } = await (supabase as any)
       .from('profiles')
       .select('company_id')
       .eq('id', user.id)
@@ -378,7 +378,7 @@ async function postHandler(request: NextRequest) {
       .single();
 
     // Get tender with documents
-    const { data: tender, error: tenderError } = await supabase
+    const { data: tender, error: tenderError } = await (supabase as any)
       .from('tenders')
       .select('*, documents:tender_documents(*)')
       .eq('id', tender_id)
@@ -399,7 +399,7 @@ async function postHandler(request: NextRequest) {
     const result = await calculateScore(tender, company, requiredDocs);
 
     // Save score to database
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('tenders')
       .update({
         ai_score: result.percentage,
@@ -433,13 +433,13 @@ async function getHandler(request: NextRequest) {
     tender_id: searchParams.get('tender_id'),
   });
 
-    const { data: profile } = await supabase
+    const { data: profile } = await (supabase as any)
       .from('profiles')
       .select('company_id')
       .eq('id', user.id)
       .single();
 
-    const { data: tender } = await supabase
+    const { data: tender } = await (supabase as any)
       .from('tenders')
       .select('ai_score, ai_score_details, ai_score_updated_at')
       .eq('id', tender_id)
@@ -458,5 +458,5 @@ async function getHandler(request: NextRequest) {
 }
 
 // Export wrapped handlers
-export const GET = withErrorHandler(getHandler);
-export const POST = withErrorHandler(postHandler);
+export const GET = withErrorHandler(getHandler as any);
+export const POST = withErrorHandler(postHandler as any);

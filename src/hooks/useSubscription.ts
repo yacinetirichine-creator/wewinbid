@@ -83,7 +83,7 @@ export function useSubscription() {
       }
 
       // Get subscription from profile
-      const { data: profile } = await supabase
+      const { data: profile } = await (supabase as any)
         .from('profiles')
         .select('subscription_plan, subscription_status, subscription_interval, subscription_current_period_end, stripe_customer_id')
         .eq('id', user.id)
@@ -91,11 +91,11 @@ export function useSubscription() {
 
       if (profile) {
         setSubscription({
-          plan: (profile.subscription_plan as any) || 'free',
-          status: profile.subscription_status as any,
-          interval: profile.subscription_interval as any,
-          currentPeriodEnd: profile.subscription_current_period_end,
-          stripeCustomerId: profile.stripe_customer_id,
+          plan: ((profile as any).subscription_plan as any) || 'free',
+          status: (profile as any).subscription_status as any,
+          interval: (profile as any).subscription_interval as any,
+          currentPeriodEnd: (profile as any).subscription_current_period_end,
+          stripeCustomerId: (profile as any).stripe_customer_id,
         });
 
         // Get usage stats

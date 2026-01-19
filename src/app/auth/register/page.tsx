@@ -282,7 +282,7 @@ export default function RegisterPage() {
 
           <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8">
             {error && (
-              <Alert variant="error" className="mb-6">
+              <Alert type="error" className="mb-6">
                 {error}
               </Alert>
             )}
@@ -325,7 +325,7 @@ export default function RegisterPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="vous@entreprise.com"
-                      icon={<Mail className="w-5 h-5" />}
+                      leftIcon={<Mail className="w-5 h-5" />}
                       className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
                     />
 
@@ -335,7 +335,7 @@ export default function RegisterPage() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+33 6 12 34 56 78"
-                      icon={<Phone className="w-5 h-5" />}
+                      leftIcon={<Phone className="w-5 h-5" />}
                       className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
                     />
 
@@ -346,7 +346,7 @@ export default function RegisterPage() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="8 caractères minimum"
-                        icon={<Lock className="w-5 h-5" />}
+                        leftIcon={<Lock className="w-5 h-5" />}
                         className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
                       />
                       <button
@@ -364,7 +364,7 @@ export default function RegisterPage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••"
-                      icon={<Lock className="w-5 h-5" />}
+                      leftIcon={<Lock className="w-5 h-5" />}
                       className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
                     />
                   </div>
@@ -428,7 +428,7 @@ export default function RegisterPage() {
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
                       placeholder="Ma Société SAS"
-                      icon={<Building2 className="w-5 h-5" />}
+                      leftIcon={<Building2 className="w-5 h-5" />}
                       className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
                     />
 
@@ -437,7 +437,7 @@ export default function RegisterPage() {
                       value={siret}
                       onChange={(e) => setSiret(e.target.value.replace(/\s/g, ''))}
                       placeholder="12345678901234"
-                      icon={<Briefcase className="w-5 h-5" />}
+                      leftIcon={<Briefcase className="w-5 h-5" />}
                       hint="14 chiffres sans espaces"
                       className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
                     />
@@ -463,7 +463,7 @@ export default function RegisterPage() {
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="123 rue de la République"
-                      icon={<MapPin className="w-5 h-5" />}
+                      leftIcon={<MapPin className="w-5 h-5" />}
                       className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
                     />
 

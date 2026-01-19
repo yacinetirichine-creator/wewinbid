@@ -29,6 +29,7 @@ export async function POST(request: Request) {
 
     const { data: sync, error: syncError } = await query.single();
 
+    const syncData = sync as any;
     if (syncError || !sync) {
       return NextResponse.json(
         { error: 'Google Calendar not connected' },
@@ -44,8 +45,8 @@ export async function POST(request: Request) {
     );
 
     oauth2Client.setCredentials({
-      access_token: sync.access_token,
-      refresh_token: sync.refresh_token,
+      access_token: (sync as any).access_token,
+      refresh_token: (sync as any).refresh_token,
     });
 
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
     if (direction === 'import' || direction === 'bidirectional') {
       try {
         const { data: googleEvents } = await calendar.events.list({
-          calendarId: sync.default_calendar_id,
+          calendarId: syncData.default_calendar_id,
           timeMin: new Date().toISOString(),
           maxResults: 100,
           singleEvents: true,
@@ -68,8 +69,8 @@ export async function POST(request: Request) {
         if (googleEvents.items) {
           for (const googleEvent of googleEvents.items) {
             // Check if event already exists
-            const { data: existingEvent } = await supabase
-              .from('calendar_events')
+            const { data: existingEvent } = await (supabase as any)
+              .from('calendar_events' as any)
               .select('id')
               .eq('external_event_id', googleEvent.id)
               .eq('sync_provider', 'google')
@@ -78,8 +79,8 @@ export async function POST(request: Request) {
             if (existingEvent) continue;
 
             // Import event
-            const { error: insertError } = await supabase
-              .from('calendar_events')
+            const { error: insertError } = await (supabase as any)
+              .from('calendar_events' as any)
               .insert({
                 user_id: user.id,
                 title: googleEvent.summary || 'Untitled Event',
@@ -90,7 +91,7 @@ export async function POST(request: Request) {
                 end_date: googleEvent.end?.dateTime || googleEvent.end?.date,
                 all_day: !googleEvent.start?.dateTime,
                 external_event_id: googleEvent.id,
-                external_calendar_id: sync.default_calendar_id,
+                external_calendar_id: syncData.default_calendar_id,
                 sync_provider: 'google',
                 last_synced_at: new Date().toISOString(),
               });
@@ -111,8 +112,8 @@ export async function POST(request: Request) {
     if (direction === 'export' || direction === 'bidirectional') {
       try {
         // Get events to export
-        const { data: localEvents } = await supabase
-          .from('calendar_events')
+        const { data: localEvents } = await (supabase as any)
+          .from('calendar_events' as any)
           .select('*')
           .eq('user_id', user.id)
           .is('external_event_id', null)
@@ -147,17 +148,17 @@ export async function POST(request: Request) {
               };
 
               const { data: createdEvent } = await calendar.events.insert({
-                calendarId: sync.default_calendar_id,
+                calendarId: syncData.default_calendar_id,
                 requestBody: googleEvent,
               });
 
               if (createdEvent) {
                 // Update local event with external ID
-                await supabase
-                  .from('calendar_events')
+                await (supabase as any)
+                  .from('calendar_events' as any)
                   .update({
                     external_event_id: createdEvent.id,
-                    external_calendar_id: sync.default_calendar_id,
+                    external_calendar_id: syncData.default_calendar_id,
                     sync_provider: 'google',
                     last_synced_at: new Date().toISOString(),
                   })
@@ -176,15 +177,15 @@ export async function POST(request: Request) {
     }
 
     // Update sync status
-    await supabase
+    await (supabase as any)
       .from('calendar_syncs')
       .update({
         last_sync_at: new Date().toISOString(),
         last_sync_status: errors.length > 0 ? 'error' : 'success',
         last_sync_error: errors.length > 0 ? errors.join('; ') : null,
-        sync_count: sync.sync_count + 1,
+        sync_count: syncData.sync_count + 1,
       })
-      .eq('id', sync.id);
+      .eq('id', syncData.id);
 
     return NextResponse.json({
       success: true,
@@ -212,7 +213,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('calendar_syncs')
       .delete()
       .eq('user_id', user.id)

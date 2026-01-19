@@ -87,7 +87,7 @@ export default function AdminDashboard() {
         <div className="space-y-6">
           <PageHeader
             title="Dashboard Administrateur"
-            description="Vue globale de la plateforme"
+            subtitle="Vue globale de la plateforme"
           />
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
@@ -125,7 +125,7 @@ export default function AdminDashboard() {
         {/* Header */}
         <PageHeader
           title="Dashboard Administrateur"
-          description="Vue globale des métriques de la plateforme WeWinBid"
+          subtitle="Vue globale des métriques de la plateforme WeWinBid"
         />
 
         {/* Statistiques principales */}

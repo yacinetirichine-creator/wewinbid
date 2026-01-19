@@ -35,7 +35,7 @@ async function getHandler(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
+    const { data: profile } = await (supabase as any)
       .from('profiles')
       .select('company_id')
       .eq('id', user.id)
@@ -98,7 +98,7 @@ async function getHandler(request: NextRequest) {
       return NextResponse.json({ partners: companies });
     } else {
       // Get my partnerships
-      const { data: partnerships, error } = await supabase
+      const { data: partnerships, error } = await (supabase as any)
         .from('partnerships')
         .select(`
           *,
@@ -118,7 +118,7 @@ async function getHandler(request: NextRequest) {
       }
 
       // Format partnerships
-      const formattedPartnerships = partnerships?.map(p => ({
+      const formattedPartnerships = partnerships?.map((p: any) => ({
         ...p,
         isRequester: p.requester_id === profile.company_id,
         otherCompany: p.requester_id === profile.company_id ? p.partner : p.requester,
@@ -137,7 +137,7 @@ async function postHandler(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
+    const { data: profile } = await (supabase as any)
       .from('profiles')
       .select('company_id')
       .eq('id', user.id)
@@ -152,7 +152,7 @@ async function postHandler(request: NextRequest) {
     const data = CreatePartnershipSchema.parse(body);
 
     // Check if partnership already exists
-    const { data: existing } = await supabase
+    const { data: existing } = await (supabase as any)
       .from('partnerships')
       .select('id, status')
       .or(`and(requester_id.eq.${profile.company_id},partner_id.eq.${data.partner_id}),and(requester_id.eq.${data.partner_id},partner_id.eq.${profile.company_id})`)
@@ -172,7 +172,7 @@ async function postHandler(request: NextRequest) {
     }
 
     // Create partnership request
-    const { data: partnership, error: createError } = await supabase
+    const { data: partnership, error: createError } = await (supabase as any)
       .from('partnerships')
       .insert({
         requester_id: profile.company_id,
@@ -209,7 +209,7 @@ async function putHandler(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
+    const { data: profile } = await (supabase as any)
       .from('profiles')
       .select('company_id')
       .eq('id', user.id)
@@ -224,7 +224,7 @@ async function putHandler(request: NextRequest) {
     const { id, action, response_message } = UpdatePartnershipSchema.parse(body);
 
     // Get the partnership
-    const { data: partnership } = await supabase
+    const { data: partnership } = await (supabase as any)
       .from('partnerships')
       .select('*')
       .eq('id', id)
@@ -294,7 +294,7 @@ async function putHandler(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
 
-    const { data: updated, error: updateError } = await supabase
+    const { data: updated, error: updateError } = await (supabase as any)
       .from('partnerships')
       .update(updateData)
       .eq('id', id)
@@ -320,7 +320,7 @@ async function deleteHandler(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
+    const { data: profile } = await (supabase as any)
       .from('profiles')
       .select('company_id')
       .eq('id', user.id)
@@ -335,7 +335,7 @@ async function deleteHandler(request: NextRequest) {
     const id = z.string().uuid().parse(searchParams.get('id'));
 
     // Get and validate partnership
-    const { data: partnership } = await supabase
+    const { data: partnership } = await (supabase as any)
       .from('partnerships')
       .select('*')
       .eq('id', id)
@@ -357,7 +357,7 @@ async function deleteHandler(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('partnerships')
       .delete()
       .eq('id', id);
@@ -371,7 +371,7 @@ async function deleteHandler(request: NextRequest) {
 }
 
 // Export wrapped handlers
-export const GET = withErrorHandler(getHandler);
-export const POST = withErrorHandler(postHandler);
-export const PUT = withErrorHandler(putHandler);
-export const DELETE = withErrorHandler(deleteHandler);
+export const GET = withErrorHandler(getHandler as any);
+export const POST = withErrorHandler(postHandler as any);
+export const PUT = withErrorHandler(putHandler as any);
+export const DELETE = withErrorHandler(deleteHandler as any);

@@ -21,12 +21,10 @@ export async function GET(
       );
     }
 
-    const { id } = await params;
-
-    const teamId = id;
+    const teamId = params.id;
 
     // Check if user is team member
-    const { data: isMember } = await (supabase as any).rpc('is_team_member', {
+    const { data: isMember } = await supabase.rpc('is_team_member', {
       p_team_id: teamId,
       p_user_id: user.id,
     });
@@ -39,7 +37,7 @@ export async function GET(
     }
 
     // Get pending invitations
-    const { data: invitations, error } = await (supabase as any)
+    const { data: invitations, error } = await supabase
       .from('team_invitations')
       .select('*')
       .eq('team_id', teamId)
@@ -82,10 +80,8 @@ export async function POST(
         { status: 401 }
       );
     }
-    const { id } = await params;
 
-
-    const teamId = id;
+    const teamId = params.id;
     const body = await req.json();
     const { email, role = 'MEMBER', message } = body;
 
@@ -98,7 +94,7 @@ export async function POST(
     }
 
     // Check if requester is owner or admin
-    const { data: requester } = await (supabase as any)
+    const { data: requester } = await supabase
       .from('team_members')
       .select('role')
       .eq('team_id', teamId)
@@ -113,7 +109,7 @@ export async function POST(
     }
 
     // Check if user is already a member
-    const { data: existingMember } = await (supabase as any)
+    const { data: existingMember } = await supabase
       .from('team_members')
       .select('id')
       .eq('team_id', teamId)
@@ -128,7 +124,7 @@ export async function POST(
     }
 
     // Check for pending invitation
-    const { data: pendingInvitation } = await (supabase as any)
+    const { data: pendingInvitation } = await supabase
       .from('team_invitations')
       .select('id')
       .eq('team_id', teamId)
@@ -147,7 +143,7 @@ export async function POST(
     const token = randomBytes(32).toString('hex');
 
     // Create invitation
-    const { data: invitation, error } = await (supabase as any)
+    const { data: invitation, error } = await supabase
       .from('team_invitations')
       .insert({
         team_id: teamId,
@@ -172,7 +168,7 @@ export async function POST(
     // await sendInvitationEmail(email, team.name, invitation.token);
 
     // Log activity
-    await (supabase as any).rpc('log_team_activity', {
+    await supabase.rpc('log_team_activity', {
       p_team_id: teamId,
       p_action: 'INVITATION_SENT',
       p_entity_type: 'invitation',
@@ -208,10 +204,8 @@ export async function DELETE(
         { status: 401 }
       );
     }
-    const { id } = await params;
 
-
-    const teamId = id;
+    const teamId = params.id;
     const { searchParams } = new URL(req.url);
     const invitationId = searchParams.get('invitation_id');
 
@@ -223,7 +217,7 @@ export async function DELETE(
     }
 
     // Check if requester is owner or admin
-    const { data: requester } = await (supabase as any)
+    const { data: requester } = await supabase
       .from('team_members')
       .select('role')
       .eq('team_id', teamId)
@@ -238,7 +232,7 @@ export async function DELETE(
     }
 
     // Delete invitation
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('team_invitations')
       .delete()
       .eq('id', invitationId)
@@ -253,7 +247,7 @@ export async function DELETE(
     }
 
     // Log activity
-    await (supabase as any).rpc('log_team_activity', {
+    await supabase.rpc('log_team_activity', {
       p_team_id: teamId,
       p_action: 'INVITATION_CANCELLED',
       p_entity_type: 'invitation',

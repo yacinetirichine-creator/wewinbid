@@ -16,7 +16,7 @@ async function getHandler(request: NextRequest) {
   }
 
   // Vérifier si l'utilisateur est admin
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('role')
     .eq('id', user.id)
@@ -27,7 +27,7 @@ async function getHandler(request: NextRequest) {
   }
 
   // Récupérer toutes les entreprises
-  const { data: companies } = await supabase
+  const { data: companies } = await (supabase as any)
     .from('companies')
     .select('id, name, created_at, subscription_plan, subscription_status') as { data: any[] | null };
 
@@ -38,7 +38,7 @@ async function getHandler(request: NextRequest) {
   const businessCompanies = companies?.filter(c => c.subscription_plan === 'business').length || 0;
 
   // Récupérer tous les appels d'offres
-  const { data: tenders } = await supabase
+  const { data: tenders } = await (supabase as any)
     .from('tenders')
     .select('id, status, type, estimated_value, created_at, sector, country, company_id') as { data: any[] | null };
 
@@ -127,7 +127,7 @@ async function getHandler(request: NextRequest) {
     .slice(0, 10)
     .map(c => c.companyId);
 
-  const { data: topCompaniesDetails } = await supabase
+  const { data: topCompaniesDetails } = await (supabase as any)
     .from('companies')
     .select('id, name, subscription_plan')
     .in('id', topCompaniesIds) as { data: any[] | null };
@@ -175,4 +175,4 @@ async function getHandler(request: NextRequest) {
   });
 }
 
-export const GET = withErrorHandler(getHandler);
+export const GET = withErrorHandler(getHandler as any);

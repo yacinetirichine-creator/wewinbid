@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's company
-    const { data: teamMember } = await supabase
+    const { data: teamMember } = await (supabase as any)
       .from('team_members')
       .select('company_id')
       .eq('user_id', user.id)
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's company
-    const { data: teamMember } = await supabase
+    const { data: teamMember } = await (supabase as any)
       .from('team_members')
       .select('company_id, role')
       .eq('user_id', user.id)
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
 
     // Check if shortcut is unique
     if (validated.shortcut) {
-      const { data: existing } = await supabase
+      const { data: existing } = await (supabase as any)
         .from('snippets')
         .select('id')
         .eq('company_id', teamMember.company_id)
@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create snippet
-    const { data: snippet, error } = await supabase
+    const { data: snippet, error } = await (supabase as any)
       .from('snippets')
       .insert({
         company_id: teamMember.company_id,
@@ -262,7 +262,7 @@ export async function PATCH(request: NextRequest) {
 
     // Check shortcut uniqueness if changing it
     if (validated.shortcut) {
-      const { data: existing } = await supabase
+      const { data: existing } = await (supabase as any)
         .from('snippets')
         .select('id, company_id')
         .eq('shortcut', validated.shortcut)
@@ -279,7 +279,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update snippet (RLS handles permissions)
-    const { data: snippet, error } = await supabase
+    const { data: snippet, error } = await (supabase as any)
       .from('snippets')
       .update(validated)
       .eq('id', snippetId)
@@ -340,7 +340,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Soft delete
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('snippets')
       .update({ is_active: false })
       .eq('id', snippetId);

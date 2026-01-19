@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get user's teams using the helper function
-    const { data: teams, error } = await supabase.rpc('get_user_teams', {
+    const { data: teams, error } = await (supabase as any).rpc('get_user_teams', {
       p_user_id: user.id,
     });
 
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
 
     // Check if slug already exists
     if (teamSlug) {
-      const { data: existing } = await supabase
+      const { data: existing } = await (supabase as any)
         .from('teams')
         .select('id')
         .eq('slug', teamSlug)
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create team
-    const { data: team, error } = await supabase
+    const { data: team, error } = await (supabase as any)
       .from('teams')
       .insert({
         name: name.trim(),

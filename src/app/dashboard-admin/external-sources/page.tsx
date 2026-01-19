@@ -15,7 +15,7 @@ import {
   EyeSlashIcon,
   PlayIcon,
 } from '@heroicons/react/24/outline';
-import { Button, Card, Badge, Skeleton, Switch } from '@/components/ui';
+import { Button, Card, Badge, Skeleton } from '@/components/ui';
 import { AppLayout, PageHeader } from '@/components/layout/Sidebar';
 import { formatDate } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -223,14 +223,15 @@ export default function ExternalSourcesPage() {
     <AppLayout>
       <PageHeader
         title="Sources Externes"
-        subtitle="Gestion des sources de données d'appels d'offres"
-      >
-        <div className="flex items-center gap-3">
-          <Badge variant="secondary">
-            {sources.filter(s => s.is_active).length} / {sources.length} actives
-          </Badge>
-        </div>
-      </PageHeader>
+        description="Gestion des sources de données d'appels d'offres"
+        actions={
+          <div className="flex items-center gap-3">
+            <Badge variant="secondary">
+              {sources.filter(s => s.is_active).length} / {sources.length} actives
+            </Badge>
+          </div>
+        }
+      />
 
       <motion.div
         variants={container}
@@ -325,11 +326,17 @@ export default function ExternalSourcesPage() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <Switch
-                      checked={source.is_active}
-                      onChange={() => toggleSource(source.id, source.is_active)}
-                      label={source.is_active ? 'Actif' : 'Inactif'}
-                    />
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={source.is_active}
+                        onChange={() => toggleSource(source.id, source.is_active)}
+                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-sm text-gray-700">
+                        {source.is_active ? 'Actif' : 'Inactif'}
+                      </span>
+                    </label>
                     <Button
                       onClick={() => triggerSync(source.id)}
                       disabled={!source.is_active || syncing[source.id]}

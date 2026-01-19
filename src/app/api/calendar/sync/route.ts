@@ -12,7 +12,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const { data: syncs, error } = await supabase
+    const { data: syncs, error } = await (supabase as any)
       .from('calendar_syncs')
       .select('*')
       .eq('user_id', user.id)
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     }
     
     // Remove sensitive tokens from response
-    const sanitizedSyncs = (syncs || []).map(sync => ({
+    const sanitizedSyncs = (syncs || []).map((sync: any) => ({
       ...sync,
       access_token: sync.access_token ? '***' : null,
       refresh_token: sync.refresh_token ? '***' : null,
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
       );
     }
     
-    const { data: sync, error } = await supabase
+    const { data: sync, error } = await (supabase as any)
       .from('calendar_syncs')
       .insert({
         user_id: user.id,
@@ -131,7 +131,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('calendar_syncs')
       .delete()
       .eq('id', syncId)

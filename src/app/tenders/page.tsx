@@ -245,7 +245,7 @@ export default function TendersPage() {
 
   async function handleStatusChange(tenderId: string, newStatus: TenderStatus) {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('tenders')
         .update({ status: newStatus, updated_at: new Date().toISOString() })
         .eq('id', tenderId);
@@ -303,27 +303,28 @@ export default function TendersPage() {
     <AppLayout>
       <PageHeader 
         title={t('tenders.title')}
-        subtitle={t('tenders.subtitle')
+        description={t('tenders.subtitle')
           .replace('{total}', String(stats.total))
           .replace('{won}', String(stats.won))}
-      >
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <FunnelIcon className="w-4 h-4 mr-2" />
-            {t('tenders.actions.filters')}
-          </Button>
-          <Link href="/tenders/new">
-            <Button size="sm">
-              <PlusIcon className="w-4 h-4 mr-2" />
-              {t('tenders.actions.new')}
+        actions={
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <FunnelIcon className="w-4 h-4 mr-2" />
+              {t('tenders.actions.filters')}
             </Button>
-          </Link>
-        </div>
-      </PageHeader>
+            <Link href="/tenders/new">
+              <Button size="sm">
+                <PlusIcon className="w-4 h-4 mr-2" />
+                {t('tenders.actions.new')}
+              </Button>
+            </Link>
+          </div>
+        }
+      />
 
       {/* Stats rapides */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -366,7 +367,7 @@ export default function TendersPage() {
               <CurrencyEuroIcon className="w-5 h-5 text-violet-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">{formatCurrency(stats.totalValue, 'EUR', 'fr-FR', true)}</p>
+              <p className="text-2xl font-bold text-slate-900">{formatCurrency(stats.totalValue, 'EUR', 'fr-FR')}</p>
               <p className="text-xs text-slate-500">{t('tenders.stats.revenue')}</p>
             </div>
           </div>
@@ -389,7 +390,7 @@ export default function TendersPage() {
                     placeholder={t('tenders.search.placeholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    icon={<MagnifyingGlassIcon className="w-4 h-4" />}
+                    leftIcon={<MagnifyingGlassIcon className="w-4 h-4" />}
                   />
                 </div>
                 <div className="w-full md:w-48">

@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     if (markAll) {
       // Mark all notifications as read
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('notifications')
         .update({ read: true })
         .eq('user_id', user.id)
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Mark specific notifications as read
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('notifications')
       .update({ read: true })
       .in('id', notificationIds)

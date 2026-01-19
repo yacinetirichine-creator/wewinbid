@@ -151,27 +151,29 @@ function TemplateCard({
   onSelect: () => void;
 }) {
   return (
-    <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer border-gray-200 hover:border-primary-300" onClick={onSelect}>
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between mb-3">
-          <div className="p-2 bg-primary-100 rounded-xl">
-            <Palette className="w-5 h-5 text-primary-600" />
+    <div className="cursor-pointer" onClick={onSelect}>
+      <Card className="hover:shadow-lg transition-all duration-200 border-gray-200 hover:border-primary-300">
+        <CardContent className="p-5">
+          <div className="flex items-start justify-between mb-3">
+            <div className="p-2 bg-primary-100 rounded-xl">
+              <Palette className="w-5 h-5 text-primary-600" />
+            </div>
+            <div className="flex gap-1">
+              {template.platforms.map((platform) => (
+                <div key={platform} className="p-1.5 bg-gray-100 rounded-lg">
+                  <PlatformIcon platform={platform} className="w-4 h-4 text-gray-500" />
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-1">
-            {template.platforms.map((platform) => (
-              <div key={platform} className="p-1.5 bg-gray-100 rounded-lg">
-                <PlatformIcon platform={platform} className="w-4 h-4 text-gray-500" />
-              </div>
-            ))}
+          <h3 className="font-semibold text-gray-900 mb-1">{template.name}</h3>
+          <p className="text-sm text-gray-500 mb-3">{template.description}</p>
+          <div className="px-3 py-2 bg-gray-50 rounded-lg">
+            <p className="text-sm text-gray-600 italic truncate">{template.preview}</p>
           </div>
-        </div>
-        <h3 className="font-semibold text-gray-900 mb-1">{template.name}</h3>
-        <p className="text-sm text-gray-500 mb-3">{template.description}</p>
-        <div className="px-3 py-2 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600 italic truncate">{template.preview}</p>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
@@ -345,7 +347,7 @@ function GenerationModal({
               <select
                 className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-primary-500"
                 value={formData.platform}
-                onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, platform: e.target.value as any })}
               >
                 {template.platforms.map((p) => (
                   <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
@@ -423,7 +425,7 @@ function GenerationModal({
 export default function StudioPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<ContentTemplate | null>(null);
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent[]>(DEMO_GENERATED);
-  const [activeTab, setActiveTab] = useState<'templates' | 'content'>('templates');
+  const [activeTab, setActiveTab] = useState<'templates' | 'content' | 'images' | 'presentations'>('templates');
 
   const handleGenerate = (data: any) => {
     // Simuler l'ajout de contenu généré
@@ -446,7 +448,7 @@ export default function StudioPage() {
     <AppLayout>
       <PageHeader
         title="Studio Créatif"
-        subtitle="Créez du contenu professionnel pour valoriser vos succès en marchés publics"
+        description="Créez du contenu professionnel pour valoriser vos succès en marchés publics"
         actions={
           <div className="flex flex-col sm:flex-row gap-3">
             <Button variant="outline">

@@ -153,7 +153,7 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <Alert variant="error" className="mb-6">
+              <Alert type="error" className="mb-6">
                 {error}
               </Alert>
             )}
@@ -165,7 +165,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="vous@entreprise.com"
-                icon={<Mail className="w-5 h-5" />}
+                leftIcon={<Mail className="w-5 h-5" />}
                 required
                 className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
               />
@@ -177,7 +177,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  icon={<Lock className="w-5 h-5" />}
+                  leftIcon={<Lock className="w-5 h-5" />}
                   required
                   className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
                 />

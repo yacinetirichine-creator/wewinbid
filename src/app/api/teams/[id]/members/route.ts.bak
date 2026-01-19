@@ -20,11 +20,10 @@ export async function GET(
       );
     }
 
-    const { id } = await params;
-    const teamId = id;
+    const teamId = params.id;
 
     // Check if user is team member
-    const { data: isMember } = await (supabase as any).rpc('is_team_member', {
+    const { data: isMember } = await supabase.rpc('is_team_member', {
       p_team_id: teamId,
       p_user_id: user.id,
     });
@@ -37,7 +36,7 @@ export async function GET(
     }
 
     // Get team members
-    const { data: members, error } = await (supabase as any)
+    const { data: members, error } = await supabase
       .from('team_members')
       .select('*')
       .eq('team_id', teamId)
@@ -80,13 +79,12 @@ export async function POST(
       );
     }
 
-    const { id } = await params;
-    const teamId = id;
+    const teamId = params.id;
     const body = await req.json();
     const { user_id, role = 'MEMBER' } = body;
 
     // Check if requester is owner or admin
-    const { data: requester } = await (supabase as any)
+    const { data: requester } = await supabase
       .from('team_members')
       .select('role')
       .eq('team_id', teamId)
@@ -101,13 +99,13 @@ export async function POST(
     }
 
     // Check team member limit
-    const { data: team } = await (supabase as any)
+    const { data: team } = await supabase
       .from('teams')
       .select('max_members')
       .eq('id', teamId)
       .single();
 
-    const { count: currentMembers } = await (supabase as any)
+    const { count: currentMembers } = await supabase
       .from('team_members')
       .select('*', { count: 'exact', head: true })
       .eq('team_id', teamId)
@@ -121,7 +119,7 @@ export async function POST(
     }
 
     // Add member
-    const { data: member, error } = await (supabase as any)
+    const { data: member, error } = await supabase
       .from('team_members')
       .insert({
         team_id: teamId,
@@ -175,13 +173,12 @@ export async function PATCH(
       );
     }
 
-    const { id } = await params;
-    const teamId = id;
+    const teamId = params.id;
     const body = await req.json();
     const { member_id, role, is_active } = body;
 
     // Check if requester is owner or admin
-    const { data: requester } = await (supabase as any)
+    const { data: requester } = await supabase
       .from('team_members')
       .select('role')
       .eq('team_id', teamId)
@@ -196,7 +193,7 @@ export async function PATCH(
     }
 
     // Update member
-    const { data: member, error } = await (supabase as any)
+    const { data: member, error } = await supabase
       .from('team_members')
       .update({
         ...(role && { role }),
@@ -216,7 +213,7 @@ export async function PATCH(
     }
 
     // Log activity
-    await (supabase as any).rpc('log_team_activity', {
+    await supabase.rpc('log_team_activity', {
       p_team_id: teamId,
       p_action: 'MEMBER_UPDATED',
       p_entity_type: 'member',
@@ -253,8 +250,7 @@ export async function DELETE(
       );
     }
 
-    const { id } = await params;
-    const teamId = id;
+    const teamId = params.id;
     const { searchParams } = new URL(req.url);
     const memberId = searchParams.get('member_id');
 
@@ -266,7 +262,7 @@ export async function DELETE(
     }
 
     // Check if requester is owner or admin
-    const { data: requester } = await (supabase as any)
+    const { data: requester } = await supabase
       .from('team_members')
       .select('role')
       .eq('team_id', teamId)
@@ -281,7 +277,7 @@ export async function DELETE(
     }
 
     // Cannot remove team owner
-    const { data: memberToRemove } = await (supabase as any)
+    const { data: memberToRemove } = await supabase
       .from('team_members')
       .select('role')
       .eq('id', memberId)
@@ -296,7 +292,7 @@ export async function DELETE(
     }
 
     // Remove member
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('team_members')
       .delete()
       .eq('id', memberId)
@@ -311,7 +307,7 @@ export async function DELETE(
     }
 
     // Log activity
-    await (supabase as any).rpc('log_team_activity', {
+    await supabase.rpc('log_team_activity', {
       p_team_id: teamId,
       p_action: 'MEMBER_REMOVED',
       p_entity_type: 'member',

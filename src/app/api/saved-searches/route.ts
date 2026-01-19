@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get user's company
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await (supabase as any)
       .from('profiles')
       .select('company_id')
       .eq('id', user.id)
@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get user's company
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await (supabase as any)
       .from('profiles')
       .select('company_id')
       .eq('id', user.id)
@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
     const { name, description, filters, notification_enabled } = validation.data;
 
     // Create saved search
-    const { data: search, error: createError } = await supabase
+    const { data: search, error: createError } = await (supabase as any)
       .from('saved_searches')
       .insert({
         user_id: user.id,
@@ -219,7 +219,7 @@ export async function PATCH(req: NextRequest) {
     const { id, ...updates } = validation.data;
 
     // Check if user owns this search
-    const { data: existing, error: checkError } = await supabase
+    const { data: existing, error: checkError } = await (supabase as any)
       .from('saved_searches')
       .select('id')
       .eq('id', id)
@@ -234,7 +234,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Update search
-    const { data: search, error: updateError } = await supabase
+    const { data: search, error: updateError } = await (supabase as any)
       .from('saved_searches')
       .update(updates)
       .eq('id', id)
@@ -289,7 +289,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Delete search (RLS will ensure user owns it)
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await (supabase as any)
       .from('saved_searches')
       .delete()
       .eq('id', id)

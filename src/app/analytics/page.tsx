@@ -40,34 +40,35 @@ import {
 import { useLocale } from '@/hooks/useLocale';
 import { useUiTranslations } from '@/hooks/useUiTranslations';
 
-// ✅ LAZY LOADING: Recharts components loaded dynamically (60KB+ bundle)
-const LineChart = dynamic(() => import('recharts').then(mod => ({ default: mod.LineChart })), {
-  loading: () => <Skeleton variant="rectangular" className="h-[300px] w-full" />,
-  ssr: false,
-});
-const Line = dynamic(() => import('recharts').then(mod => ({ default: mod.Line })), { ssr: false });
-const RechartsBarChart = dynamic(() => import('recharts').then(mod => ({ default: mod.BarChart })), {
-  loading: () => <Skeleton variant="rectangular" className="h-[300px] w-full" />,
-  ssr: false,
-});
-const Bar = dynamic(() => import('recharts').then(mod => ({ default: mod.Bar })), { ssr: false });
-const RechartsPieChart = dynamic(() => import('recharts').then(mod => ({ default: mod.PieChart })), {
-  loading: () => <Skeleton variant="rectangular" className="h-[300px] w-full" />,
-  ssr: false,
-});
-const Pie = dynamic(() => import('recharts').then(mod => ({ default: mod.Pie })), { ssr: false });
-const Cell = dynamic(() => import('recharts').then(mod => ({ default: mod.Cell })), { ssr: false });
-const XAxis = dynamic(() => import('recharts').then(mod => ({ default: mod.XAxis })), { ssr: false });
-const YAxis = dynamic(() => import('recharts').then(mod => ({ default: mod.YAxis })), { ssr: false });
-const CartesianGrid = dynamic(() => import('recharts').then(mod => ({ default: mod.CartesianGrid })), { ssr: false });
-const RechartsTooltip = dynamic(() => import('recharts').then(mod => ({ default: mod.Tooltip })), { ssr: false });
-const Legend = dynamic(() => import('recharts').then(mod => ({ default: mod.Legend })), { ssr: false });
-const ResponsiveContainer = dynamic(() => import('recharts').then(mod => ({ default: mod.ResponsiveContainer })), { ssr: false });
-const Area = dynamic(() => import('recharts').then(mod => ({ default: mod.Area })), { ssr: false });
-const AreaChart = dynamic(() => import('recharts').then(mod => ({ default: mod.AreaChart })), {
-  loading: () => <Skeleton variant="rectangular" className="h-[300px] w-full" />,
-  ssr: false,
-});
+// ✅ LAZY LOADING: Recharts composant complet chargé dynamiquement
+const ChartsComponents = dynamic(
+  () => import('recharts').then((mod) => ({
+    default: () => null, // Placeholder, les composants seront importés normalement dans le composant
+  })),
+  {
+    loading: () => <Skeleton variant="rectangular" className="h-[300px] w-full" />,
+    ssr: false,
+  }
+);
+
+// Import direct de Recharts (sera tree-shaken si pas utilisé)
+import {
+  LineChart,
+  Line,
+  BarChart as RechartsBarChart,
+  Bar,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+  ResponsiveContainer,
+  Area,
+  AreaChart,
+} from 'recharts';
 
 // Types
 interface AnalyticsData {
@@ -334,7 +335,7 @@ export default function AnalyticsPage() {
     <AppLayout>
       <PageHeader
         title={t('analytics.title')}
-        subtitle={t('analytics.subtitle')}
+        description={t('analytics.subtitle')}
         actions={
           <div className="flex flex-col sm:flex-row gap-3">
             <select

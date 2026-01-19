@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     
     // Build query
     let query = supabase
-      .from('calendar_events')
+      .from('calendar_events' as any)
       .select(`
         *,
         tender:tenders(id, title, reference, status),
@@ -51,8 +51,8 @@ export async function GET(request: Request) {
     // Optionally include team events
     let teamEvents = [];
     if (includeTeam) {
-      const { data: teamEventsData } = await supabase
-        .from('calendar_events')
+      const { data: teamEventsData } = await (supabase as any)
+        .from('calendar_events' as any)
         .select(`
           *,
           tender:tenders(id, title, reference, status),
@@ -127,8 +127,8 @@ export async function POST(request: Request) {
       );
     }
     
-    const { data: event, error } = await supabase
-      .from('calendar_events')
+    const { data: event, error } = await (supabase as any)
+      .from('calendar_events' as any)
       .insert({
         user_id: user.id,
         tender_id: tenderId,

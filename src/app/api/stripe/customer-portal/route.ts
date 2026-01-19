@@ -10,7 +10,7 @@ import { withErrorHandler } from '@/lib/errors';
 
 async function handler(req: NextRequest) {
   // Get authenticated user
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
@@ -21,7 +21,7 @@ async function handler(req: NextRequest) {
   }
 
   // Get Stripe customer ID
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('stripe_customer_id')
     .eq('id', user.id)
@@ -45,4 +45,4 @@ async function handler(req: NextRequest) {
   });
 }
 
-export const POST = withErrorHandler(handler);
+export const POST = withErrorHandler(handler as any);

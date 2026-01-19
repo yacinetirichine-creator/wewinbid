@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
       : undefined;
 
     // Get recommendations using the database function
-    const { data: recommendations, error: recsError } = await supabase.rpc(
+    const { data: recommendations, error: recsError } = await (supabase as any).rpc(
       'get_recommended_tenders',
       {
         p_user_id: user.id,
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get user's profile and company
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await (supabase as any)
       .from('profiles')
       .select('company_id')
       .eq('id', user.id)
@@ -109,18 +109,18 @@ export async function POST(req: NextRequest) {
     }
 
     // Get user's sector preferences (from past tenders)
-    const { data: pastTenders } = await supabase
+    const { data: pastTenders } = await (supabase as any)
       .from('tenders')
       .select('sector')
       .eq('company_id', profile.company_id)
       .limit(10);
 
     const preferredSectors = [
-      ...new Set(pastTenders?.map((t) => t.sector).filter(Boolean)),
+      ...new Set(pastTenders?.map((t: any) => t.sector).filter(Boolean)),
     ];
 
     // Get recent marketplace tenders
-    const { data: recentTenders } = await supabase
+    const { data: recentTenders } = await (supabase as any)
       .from('tenders')
       .select('*')
       .eq('company_id', profile.company_id)
@@ -185,13 +185,13 @@ export async function POST(req: NextRequest) {
     });
 
     // Sort by score
-    recommendations.sort((a, b) => b.match_score - a.match_score);
+    recommendations.sort((a: any, b: any) => b.match_score - a.match_score);
 
     // Take top 10
     const topRecommendations = recommendations.slice(0, 10);
 
     // Insert into database (upsert to avoid duplicates)
-    const inserts = topRecommendations.map((rec) => ({
+    const inserts = topRecommendations.map((rec: any) => ({
       user_id: user.id,
       tender_id: rec.tender_id,
       match_score: rec.match_score,
@@ -201,7 +201,7 @@ export async function POST(req: NextRequest) {
       expires_at: rec.expires_at,
     }));
 
-    const { error: insertError } = await supabase
+    const { error: insertError } = await (supabase as any)
       .from('tender_recommendations')
       .upsert(inserts, {
         onConflict: 'user_id,tender_id',
@@ -285,7 +285,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Update recommendation
-    const { data: recommendation, error: updateError } = await supabase
+    const { data: recommendation, error: updateError } = await (supabase as any)
       .from('tender_recommendations')
       .update(updates)
       .eq('id', id)

@@ -53,7 +53,7 @@ async function getHandler(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('company_id')
     .eq('id', user.id)
@@ -107,7 +107,7 @@ async function postHandler(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('company_id')
     .eq('id', user.id)
@@ -169,7 +169,7 @@ async function postHandler(request: NextRequest) {
   
   const data = FormDataSchema.parse({
     name: formData.get('name') || sanitizedOriginalName,
-    category: formData.get('category') || 'OTHER'),
+    category: formData.get('category') || 'OTHER',
     tender_id: formData.get('tender_id') || null,
     expires_at: formData.get('expires_at') || null,
   });
@@ -246,7 +246,7 @@ async function postHandler(request: NextRequest) {
     .getPublicUrl(fileName);
 
   // Create document record with sanitized data
-  const { data: document, error: dbError } = await supabase
+  const { data: document, error: dbError } = await (supabase as any)
     .from('documents')
     .insert({
       company_id: profile.company_id,
@@ -300,7 +300,7 @@ async function putHandler(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('company_id')
     .eq('id', user.id)
@@ -315,7 +315,7 @@ async function putHandler(request: NextRequest) {
   const { id, ...updateData } = UpdateDocumentSchema.parse(body);
 
   // Update document
-  const { data: document, error } = await supabase
+  const { data: document, error } = await (supabase as any)
     .from('documents')
     .update({ ...updateData, updated_at: new Date().toISOString() })
     .eq('id', id)
@@ -340,7 +340,7 @@ async function deleteHandler(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('company_id')
     .eq('id', user.id)
@@ -355,7 +355,7 @@ async function deleteHandler(request: NextRequest) {
   const id = z.string().uuid().parse(searchParams.get('id'));
 
   // Get document to find file path
-  const { data: document } = await supabase
+  const { data: document } = await (supabase as any)
     .from('documents')
     .select('file_path')
     .eq('id', id)
@@ -374,7 +374,7 @@ async function deleteHandler(request: NextRequest) {
   }
 
   // Delete from database
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('documents')
     .delete()
     .eq('id', id)
@@ -389,7 +389,7 @@ async function deleteHandler(request: NextRequest) {
 }
 
 // Export wrapped handlers
-export const GET = withErrorHandler(getHandler);
-export const POST = withErrorHandler(postHandler);
-export const PUT = withErrorHandler(putHandler);
-export const DELETE = withErrorHandler(deleteHandler);
+export const GET = withErrorHandler(getHandler as any);
+export const POST = withErrorHandler(postHandler as any);
+export const PUT = withErrorHandler(putHandler as any);
+export const DELETE = withErrorHandler(deleteHandler as any);

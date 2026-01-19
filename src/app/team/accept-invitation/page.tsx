@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, XCircle, Mail, Building2, Clock, Shield } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -19,7 +19,7 @@ interface InvitationData {
   };
 }
 
-export default function AcceptInvitationPage() {
+function AcceptInvitationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -31,11 +31,17 @@ export default function AcceptInvitationPage() {
   const [success, setSuccess] = useState(false);
 
   const verifyInvitation = useCallback(async () => {
+    if (!token) {
+      setError('Token d\'invitation manquant');
+      setLoading(false);
+      return;
+    }
+
     try {
       const supabase = createClient();
 
       // Vérifier l'invitation
-      const { data, error: fetchError } = await supabase
+      const { data, error: fetchError } = await (supabase as any)
         .from('team_invitations')
         .select(
           `
@@ -108,7 +114,7 @@ export default function AcceptInvitationPage() {
       }
 
       // Créer le membre de l'équipe
-      const { error: memberError } = await supabase.from('team_members').insert({
+      const { error: memberError } = await (supabase as any).from('team_members').insert({
         user_id: user.id,
         company_id: (invitation as any).company_id,
         role: invitation.role,
@@ -118,7 +124,7 @@ export default function AcceptInvitationPage() {
       if (memberError) throw memberError;
 
       // Marquer l'invitation comme acceptée
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (supabase as any)
         .from('team_invitations')
         .update({ status: 'accepted' })
         .eq('id', invitation.id);
@@ -148,7 +154,7 @@ export default function AcceptInvitationPage() {
     try {
       const supabase = createClient();
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('team_invitations')
         .update({ status: 'declined' })
         .eq('id', invitation.id);
@@ -359,5 +365,17 @@ export default function AcceptInvitationPage() {
         )}
       </motion.div>
     </div>
+  );
+}
+
+export default function AcceptInvitationPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
+        <Clock className="h-12 w-12 text-white animate-pulse" />
+      </div>
+    }>
+      <AcceptInvitationContent />
+    </Suspense>
   );
 }

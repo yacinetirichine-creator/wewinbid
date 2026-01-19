@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Profil utilisateur
-    const { data: profile } = await supabase
+    const { data: profile } = await (supabase as any)
       .from('profiles')
       .select('*')
       .eq('id', user.id)
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     // 2. Informations d'entreprise
     const { data: company } = profile?.company_id
-      ? await supabase
+      ? await (supabase as any)
           .from('companies')
           .select('*')
           .eq('id', profile.company_id)
@@ -35,26 +35,26 @@ export async function POST(request: NextRequest) {
       : { data: null };
 
     // 3. Tenders créés
-    const { data: tenders } = await supabase
+    const { data: tenders } = await (supabase as any)
       .from('tenders')
       .select('*')
       .eq('user_id', user.id);
 
     // 4. Documents uploadés
-    const { data: documents } = await supabase
+    const { data: documents } = await (supabase as any)
       .from('documents')
       .select('*')
       .eq('user_id', user.id);
 
     // 5. Réponses aux tenders
-    const { data: responses } = await supabase
+    const { data: responses } = await (supabase as any)
       .from('tender_responses')
       .select('*')
       .eq('user_id', user.id);
 
     // 6. Abonnement et paiements
     const { data: subscription } = profile?.company_id
-      ? await supabase
+      ? await (supabase as any)
           .from('subscriptions')
           .select('*')
           .eq('company_id', profile.company_id)
@@ -62,13 +62,13 @@ export async function POST(request: NextRequest) {
       : { data: null };
 
     // 7. Notifications
-    const { data: notifications } = await supabase
+    const { data: notifications } = await (supabase as any)
       .from('notifications')
       .select('*')
       .eq('user_id', user.id);
 
     // 8. Activité récente (si table existe)
-    const { data: activity } = await supabase
+    const { data: activity } = await (supabase as any)
       .from('activity_logs')
       .select('*')
       .eq('user_id', user.id)
@@ -92,11 +92,11 @@ export async function POST(request: NextRequest) {
       company: sanitizeObject(company || {}),
       tenders: {
         count: tenders?.length || 0,
-        data: tenders?.map(t => sanitizeObject(t)) || [],
+        data: tenders?.map((t: any) => sanitizeObject(t)) || [],
       },
       documents: {
         count: documents?.length || 0,
-        data: documents?.map(d => ({
+        data: documents?.map((d: any) => ({
           ...sanitizeObject(d),
           // Ne pas exposer les URLs signées complètes pour la sécurité
           file_path: d.file_path,
@@ -105,16 +105,16 @@ export async function POST(request: NextRequest) {
       },
       responses: {
         count: responses?.length || 0,
-        data: responses?.map(r => sanitizeObject(r)) || [],
+        data: responses?.map((r: any) => sanitizeObject(r)) || [],
       },
       subscription: sanitizeObject(subscription || {}),
       notifications: {
         count: notifications?.length || 0,
-        data: notifications?.map(n => sanitizeObject(n)) || [],
+        data: notifications?.map((n: any) => sanitizeObject(n)) || [],
       },
       activity_logs: {
         count: activity?.length || 0,
-        data: activity?.map(a => sanitizeObject(a)) || [],
+        data: activity?.map((a: any) => sanitizeObject(a)) || [],
         note: 'Limité aux 100 dernières activités',
       },
       legal_information: {

@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get tender data
-    const { data: tender, error: tenderError } = await supabase
+    const { data: tender, error: tenderError } = await (supabase as any)
       .from('tenders')
       .select('*')
       .eq('id', tender_id)
@@ -103,7 +103,7 @@ Provide a clear, structured analysis in markdown format.`;
       .map(point => point.replace(/^[-•\d.]+\s*/, '').trim());
 
     // Save analysis context
-    const { data: context, error: contextError } = await supabase
+    const { data: context, error: contextError } = await (supabase as any)
       .from('chat_context')
       .insert({
         session_id: session_id || null,

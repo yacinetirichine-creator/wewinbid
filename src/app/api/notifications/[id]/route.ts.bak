@@ -20,12 +20,12 @@ export async function PATCH(
       );
     }
 
-    const { id: notificationId } = await params;
+    const notificationId = params.id;
     const body = await req.json();
     const { read } = body;
 
     // Update notification
-    const { data: notification, error } = await (supabase as any)
+    const { data: notification, error } = await supabase
       .from('notifications')
       .update({ read })
       .eq('id', notificationId)
@@ -77,9 +77,9 @@ export async function DELETE(
       );
     }
 
-    const { id: notificationId } = await params;
+    const notificationId = params.id;
 
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('notifications')
       .delete()
       .eq('id', notificationId)

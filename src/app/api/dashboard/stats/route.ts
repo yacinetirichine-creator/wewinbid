@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Call the database function to get stats
-    const { data, error } = await supabase.rpc('get_dashboard_stats', {
+    const { data, error } = await (supabase as any).rpc('get_dashboard_stats', {
       p_user_id: user.id
     });
 

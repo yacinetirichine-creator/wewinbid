@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import type { Database } from '@/types/database';
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Récupérer toutes les sources externes
-    const { data: sources, error: sourcesError } = await supabase
+    const { data: sources, error: sourcesError } = await (supabase as any)
       .from('external_sources')
       .select('*')
       .order('name', { ascending: true });
@@ -21,8 +22,8 @@ export async function GET(request: NextRequest) {
 
     // Récupérer les statistiques de sync pour chaque source
     const sourcesWithStats = await Promise.all(
-      (sources || []).map(async (source) => {
-        const { data: logs, error: logsError } = await supabase
+      (sources || []).map(async (source: any) => {
+        const { data: logs, error: logsError } = await (supabase as any)
           .from('source_sync_logs')
           .select('*')
           .eq('source_id', source.id)
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
 
         // Calculer le taux de succès
         const totalSyncs = logs?.length || 0;
-        const successfulSyncs = logs?.filter(log => log.status === 'SUCCESS').length || 0;
+        const successfulSyncs = logs?.filter((log: any) => log.status === 'SUCCESS').length || 0;
         const success_rate = totalSyncs > 0 ? (successfulSyncs / totalSyncs) * 100 : 0;
 
         return {
@@ -84,7 +85,7 @@ export async function PATCH(request: NextRequest) {
     if (api_key_encrypted) updates.api_key_encrypted = api_key_encrypted;
 
     // Mettre à jour la source
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('external_sources')
       .update(updates)
       .eq('id', source_id)
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Créer un log de synchronisation
-    const { data: log, error: logError } = await supabase
+    const { data: log, error: logError } = await (supabase as any)
       .from('source_sync_logs')
       .insert({
         source_id,
@@ -141,17 +142,17 @@ export async function POST(request: NextRequest) {
       const randomTendersFound = Math.floor(Math.random() * 50) + 10;
       const randomTendersImported = Math.floor(randomTendersFound * (0.7 + Math.random() * 0.3));
       
-      await supabase
+      await (supabase as any)
         .from('source_sync_logs')
         .update({
-          sync_completed_at: new Date().toISOString(),
+          sync_ended_at: new Date().toISOString(),
           status: 'SUCCESS',
           tenders_found: randomTendersFound,
           tenders_imported: randomTendersImported,
         })
         .eq('id', log.id);
 
-      await supabase
+      await (supabase as any)
         .from('external_sources')
         .update({
           last_sync_at: new Date().toISOString(),

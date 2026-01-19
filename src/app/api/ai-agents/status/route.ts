@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/server';
  */
 export async function GET() {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Vérifier l'authentification
     const {
@@ -19,7 +19,7 @@ export async function GET() {
     }
 
     // Vérifier le rôle admin
-    const { data: profile } = (await supabase
+    const { data: profile } = (await (supabase as any)
       .from('profiles')
       .select('role')
       .eq('id', user.id)
@@ -30,7 +30,7 @@ export async function GET() {
     }
 
     // Récupérer les configurations des agents
-    const { data: configs } = (await supabase
+    const { data: configs } = (await (supabase as any)
       .from('ai_agent_configs')
       .select('*')
       .order('agent_name')) as { data: any[] | null };
@@ -39,7 +39,7 @@ export async function GET() {
     const oneDayAgo = new Date();
     oneDayAgo.setDate(oneDayAgo.getDate() - 1);
 
-    const { data: recentActions } = (await supabase
+    const { data: recentActions } = (await (supabase as any)
       .from('ai_actions')
       .select('*')
       .gte('created_at', oneDayAgo.toISOString())
@@ -87,7 +87,7 @@ export async function GET() {
  */
 export async function PATCH(request: Request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Vérifier l'authentification
     const {
@@ -99,7 +99,7 @@ export async function PATCH(request: Request) {
     }
 
     // Vérifier le rôle admin
-    const { data: profile } = (await supabase
+    const { data: profile } = (await (supabase as any)
       .from('profiles')
       .select('role')
       .eq('id', user.id)
@@ -124,7 +124,7 @@ export async function PATCH(request: Request) {
     if (typeof enabled === 'boolean') updateData.enabled = enabled;
     if (autonomyLevel) updateData.autonomy_level = autonomyLevel;
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('ai_agent_configs')
       .update(updateData)
       .eq('agent_name', agentName)

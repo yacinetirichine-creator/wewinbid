@@ -223,7 +223,7 @@ function PartnerCard({
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-lg text-gray-900">{partner.company_name}</h3>
                 {partner.verified && (
-                  <CheckCircle2 className="w-5 h-5 text-green-500" title={t('marketplace.partner.verified')} />
+                  <CheckCircle2 className="w-5 h-5 text-green-500" />
                 )}
                 {partner.premium && (
                   <Badge variant="warning" className="text-xs">{t('marketplace.partner.premium')}</Badge>
@@ -471,7 +471,7 @@ export default function MarketplacePage() {
     <AppLayout>
       <PageHeader
         title={t('marketplace.title')}
-        subtitle={t('marketplace.subtitle')}
+        description={t('marketplace.subtitle')}
         actions={
           <Button variant="primary">
             <Building2 className="w-4 h-4 mr-2" />

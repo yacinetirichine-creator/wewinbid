@@ -44,7 +44,7 @@ export function useAuth() {
               user,
               profile: profile || null,
               loading: false,
-              isAdmin: profile?.role === 'admin',
+              isAdmin: (profile as any)?.role === 'admin',
             });
           });
       } else {
@@ -72,7 +72,7 @@ export function useAuth() {
           user: session.user,
           profile: profile || null,
           loading: false,
-          isAdmin: profile?.role === 'admin',
+          isAdmin: (profile as any)?.role === 'admin',
         });
       } else {
         setState({

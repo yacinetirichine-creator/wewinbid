@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     
     if (user) {
       // Check if profile exists, create if not
-      const { data: profile } = await supabase
+      const { data: profile } = await (supabase as any)
         .from('profiles')
         .select('id')
         .eq('id', user.id)
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 
       if (!profile) {
         // Create profile
-        await supabase.from('profiles').insert({
+        await (supabase as any).from('profiles').insert({
           id: user.id,
           email: user.email,
           first_name: user.user_metadata?.first_name || '',

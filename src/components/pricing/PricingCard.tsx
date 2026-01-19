@@ -129,7 +129,7 @@ export function PricingCard({
         size="lg"
         className="mb-6 w-full"
         onClick={handleSubscribe}
-        loading={loading}
+        isLoading={loading}
         disabled={currentPlan || plan === 'free'}
       >
         {currentPlan ? 'Plan actuel' : plan === 'free' ? 'Commencer gratuitement' : 'Souscrire'}

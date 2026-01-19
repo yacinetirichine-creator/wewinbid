@@ -254,7 +254,7 @@ export default function TenderDetailPage() {
     if (!tender) return;
     
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('tenders')
         .update({ 
           status: newStatus, 
@@ -287,7 +287,7 @@ export default function TenderDetailPage() {
         'Détailler la méthodologie proposée',
       ];
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('tenders')
         .update({ 
           ai_score: score,
@@ -379,27 +379,27 @@ export default function TenderDetailPage() {
     <AppLayout>
       <PageHeader
         title={tender.title}
-        subtitle={`Référence: ${tender.reference}`}
-        backLink="/tenders"
-      >
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setShowStatusModal(true)}>
-            <div className={`flex items-center gap-2 px-2 py-1 rounded-full ${statusConfig.color}`}>
-              <StatusIcon className="w-4 h-4" />
-              {statusConfig.label}
-            </div>
-          </Button>
-          <Link href={`/tenders/${tenderId}/edit`}>
-            <Button variant="secondary" size="sm">
-              <PencilIcon className="w-4 h-4 mr-2" />
-              Modifier
+        description={`Référence: ${tender.reference}`}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setShowStatusModal(true)}>
+              <div className={`flex items-center gap-2 px-2 py-1 rounded-full ${statusConfig.color}`}>
+                <StatusIcon className="w-4 h-4" />
+                {statusConfig.label}
+              </div>
             </Button>
-          </Link>
-          <Button variant="danger" size="sm" onClick={() => setShowDeleteModal(true)}>
-            <TrashIcon className="w-4 h-4" />
-          </Button>
-        </div>
-      </PageHeader>
+            <Link href={`/tenders/${tenderId}/edit`}>
+              <Button variant="secondary" size="sm">
+                <PencilIcon className="w-4 h-4 mr-2" />
+                Modifier
+              </Button>
+            </Link>
+            <Button variant="danger" size="sm" onClick={() => setShowDeleteModal(true)}>
+              <TrashIcon className="w-4 h-4" />
+            </Button>
+          </div>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Colonne principale */}

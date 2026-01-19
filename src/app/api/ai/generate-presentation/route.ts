@@ -107,8 +107,8 @@ Retournez un JSON structuré avec le format suivant:
 
             return {
               slideNumber: slide.slideNumber,
-              imageUrl: imageResponse.data[0]?.url,
-              revisedPrompt: imageResponse.data[0]?.revised_prompt,
+              imageUrl: imageResponse.data?.[0]?.url,
+              revisedPrompt: imageResponse.data?.[0]?.revised_prompt,
             };
           } catch (imageError) {
             console.error(`Failed to generate image for slide ${index + 1}:`, imageError);
@@ -136,7 +136,7 @@ Retournez un JSON structuré avec le format suivant:
     }
 
     // 3. Sauvegarder dans creative_contents
-    const { data: savedPresentation, error: saveError } = await supabase
+    const { data: savedPresentation, error: saveError } = await (supabase as any)
       .from('creative_contents')
       .insert({
         type: 'CASE_STUDY',

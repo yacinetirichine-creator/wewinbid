@@ -21,15 +21,8 @@ Sentry.init({
 
   // Performance monitoring
   integrations: [
-    new Sentry.BrowserTracing({
-      // Track page loads and navigation
-      tracePropagationTargets: [
-        'localhost',
-        /^https:\/\/wewinbid\.vercel\.app/,
-        /^https:\/\/.*\.supabase\.co/,
-      ],
-    }),
-    new Sentry.Replay({
+    // BrowserTracing removed in Sentry v8+ - now automatic
+    Sentry.replayIntegration({
       // Mask all text and images for privacy
       maskAllText: true,
       blockAllMedia: true,

@@ -61,7 +61,7 @@ async function getHandler(request: NextRequest) {
     }
 
     // Get user's company
-    const { data: profile } = await supabase
+    const { data: profile } = await (supabase as any)
       .from('profiles')
       .select('company_id')
       .eq('id', user.id)
@@ -129,7 +129,7 @@ async function postHandler(request: NextRequest) {
   }
 
   // Get user's company
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('company_id')
     .eq('id', user.id)
@@ -180,7 +180,7 @@ async function postHandler(request: NextRequest) {
     let buyerId = null;
     if (buyer?.name) {
       // Check if buyer exists
-      const { data: existingBuyer } = await supabase
+      const { data: existingBuyer } = await (supabase as any)
         .from('buyers')
         .select('id')
         .eq('name', buyer.name)
@@ -191,7 +191,7 @@ async function postHandler(request: NextRequest) {
         buyerId = existingBuyer.id;
       } else {
         // Create new buyer
-        const { data: newBuyer, error: buyerError } = await supabase
+        const { data: newBuyer, error: buyerError } = await (supabase as any)
           .from('buyers')
           .insert({
             company_id: profile.company_id,
@@ -214,7 +214,7 @@ async function postHandler(request: NextRequest) {
     }
 
     // Create tender
-    const { data: tender, error: tenderError } = await supabase
+    const { data: tender, error: tenderError } = await (supabase as any)
       .from('tenders')
       .insert({
         company_id: profile.company_id,
@@ -258,7 +258,7 @@ async function putHandler(request: NextRequest) {
   }
 
   // Get user's company
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('company_id')
     .eq('id', user.id)
@@ -273,7 +273,7 @@ async function putHandler(request: NextRequest) {
   const { id, ...updateData } = UpdateTenderSchema.parse(body);
 
     // Update tender (only if belongs to user's company)
-    const { data: tender, error: updateError } = await supabase
+    const { data: tender, error: updateError } = await (supabase as any)
       .from('tenders')
       .update({
         ...updateData,
@@ -307,7 +307,7 @@ async function deleteHandler(request: NextRequest) {
   }
 
   // Get user's company
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('company_id')
     .eq('id', user.id)
@@ -322,7 +322,7 @@ async function deleteHandler(request: NextRequest) {
   const id = z.string().uuid().parse(searchParams.get('id'));
 
     // Delete tender (only if belongs to user's company)
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await (supabase as any)
       .from('tenders')
       .delete()
       .eq('id', id)
@@ -337,7 +337,7 @@ async function deleteHandler(request: NextRequest) {
 }
 
 // Export wrapped handlers
-export const GET = withErrorHandler(getHandler);
-export const POST = withErrorHandler(postHandler);
-export const PUT = withErrorHandler(putHandler);
-export const DELETE = withErrorHandler(deleteHandler);
+export const GET = withErrorHandler(getHandler as any);
+export const POST = withErrorHandler(postHandler as any);
+export const PUT = withErrorHandler(putHandler as any);
+export const DELETE = withErrorHandler(deleteHandler as any);

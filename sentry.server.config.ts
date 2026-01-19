@@ -17,7 +17,7 @@ Sentry.init({
 
   // Performance monitoring
   integrations: [
-    new Sentry.Integrations.Http({ tracing: true }),
+    // HTTP integration removed in Sentry v8+ - now automatic
   ],
 
   // Release version for tracking deployments

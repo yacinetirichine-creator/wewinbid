@@ -79,7 +79,7 @@ export default function ClientDashboard() {
         <div className="space-y-6">
           <PageHeader
             title="Tableau de bord"
-            description="Vue d'ensemble de vos appels d'offres"
+            subtitle="Vue d'ensemble de vos appels d'offres"
           />
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map(i => (
@@ -118,7 +118,7 @@ export default function ClientDashboard() {
         {/* Header */}
         <PageHeader
           title="Tableau de bord"
-          description="Vue d'ensemble de vos réponses aux appels d'offres"
+          subtitle="Vue d'ensemble de vos réponses aux appels d'offres"
           action={{
             label: 'Nouvel appel d\'offres',
             href: '/tenders/new',

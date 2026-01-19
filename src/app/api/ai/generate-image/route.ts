@@ -86,7 +86,7 @@ const openai = new OpenAI({
   });
 }
 
-export const POST = withErrorHandler(generateImageHandler);     error: 'Failed to generate image',
+export const POST = withErrorHandler(generateImageHandler as any);     error: 'Failed to generate image',
       details: error.message,
     }, { status: 500 });
   }

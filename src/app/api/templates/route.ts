@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's company
-    const { data: teamMember } = await supabase
+    const { data: teamMember } = await (supabase as any)
       .from('team_members')
       .select('company_id')
       .eq('user_id', user.id)
@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's company
-    const { data: teamMember } = await supabase
+    const { data: teamMember } = await (supabase as any)
       .from('team_members')
       .select('company_id, role')
       .eq('user_id', user.id)
@@ -209,7 +209,7 @@ export async function POST(request: NextRequest) {
     const validated = CreateTemplateSchema.parse(body);
 
     // Create template
-    const { data: template, error } = await supabase
+    const { data: template, error } = await (supabase as any)
       .from('templates')
       .insert({
         company_id: teamMember.company_id,
@@ -284,7 +284,7 @@ export async function PATCH(request: NextRequest) {
     const validated = UpdateTemplateSchema.parse(body);
 
     // Update template (RLS handles permissions)
-    const { data: template, error } = await supabase
+    const { data: template, error } = await (supabase as any)
       .from('templates')
       .update(validated)
       .eq('id', templateId)
@@ -345,7 +345,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Soft delete (set is_active to false)
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('templates')
       .update({ is_active: false })
       .eq('id', templateId);

@@ -46,7 +46,7 @@ export async function GET(request: Request) {
     const primaryCalendar = calendarList.items?.find(cal => cal.primary);
 
     // Store sync connection
-    const { error: syncError } = await supabase
+    const { error: syncError } = await (supabase as any)
       .from('calendar_syncs')
       .upsert({
         user_id: user.id,

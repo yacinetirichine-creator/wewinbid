@@ -93,13 +93,13 @@ export async function GET(req: NextRequest) {
     }
 
     // Get unique folders for filter
-    const { data: foldersData } = await supabase
+    const { data: foldersData } = await (supabase as any)
       .from('tender_favorites')
       .select('folder')
       .eq('user_id', user.id)
       .not('folder', 'is', null);
 
-    const folders = [...new Set(foldersData?.map((f) => f.folder) || [])];
+    const folders = [...new Set(foldersData?.map((f: any) => f.folder) || [])];
 
     return NextResponse.json({ favorites, folders });
   } catch (error) {
@@ -144,7 +144,7 @@ export async function POST(req: NextRequest) {
       validation.data;
 
     // Check if tender exists
-    const { data: tender, error: tenderError } = await supabase
+    const { data: tender, error: tenderError } = await (supabase as any)
       .from('tenders')
       .select('id')
       .eq('id', tender_id)
@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if already favorited
-    const { data: existing } = await supabase
+    const { data: existing } = await (supabase as any)
       .from('tender_favorites')
       .select('id')
       .eq('user_id', user.id)
@@ -173,7 +173,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Add to favorites
-    const { data: favorite, error: createError } = await supabase
+    const { data: favorite, error: createError } = await (supabase as any)
       .from('tender_favorites')
       .insert({
         user_id: user.id,
@@ -252,7 +252,7 @@ export async function PATCH(req: NextRequest) {
     const { id, ...updates } = validation.data;
 
     // Check if user owns this favorite
-    const { data: existing, error: checkError } = await supabase
+    const { data: existing, error: checkError } = await (supabase as any)
       .from('tender_favorites')
       .select('id')
       .eq('id', id)
@@ -267,7 +267,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Update favorite
-    const { data: favorite, error: updateError } = await supabase
+    const { data: favorite, error: updateError } = await (supabase as any)
       .from('tender_favorites')
       .update(updates)
       .eq('id', id)
@@ -337,7 +337,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Delete favorite (RLS will ensure user owns it)
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await (supabase as any)
       .from('tender_favorites')
       .delete()
       .eq('user_id', user.id)

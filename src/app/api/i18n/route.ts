@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
     const keys = keysParam.split(',').map((k) => k.trim()).filter(Boolean);
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('ui_translations')
       .select('translation_key, translated_text, source_text')
       .eq('locale', locale)
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     const translations: Record<string, string> = {};
     const foundKeys = new Set<string>();
 
-    data?.forEach((row) => {
+    data?.forEach((row: any) => {
       translations[row.translation_key] = row.translated_text;
       foundKeys.add(row.translation_key);
     });
@@ -106,7 +106,7 @@ Entrées: ${JSON.stringify(entries)}`;
       updated_by: user?.id || null,
     }));
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('ui_translations')
       .upsert(upserts, { onConflict: 'translation_key,locale' })
       .select('translation_key, translated_text');
@@ -116,7 +116,7 @@ Entrées: ${JSON.stringify(entries)}`;
     }
 
     const translations: Record<string, string> = {};
-    data?.forEach((row) => {
+    data?.forEach((row: any) => {
       translations[row.translation_key] = row.translated_text;
     });
 
@@ -141,7 +141,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'locale, key and translated_text are required' }, { status: 400 });
     }
 
-    const { data: profile } = await supabase
+    const { data: profile } = await (supabase as any)
       .from('profiles')
       .select('role')
       .eq('id', user?.id)
@@ -151,7 +151,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('ui_translations')
       .update({
         translated_text,

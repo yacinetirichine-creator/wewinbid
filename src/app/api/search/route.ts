@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Use RPC function for advanced search
-    const { data: results, error: searchError } = await supabase
+    const { data: results, error: searchError } = await (supabase as any)
       .rpc('search_tenders', {
         p_query: query || null,
         p_filters: filters,
@@ -75,14 +75,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Log search to history
-    await supabase.rpc('log_search', {
+    await (supabase as any).rpc('log_search', {
       p_query: query || null,
       p_filters: filters,
       p_results_count: results?.length || 0
     });
 
     // Get total count (approximate for performance)
-    const { count } = await supabase
+    const { count } = await (supabase as any)
       .from('tenders')
       .select('*', { count: 'exact', head: true });
 

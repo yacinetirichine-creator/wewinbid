@@ -1,5 +1,6 @@
 // Types principaux de l'application WeWinBid
 export * from './database';
+import type { Tender as TenderRow } from './database';
 
 // Types pour les formulaires
 export interface LoginFormData {
@@ -65,7 +66,7 @@ export interface KanbanColumn {
   id: string;
   title: string;
   color: string;
-  items: Tender[];
+  items: TenderRow[];
 }
 
 // Types pour la tarification

@@ -319,7 +319,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's profile and company
-    const { data: profile } = await supabase
+    const { data: profile } = await (supabase as any)
       .from('profiles')
       .select('company_id')
       .eq('id', user.id)
@@ -330,7 +330,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get company details
-    const { data: company } = await supabase
+    const { data: company } = await (supabase as any)
       .from('companies')
       .select('*')
       .eq('id', profile.company_id)
@@ -339,7 +339,7 @@ export async function POST(request: NextRequest) {
     // Get tender if provided
     let tender = null;
     if (tender_id) {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('tenders')
         .select('*')
         .eq('id', tender_id)
@@ -420,7 +420,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log generation for analytics
-    await supabase.from('ai_generations').insert({
+    await (supabase as any).from('ai_generations').insert({
       user_id: user.id,
       company_id: profile.company_id,
       tender_id,

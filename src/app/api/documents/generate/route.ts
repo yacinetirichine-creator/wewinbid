@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get user's company
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await (supabase as any)
       .from('profiles')
       .select('company_id')
       .eq('id', user.id)
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get user's company
-    const { data: member, error: memberError } = await supabase
+    const { data: member, error: memberError } = await (supabase as any)
       .from('team_members')
       .select('company_id')
       .eq('user_id', user.id)
@@ -178,13 +178,13 @@ export async function POST(req: NextRequest) {
 
     // Increment template usage if template_id provided
     if (data.template_id) {
-      await supabase.rpc('increment_template_usage', {
+      await (supabase as any).rpc('increment_template_usage', {
         p_template_id: data.template_id,
       });
     }
 
     // Create document
-    const { data: document, error: createError } = await supabase
+    const { data: document, error: createError } = await (supabase as any)
       .from('generated_documents')
       .insert({
         company_id: member.company_id,
@@ -253,7 +253,7 @@ export async function PATCH(req: NextRequest) {
     const { id, ...updates } = validation.data;
 
     // Check permissions
-    const { data: document, error: documentError } = await supabase
+    const { data: document, error: documentError } = await (supabase as any)
       .from('generated_documents')
       .select('created_by, company_id, version, content')
       .eq('id', id)
@@ -267,7 +267,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Check if user can update
-    const { data: member } = await supabase
+    const { data: member } = await (supabase as any)
       .from('team_members')
       .select('role')
       .eq('user_id', user.id)
@@ -287,11 +287,11 @@ export async function PATCH(req: NextRequest) {
 
     // If content changed, increment version
     if (updates.content && updates.content !== document.content) {
-      updates.version = document.version + 1;
+      (updates as any).version = (document as any).version + 1;
     }
 
     // Update document
-    const { data: updated, error: updateError } = await supabase
+    const { data: updated, error: updateError } = await (supabase as any)
       .from('generated_documents')
       .update(updates)
       .eq('id', id)
@@ -346,7 +346,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Check permissions
-    const { data: document, error: documentError } = await supabase
+    const { data: document, error: documentError } = await (supabase as any)
       .from('generated_documents')
       .select('created_by, company_id')
       .eq('id', id)
@@ -359,7 +359,7 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    const { data: member } = await supabase
+    const { data: member } = await (supabase as any)
       .from('team_members')
       .select('role')
       .eq('user_id', user.id)
@@ -376,7 +376,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Delete document
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await (supabase as any)
       .from('generated_documents')
       .delete()
       .eq('id', id);

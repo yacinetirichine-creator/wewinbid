@@ -20,11 +20,10 @@ export async function GET(
       );
     }
 
-    const { id } = await params;
-    const teamId = id;
+    const teamId = params.id;
 
     // Check if user is team member
-    const { data: isMember } = await (supabase as any).rpc('is_team_member', {
+    const { data: isMember } = await supabase.rpc('is_team_member', {
       p_team_id: teamId,
       p_user_id: user.id,
     });
@@ -37,7 +36,7 @@ export async function GET(
     }
 
     // Get team details
-    const { data: team, error } = await (supabase as any)
+    const { data: team, error } = await supabase
       .from('teams')
       .select(`
         *,
@@ -96,13 +95,12 @@ export async function PATCH(
       );
     }
 
-    const { id } = await params;
-    const teamId = id;
+    const teamId = params.id;
     const body = await req.json();
     const { name, description, avatar_url, color, is_active } = body;
 
     // Check if user is owner or admin
-    const { data: member } = await (supabase as any)
+    const { data: member } = await supabase
       .from('team_members')
       .select('role')
       .eq('team_id', teamId)
@@ -117,7 +115,7 @@ export async function PATCH(
     }
 
     // Update team
-    const { data: team, error } = await (supabase as any)
+    const { data: team, error } = await supabase
       .from('teams')
       .update({
         ...(name && { name: name.trim() }),
@@ -139,7 +137,7 @@ export async function PATCH(
     }
 
     // Log activity
-    await (supabase as any).rpc('log_team_activity', {
+    await supabase.rpc('log_team_activity', {
       p_team_id: teamId,
       p_action: 'TEAM_UPDATED',
       p_entity_type: 'team',
@@ -176,11 +174,10 @@ export async function DELETE(
       );
     }
 
-    const { id } = await params;
-    const teamId = id;
+    const teamId = params.id;
 
     // Check if user is owner
-    const { data: team } = await (supabase as any)
+    const { data: team } = await supabase
       .from('teams')
       .select('owner_id')
       .eq('id', teamId)
@@ -194,7 +191,7 @@ export async function DELETE(
     }
 
     // Delete team (cascade will handle members, invitations, etc.)
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('teams')
       .delete()
       .eq('id', teamId);

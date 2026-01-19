@@ -556,7 +556,7 @@ function AlertModal({
             <select
               className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-primary-500"
               value={formData.tender_type}
-              onChange={(e) => setFormData({ ...formData, tender_type: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, tender_type: e.target.value as 'public' | 'private' | 'all' })}
             >
               <option value="all">{t('alerts.modal.tenderType.all')}</option>
               <option value="public">{t('alerts.modal.tenderType.public')}</option>
@@ -571,7 +571,7 @@ function AlertModal({
             <select
               className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-primary-500"
               value={formData.frequency}
-              onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, frequency: e.target.value as 'realtime' | 'daily' | 'weekly' })}
             >
               <option value="realtime">{t('alerts.modal.frequency.realtime')}</option>
               <option value="daily">{t('alerts.modal.frequency.daily')}</option>
@@ -726,7 +726,7 @@ export default function AlertsPage() {
     <AppLayout>
       <PageHeader
         title={t('alerts.title')}
-        subtitle={t('alerts.subtitle')}
+        description={t('alerts.subtitle')}
         actions={
           <Button variant="primary" onClick={() => { setEditingAlert(null); setShowModal(true); }}>
             <Plus className="w-4 h-4 mr-2" />

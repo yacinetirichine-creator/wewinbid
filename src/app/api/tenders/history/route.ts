@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/server';
  */
 export async function GET(request: Request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const tenderId = searchParams.get('tenderId');
 
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     }
 
     // Récupérer l'historique
-    const { data: history, error } = (await supabase
+    const { data: history, error } = (await (supabase as any)
       .from('tender_history')
       .select(`
         *,

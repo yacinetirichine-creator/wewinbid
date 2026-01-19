@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Send, Loader2, CheckCircle } from 'lucide-react';
 import { Button, Input, Alert } from '@/components/ui';
 import Link from 'next/link';
 
-export default function ContactPage() {
+function ContactContent() {
   const searchParams = useSearchParams();
   const type = searchParams.get('type') || 'general';
   
@@ -181,7 +181,7 @@ export default function ContactPage() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 {error && (
-                  <Alert variant="error">
+                  <Alert type="error">
                     {error}
                   </Alert>
                 )}
@@ -296,5 +296,13 @@ export default function ContactPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ContactPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-white" /></div>}>
+      <ContactContent />
+    </Suspense>
   );
 }

@@ -15,7 +15,7 @@ const inviteSchema = z.object({
  */
 export async function GET() {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const {
       data: { user },
@@ -26,7 +26,7 @@ export async function GET() {
     }
 
     // Récupérer le company_id
-    const { data: profile } = (await supabase
+    const { data: profile } = (await (supabase as any)
       .from('profiles')
       .select('company_id')
       .eq('id', user.id)
@@ -37,7 +37,7 @@ export async function GET() {
     }
 
     // Récupérer les invitations
-    const { data: invitations, error } = (await supabase
+    const { data: invitations, error } = (await (supabase as any)
       .from('team_invitations')
       .select(`
         *,
@@ -65,7 +65,7 @@ export async function GET() {
  */
 export async function POST(request: Request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const body = await request.json();
     const validated = inviteSchema.parse(body);
 
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
     }
 
     // Récupérer le company_id et vérifier les permissions
-    const { data: profile } = (await supabase
+    const { data: profile } = (await (supabase as any)
       .from('profiles')
       .select('company_id')
       .eq('id', user.id)
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     }
 
     // Vérifier le rôle de l'inviteur
-    const { data: member } = (await supabase
+    const { data: member } = (await (supabase as any)
       .from('team_members')
       .select('role')
       .eq('company_id', profile.company_id)
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
     }
 
     // Vérifier si l'utilisateur existe déjà
-    const { data: existingUser } = await supabase
+    const { data: existingUser } = await (supabase as any)
       .from('profiles')
       .select('id')
       .eq('email', validated.email)
@@ -113,7 +113,7 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       // Vérifier s'il est déjà membre
-      const { data: existingMember } = await supabase
+      const { data: existingMember } = await (supabase as any)
         .from('team_members')
         .select('id')
         .eq('company_id', profile.company_id)
@@ -134,7 +134,7 @@ export async function POST(request: Request) {
     expiresAt.setDate(expiresAt.getDate() + 7); // Expire dans 7 jours
 
     // Créer l'invitation
-    const { data: invitation, error: insertError } = await supabase
+    const { data: invitation, error: insertError } = await (supabase as any)
       .from('team_invitations')
       .insert({
         company_id: profile.company_id,
@@ -209,7 +209,7 @@ export async function POST(request: Request) {
  */
 export async function DELETE(request: Request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const invitationId = searchParams.get('id');
 
@@ -226,7 +226,7 @@ export async function DELETE(request: Request) {
     }
 
     // Supprimer l'invitation
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('team_invitations')
       .delete()
       .eq('id', invitationId);

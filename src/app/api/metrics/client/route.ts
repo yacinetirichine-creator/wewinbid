@@ -14,7 +14,7 @@ async function getHandler(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('company_id')
     .eq('id', user.id)
@@ -25,7 +25,7 @@ async function getHandler(request: NextRequest) {
   }
 
   // Récupérer tous les appels d'offres
-  const { data: tenders } = await supabase
+  const { data: tenders } = await (supabase as any)
     .from('tenders')
     .select(`
       id,
@@ -136,4 +136,4 @@ async function getHandler(request: NextRequest) {
   });
 }
 
-export const GET = withErrorHandler(getHandler);
+export const GET = withErrorHandler(getHandler as any);

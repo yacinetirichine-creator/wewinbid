@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Use RPC function for suggestions
-    const { data: suggestions, error } = await supabase
+    const { data: suggestions, error } = await (supabase as any)
       .rpc('get_search_suggestions', {
         p_prefix: prefix.toLowerCase(),
         p_limit: limit

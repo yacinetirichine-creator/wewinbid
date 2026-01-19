@@ -413,6 +413,68 @@ export interface Database {
           description?: string | null
         }
       }
+      external_sources: {
+        Row: {
+          id: string
+          name: string
+          source_type: string
+          api_endpoint: string | null
+          api_key_encrypted: string | null
+          sync_frequency: string | null
+          is_active: boolean
+          last_sync_at: string | null
+          next_sync_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          name: string
+          source_type: string
+          api_endpoint?: string | null
+          api_key_encrypted?: string | null
+          sync_frequency?: string | null
+          is_active?: boolean
+        }
+        Update: {
+          name?: string
+          source_type?: string
+          api_endpoint?: string | null
+          api_key_encrypted?: string | null
+          sync_frequency?: string | null
+          is_active?: boolean
+          last_sync_at?: string | null
+          next_sync_at?: string | null
+          updated_at?: string
+        }
+      }
+      source_sync_logs: {
+        Row: {
+          id: string
+          source_id: string
+          sync_started_at: string
+          sync_ended_at: string | null
+          status: string
+          tenders_found: number
+          tenders_imported: number
+          error_message: string | null
+          created_at: string
+        }
+        Insert: {
+          source_id: string
+          sync_started_at: string
+          status: string
+          tenders_found?: number
+          tenders_imported?: number
+          error_message?: string | null
+        }
+        Update: {
+          sync_ended_at?: string | null
+          status?: string
+          tenders_found?: number
+          tenders_imported?: number
+          error_message?: string | null
+        }
+      }
     }
     Views: {}
     Functions: {}

@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia',
+  apiVersion: '2024-06-20' as any,
 });
 
 export async function POST(req: NextRequest) {
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Récupérer le profil utilisateur
-    const { data: profile } = await supabase
+    const { data: profile } = await (supabase as any)
       .from('profiles')
       .select('email, stripe_customer_id')
       .eq('id', user.id)
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       customerId = customer.id;
 
       // Sauvegarder le customer ID
-      await supabase
+      await (supabase as any)
         .from('profiles')
         .update({ stripe_customer_id: customerId })
         .eq('id', user.id);

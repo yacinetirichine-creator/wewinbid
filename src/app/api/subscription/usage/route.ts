@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's company
-    const { data: profile } = await supabase
+    const { data: profile } = await (supabase as any)
       .from('profiles')
       .select('company_id')
       .eq('id', user.id)

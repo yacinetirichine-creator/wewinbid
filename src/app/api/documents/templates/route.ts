@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get user's company
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await (supabase as any)
       .from('profiles')
       .select('company_id')
       .eq('id', user.id)
@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get user's company and role
-    const { data: member, error: memberError } = await supabase
+    const { data: member, error: memberError } = await (supabase as any)
       .from('team_members')
       .select('company_id, role')
       .eq('user_id', user.id)
@@ -181,7 +181,7 @@ export async function POST(req: NextRequest) {
 
     // If setting as default, unset other defaults in same category
     if (data.is_default) {
-      await supabase
+      await (supabase as any)
         .from('document_templates')
         .update({ is_default: false })
         .eq('company_id', member.company_id)
@@ -189,7 +189,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create template
-    const { data: template, error: createError } = await supabase
+    const { data: template, error: createError } = await (supabase as any)
       .from('document_templates')
       .insert({
         company_id: member.company_id,
@@ -255,7 +255,7 @@ export async function PATCH(req: NextRequest) {
     const { id, ...updates } = validation.data;
 
     // Check if user can update (creator or admin)
-    const { data: template, error: templateError } = await supabase
+    const { data: template, error: templateError } = await (supabase as any)
       .from('document_templates')
       .select('created_by, company_id, category')
       .eq('id', id)
@@ -269,7 +269,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Check permissions
-    const { data: member } = await supabase
+    const { data: member } = await (supabase as any)
       .from('team_members')
       .select('role')
       .eq('user_id', user.id)
@@ -287,7 +287,7 @@ export async function PATCH(req: NextRequest) {
 
     // If setting as default, unset other defaults
     if (updates.is_default) {
-      await supabase
+      await (supabase as any)
         .from('document_templates')
         .update({ is_default: false })
         .eq('company_id', template.company_id)
@@ -296,7 +296,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Update template
-    const { data: updated, error: updateError } = await supabase
+    const { data: updated, error: updateError } = await (supabase as any)
       .from('document_templates')
       .update(updates)
       .eq('id', id)
@@ -351,7 +351,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Check permissions (creator or admin)
-    const { data: template, error: templateError } = await supabase
+    const { data: template, error: templateError } = await (supabase as any)
       .from('document_templates')
       .select('created_by, company_id')
       .eq('id', id)
@@ -364,7 +364,7 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    const { data: member } = await supabase
+    const { data: member } = await (supabase as any)
       .from('team_members')
       .select('role')
       .eq('user_id', user.id)
@@ -381,7 +381,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Delete template
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await (supabase as any)
       .from('document_templates')
       .delete()
       .eq('id', id);

@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get user's company
-    const { data: member, error: memberError } = await supabase
+    const { data: member, error: memberError } = await (supabase as any)
       .from('team_members')
       .select('company_id')
       .eq('user_id', user.id)

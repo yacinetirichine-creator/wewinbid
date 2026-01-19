@@ -15,7 +15,7 @@ const commentSchema = z.object({
  */
 export async function GET(request: Request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const tenderId = searchParams.get('tenderId');
 
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     }
 
     // Récupérer les commentaires avec les infos utilisateur
-    const { data: comments, error } = (await supabase
+    const { data: comments, error } = (await (supabase as any)
       .from('tender_comments')
       .select(`
         *,
@@ -71,7 +71,7 @@ export async function GET(request: Request) {
  */
 export async function POST(request: Request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const body = await request.json();
     const validated = commentSchema.parse(body);
 
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
     }
 
     // Créer le commentaire
-    const { data: comment, error } = await supabase
+    const { data: comment, error } = await (supabase as any)
       .from('tender_comments')
       .insert({
         tender_id: validated.tenderId,
@@ -125,7 +125,7 @@ export async function POST(request: Request) {
  */
 export async function PATCH(request: Request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const commentId = searchParams.get('id');
     const { content } = await request.json();
@@ -143,7 +143,7 @@ export async function PATCH(request: Request) {
     }
 
     // Mettre à jour le commentaire
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('tender_comments')
       .update({
         content,
@@ -171,7 +171,7 @@ export async function PATCH(request: Request) {
  */
 export async function DELETE(request: Request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const commentId = searchParams.get('id');
 
@@ -188,7 +188,7 @@ export async function DELETE(request: Request) {
     }
 
     // Supprimer le commentaire
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('tender_comments')
       .delete()
       .eq('id', commentId)

@@ -13,7 +13,7 @@ const updateMemberSchema = z.object({
  */
 export async function GET() {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const {
       data: { user },
@@ -24,7 +24,7 @@ export async function GET() {
     }
 
     // Récupérer le company_id
-    const { data: profile } = (await supabase
+    const { data: profile } = (await (supabase as any)
       .from('profiles')
       .select('company_id')
       .eq('id', user.id)
@@ -35,7 +35,7 @@ export async function GET() {
     }
 
     // Récupérer les membres
-    const { data: members, error } = (await supabase
+    const { data: members, error } = (await (supabase as any)
       .from('team_members')
       .select(`
         *,
@@ -68,7 +68,7 @@ export async function GET() {
  */
 export async function PATCH(request: Request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const memberId = searchParams.get('id');
     const body = await request.json();
@@ -88,7 +88,7 @@ export async function PATCH(request: Request) {
     }
 
     // Vérifier les permissions (seuls les admins peuvent modifier)
-    const { data: currentMember } = (await supabase
+    const { data: currentMember } = (await (supabase as any)
       .from('team_members')
       .select('company_id, role')
       .eq('id', memberId)
@@ -98,7 +98,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Membre non trouvé' }, { status: 404 });
     }
 
-    const { data: adminCheck } = (await supabase
+    const { data: adminCheck } = (await (supabase as any)
       .from('team_members')
       .select('role')
       .eq('company_id', currentMember.company_id)
@@ -118,7 +118,7 @@ export async function PATCH(request: Request) {
     if (validated.role) updateData.role = validated.role;
     if (validated.status) updateData.status = validated.status;
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('team_members')
       .update(updateData)
       .eq('id', memberId)
@@ -146,7 +146,7 @@ export async function PATCH(request: Request) {
  */
 export async function DELETE(request: Request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const memberId = searchParams.get('id');
 
@@ -163,7 +163,7 @@ export async function DELETE(request: Request) {
     }
 
     // Vérifier les permissions
-    const { data: targetMember } = (await supabase
+    const { data: targetMember } = (await (supabase as any)
       .from('team_members')
       .select('company_id, user_id')
       .eq('id', memberId)
@@ -173,7 +173,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Membre non trouvé' }, { status: 404 });
     }
 
-    const { data: adminCheck } = (await supabase
+    const { data: adminCheck } = (await (supabase as any)
       .from('team_members')
       .select('role')
       .eq('company_id', targetMember.company_id)
@@ -197,7 +197,7 @@ export async function DELETE(request: Request) {
     }
 
     // Supprimer le membre
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('team_members')
       .delete()
       .eq('id', memberId);

@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify user has access to the template
-    const { data: template } = await supabase
+    const { data: template } = await (supabase as any)
       .from('templates')
       .select('id')
       .eq('id', templateId)
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch versions
-    const { data: versions, error } = await supabase
+    const { data: versions, error } = await (supabase as any)
       .from('template_versions')
       .select(
         `

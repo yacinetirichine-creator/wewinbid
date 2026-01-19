@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Filter, X, ChevronDown, ChevronUp } from 'lucide-react';
-import { COUNTRIES } from '@/lib/countries';
+import { getAllCountries } from '@/lib/countries';
 
 interface FilterPanelProps {
   onFilterChange: (filters: SearchFilters) => void;
@@ -124,7 +124,7 @@ export default function FilterPanel({ onFilterChange, initialFilters = {} }: Fil
             </button>
             {expandedSections.has('country') && (
               <div className="space-y-2 max-h-48 overflow-y-auto">
-                {COUNTRIES.map((country) => (
+                {getAllCountries().map((country) => (
                   <label key={country.code} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
                     <input
                       type="checkbox"

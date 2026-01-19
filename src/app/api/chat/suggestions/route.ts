@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       suggestions.push(...generalSuggestions);
     } else if (tenderId) {
       // Get tender-specific suggestions
-      const { data: tender } = await supabase
+      const { data: tender } = await (supabase as any)
         .from('tenders')
         .select('title, deadline, status')
         .eq('id', tenderId)
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
       }
     } else if (sessionId) {
       // Get context-based suggestions from previous conversation
-      const { data: recentMessages } = await supabase
+      const { data: recentMessages } = await (supabase as any)
         .from('chat_messages')
         .select('content, role')
         .eq('session_id', sessionId)
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
         .limit(5);
 
       if (recentMessages && recentMessages.length > 0) {
-        const lastUserMessage = recentMessages.find(m => m.role === 'user');
+        const lastUserMessage = recentMessages.find((m: any) => m.role === 'user');
         
         if (lastUserMessage) {
           const content = lastUserMessage.content.toLowerCase();

@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const offset = (page - 1) * limit;
 
-    const { data: history, error } = await supabase
+    const { data: history, error } = await (supabase as any)
       .from('search_history')
       .select('*')
       .eq('user_id', user.id)
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const { count } = await supabase
+    const { count } = await (supabase as any)
       .from('search_history')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id);
@@ -67,7 +67,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
     }
 
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await (supabase as any)
       .from('search_history')
       .delete()
       .eq('user_id', user.id);

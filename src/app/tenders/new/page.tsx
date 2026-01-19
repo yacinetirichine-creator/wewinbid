@@ -18,8 +18,8 @@ import {
 import { Button, Card, Input, Textarea, Select, Badge, Alert } from '@/components/ui';
 import { AppLayout, PageHeader } from '@/components/layout/Sidebar';
 import { createClient } from '@/lib/supabase/client';
-import { getCountryConfig, getRequiredDocuments } from '@/lib/countries';
-import type { TenderType, Sector, BuyerType, CountryCode } from '@/types/database';
+import { getCountryConfig, getRequiredDocuments, type CountryCode } from '@/lib/countries';
+import type { TenderType, Sector, BuyerType } from '@/types/database';
 import toast from 'react-hot-toast';
 
 // Types des étapes
@@ -186,7 +186,7 @@ export default function NewTenderPage() {
 
       if (!membership) throw new Error('Aucune entreprise associée');
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('tenders')
         .insert({
           title: formData.title,
@@ -207,7 +207,7 @@ export default function NewTenderPage() {
           region: formData.region || null,
           department: formData.department || null,
           notes: formData.notes || null,
-          company_id: membership.company_id,
+          company_id: (membership as any).company_id,
           created_by: userData.user.id,
         })
         .select()
@@ -229,8 +229,7 @@ export default function NewTenderPage() {
     <AppLayout>
       <PageHeader
         title="Nouvel appel d'offres"
-        subtitle="Créez un nouvel AO en quelques étapes"
-        backLink="/tenders"
+        description="Créez un nouvel AO en quelques étapes"
       />
 
       {/* Progress Steps */}
@@ -470,7 +469,7 @@ export default function NewTenderPage() {
                   placeholder="Ex: 50000"
                   value={formData.estimated_value}
                   onChange={(e) => updateField('estimated_value', e.target.value)}
-                  icon={<CurrencyEuroIcon className="w-4 h-4" />}
+                  leftIcon={<CurrencyEuroIcon className="w-4 h-4" />}
                 />
               </div>
 
@@ -492,7 +491,7 @@ export default function NewTenderPage() {
               </div>
 
               {formData.type === 'PUBLIC' && (
-                <Alert variant="info">
+                <Alert type="info">
                   <strong>Délais légaux ({countryConfig.name}):</strong>
                   <ul className="mt-2 text-sm space-y-1">
                     <li>• Procédure ouverte: {countryConfig.minResponseDays.openProcedure} jours min.</li>

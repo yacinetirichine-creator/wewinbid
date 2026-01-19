@@ -194,7 +194,7 @@ export default function EnhancedMarketplacePage() {
         r.json()
       );
       if (!error) {
-        const favSet = new Set(data.favorites?.map((f: any) => f.tender_id) || []);
+        const favSet = new Set<string>(data.favorites?.map((f: any) => f.tender_id as string) || []);
         setFavorites(favSet);
       }
     } catch (error) {
@@ -344,7 +344,7 @@ export default function EnhancedMarketplacePage() {
     <AppLayout>
       <PageHeader
         title="Marketplace"
-        subtitle="Recherchez et trouvez les meilleurs appels d'offres"
+        description="Recherchez et trouvez les meilleurs appels d'offres"
         actions={
           <div className="flex flex-col sm:flex-row gap-3">
             <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>

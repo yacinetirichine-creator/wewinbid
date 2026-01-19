@@ -34,8 +34,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Separate system and user presets
-    const systemPresets = presets?.filter(p => p.is_system) || [];
-    const userPresets = presets?.filter(p => !p.is_system && p.user_id === user.id) || [];
+    const systemPresets = presets?.filter((p: any) => p.is_system) || [];
+    const userPresets = presets?.filter((p: any) => !p.is_system && p.user_id === user.id) || [];
 
     return NextResponse.json({
       systemPresets,

@@ -93,7 +93,7 @@ export async function createAuditLog(params: CreateAuditLogParams): Promise<stri
     const supabase = await createClient();
 
     // Utiliser la fonction SQL pour bypasser RLS
-    const { data, error } = await supabase.rpc('create_audit_log', {
+    const { data, error } = await (supabase as any).rpc('create_audit_log', {
       p_user_id: params.userId || null,
       p_company_id: params.companyId || null,
       p_action: params.action,

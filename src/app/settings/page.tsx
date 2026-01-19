@@ -354,6 +354,26 @@ export default function SettingsPage() {
     setSaving(false);
   };
 
+  const handleSaveNotifications = async () => {
+    setSaving(true);
+    try {
+      const response = await fetch('/api/user/preferences', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notifications }),
+      });
+      
+      if (response.ok) {
+        showMessage('success', t('settings.message.notificationsSaved'));
+      } else {
+        showMessage('error', t('settings.message.notificationsError'));
+      }
+    } catch (error) {
+      showMessage('error', t('settings.message.networkError'));
+    }
+    setSaving(false);
+  };
+
   const addKeyword = () => {
     if (newKeyword.trim() && !matching.keywords.includes(newKeyword.trim())) {
       setMatching({ ...matching, keywords: [...matching.keywords, newKeyword.trim()] });

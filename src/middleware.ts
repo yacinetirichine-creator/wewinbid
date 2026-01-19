@@ -16,36 +16,27 @@ export async function middleware(request: NextRequest) {
 
   // Apply rate limiting to API routes
   if (pathname.startsWith('/api/')) {
-    const rateLimitResult = await rateLimit(request);
-    
-    if (!rateLimitResult.success) {
+    try {
+      const identifier = request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || 'unknown';
+      rateLimit(request, identifier, pathname);
+    } catch (error: any) {
       return NextResponse.json(
         { 
           error: 'Too many requests',
-          message: `Rate limit exceeded. Try again in ${Math.ceil(rateLimitResult.retryAfter! / 1000)} seconds.`,
-          retryAfter: rateLimitResult.retryAfter 
+          message: error.message || 'Rate limit exceeded.',
+          retryAfter: error.metadata?.retryAfter
         },
         { 
           status: 429,
           headers: {
-            'Retry-After': String(Math.ceil(rateLimitResult.retryAfter! / 1000)),
-            'X-RateLimit-Limit': String(rateLimitResult.limit),
-            'X-RateLimit-Remaining': String(rateLimitResult.remaining),
-            'X-RateLimit-Reset': String(rateLimitResult.reset),
+            'Retry-After': String(error.metadata?.retryAfter || 60),
           }
         }
       );
     }
-
-    // Add rate limit headers to successful responses
-    const response = await updateSession(request);
-    response.headers.set('X-RateLimit-Limit', String(rateLimitResult.limit));
-    response.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining));
-    response.headers.set('X-RateLimit-Reset', String(rateLimitResult.reset));
-    return response;
   }
 
-  // For non-API routes, just update session
+  // Update Supabase session
   return await updateSession(request);
 }
 

@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify message belongs to user's session
-    const { data: message, error: messageError } = await supabase
+    const { data: message, error: messageError } = await (supabase as any)
       .from('chat_messages')
       .select(`
         id,
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     if (feedback !== undefined) updates.user_feedback = feedback;
     if (is_helpful !== undefined) updates.is_helpful = is_helpful;
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('chat_messages')
       .update(updates)
       .eq('id', message_id)

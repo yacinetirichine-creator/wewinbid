@@ -4,11 +4,11 @@ import { NextResponse } from 'next/server';
 // GET /api/calendar/[id] - Get single event
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
-    const { id } = params;
+    const { id } = await params;
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
@@ -16,8 +16,8 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const { data: event, error } = await supabase
-      .from('calendar_events')
+    const { data: event, error } = await (supabase as any)
+      .from('calendar_events' as any)
       .select(`
         *,
         tender:tenders(id, title, reference, status),
@@ -46,11 +46,11 @@ export async function GET(
 // PATCH /api/calendar/[id] - Update event
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -79,9 +79,9 @@ export async function PATCH(
     if (body.color !== undefined) updateData.color = body.color;
     if (body.attendees !== undefined) updateData.attendees = body.attendees;
     
-    const { data: event, error } = await supabase
-      .from('calendar_events')
-      .update(updateData)
+    const { data: event, error } = await (supabase as any)
+      .from('calendar_events' as any)
+      .update(updateData as any)
       .eq('id', id)
       .eq('user_id', user.id)
       .select()
@@ -106,11 +106,11 @@ export async function PATCH(
 // DELETE /api/calendar/[id] - Delete event
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
-    const { id } = params;
+    const { id } = await params;
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
@@ -118,8 +118,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const { error } = await supabase
-      .from('calendar_events')
+    const { error } = await (supabase as any)
+      .from('calendar_events' as any)
       .delete()
       .eq('id', id)
       .eq('user_id', user.id);

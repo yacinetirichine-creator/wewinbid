@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Récupérer tous les tenders avec deadlines à venir
     const now = new Date();
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const in3Days = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
     const in24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-    const { data: tenders } = (await supabase
+    const { data: tenders } = (await (supabase as any)
       .from('tenders')
       .select(`
         *,
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
       if (!notificationType) continue;
 
       // Vérifier si la notification n'a pas déjà été envoyée
-      const { data: existingNotif } = await supabase
+      const { data: existingNotif } = await (supabase as any)
         .from('notification_sent')
         .select('id')
         .eq('notification_type', notificationType)
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
       if (existingNotif) continue; // Déjà envoyée
 
       // Vérifier les préférences utilisateur
-      const { data: prefs } = (await supabase
+      const { data: prefs } = (await (supabase as any)
         .from('notification_preferences')
         .select('*')
         .eq('user_id', tender.profile.id)
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
       if (prefs && prefs[field] === false) continue;
 
       // Créer la notification dans la DB
-      await supabase.from('notifications').insert({
+      await (supabase as any).from('notifications').insert({
         user_id: tender.profile.id,
         type: notificationType,
         title,
@@ -144,7 +144,7 @@ export async function POST(request: Request) {
         });
 
         // Marquer comme envoyée
-        await supabase.from('notification_sent').insert({
+        await (supabase as any).from('notification_sent').insert({
           notification_type: notificationType,
           tender_id: tender.id,
           user_id: tender.profile.id,

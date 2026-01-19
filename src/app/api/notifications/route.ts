@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get unread count
-    const { count: unreadCount } = await supabase
+    const { count: unreadCount } = await (supabase as any)
       .from('notifications')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create notification
-    const { data: notification, error } = await supabase
+    const { data: notification, error } = await (supabase as any)
       .from('notifications')
       .insert({
         user_id: user.id,
@@ -171,7 +171,7 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('notifications')
       .delete()
       .eq('user_id', user.id)

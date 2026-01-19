@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get user profile with preferences
-    const { data: profile, error } = await supabase
+    const { data: profile, error } = await (supabase as any)
       .from('profiles')
       .select('preferred_sectors, keywords, target_countries, languages, notification_settings')
       .eq('id', user.id)
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get dashboard preferences
-    const { data: dashboardPrefs } = await supabase
+    const { data: dashboardPrefs } = await (supabase as any)
       .from('user_dashboard_preferences')
       .select('min_match_score, deadline_alert_days, auto_match_enabled, notify_new_matches')
       .eq('user_id', user.id)
@@ -94,7 +94,7 @@ export async function PATCH(req: NextRequest) {
     if (notification_settings !== undefined) profileUpdates.notification_settings = notification_settings;
 
     if (Object.keys(profileUpdates).length > 0) {
-      const { error: profileError } = await supabase
+      const { error: profileError } = await (supabase as any)
         .from('profiles')
         .update(profileUpdates)
         .eq('id', user.id);
@@ -118,7 +118,7 @@ export async function PATCH(req: NextRequest) {
       if (notify_new_matches !== undefined) dashboardUpdates.notify_new_matches = notify_new_matches;
 
       // Upsert dashboard preferences
-      const { error: dashError } = await supabase
+      const { error: dashError } = await (supabase as any)
         .from('user_dashboard_preferences')
         .upsert({
           user_id: user.id,

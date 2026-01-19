@@ -182,7 +182,7 @@ export default function DocumentsPage() {
     <AppLayout>
       <PageHeader
         title="Génération de Documents"
-        subtitle="Créez et gérez vos documents professionnels avec l'aide de l'IA"
+        description="Créez et gérez vos documents professionnels avec l'aide de l'IA"
         actions={
           <div className="flex flex-col sm:flex-row gap-3">
             <Button variant="outline" onClick={() => setShowAIGenerator(true)}>
