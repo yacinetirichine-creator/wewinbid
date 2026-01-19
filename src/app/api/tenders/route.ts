@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { withErrorHandler } from '@/lib/errors';
+import { canCreateTender } from '@/lib/subscription';
 import { z } from 'zod';
 
 // Validation schemas
@@ -136,6 +137,18 @@ async function postHandler(request: NextRequest) {
 
   if (!profile?.company_id) {
     return NextResponse.json({ error: 'No company associated' }, { status: 400 });
+  }
+
+  // ✅ VÉRIFICATION DU QUOTA D'ABONNEMENT
+  const quotaCheck = await canCreateTender(profile.company_id);
+  if (!quotaCheck.canCreate) {
+    return NextResponse.json({ 
+      error: quotaCheck.reason || 'Quota exceeded',
+      quota: {
+        current: quotaCheck.currentCount,
+        limit: quotaCheck.limit,
+      }
+    }, { status: 403 });
   }
 
   // Parse and validate request body
