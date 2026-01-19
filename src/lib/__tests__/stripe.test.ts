@@ -1,14 +1,19 @@
 /**
  * @fileoverview Stripe Integration Tests
  * Tests for Stripe checkout, webhooks, and customer portal
+ * Updated: 2026-01-19 - Tests avec vrais Price IDs
  */
 
 import { describe, it, expect } from '@jest/globals';
 import Stripe from 'stripe';
 
-// Mock environment variables - Using mock keys for testing
+// Configuration avec les vrais Price IDs créés
 process.env.STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || 'sk_test_mock_key_for_testing';
 process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'pk_test_mock_key_for_testing';
+process.env.STRIPE_PRICE_PRO_MONTHLY = process.env.STRIPE_PRICE_PRO_MONTHLY || 'price_1Sqy1TGGLTfcP2aLy7MtCKIb';
+process.env.STRIPE_PRICE_PRO_YEARLY = process.env.STRIPE_PRICE_PRO_YEARLY || 'price_1Sqy1ZGGLTfcP2aLbIVEtX2K';
+process.env.STRIPE_PRICE_BUSINESS_MONTHLY = process.env.STRIPE_PRICE_BUSINESS_MONTHLY || 'price_1Sqy1qGGLTfcP2aLSY0AHqXC';
+process.env.STRIPE_PRICE_BUSINESS_YEARLY = process.env.STRIPE_PRICE_BUSINESS_YEARLY || 'price_1Sqy1xGGLTfcP2aL2K5RMkfW';
 
 describe('Stripe Configuration', () => {
   it('should have valid Stripe secret key', () => {
@@ -43,22 +48,41 @@ describe('Stripe Client-Side', () => {
 });
 
 describe('Stripe Price Utilities', () => {
-  it('should throw error for invalid plan/interval combination', async () => {
+  it('should return correct Price ID for Pro Monthly', async () => {
     const { getPriceId } = await import('@/lib/stripe');
     
-    // Since we haven't set STRIPE_PRICE_* env vars, this should throw
-    expect(() => {
-      getPriceId('pro', 'monthly');
-    }).toThrow();
+    const priceId = getPriceId('pro', 'monthly');
+    expect(priceId).toBe('price_1Sqy1TGGLTfcP2aLy7MtCKIb');
   });
 
-  it('should export STRIPE_PRICES constant', async () => {
+  it('should return correct Price ID for Pro Yearly', async () => {
+    const { getPriceId } = await import('@/lib/stripe');
+    
+    const priceId = getPriceId('pro', 'yearly');
+    expect(priceId).toBe('price_1Sqy1ZGGLTfcP2aLbIVEtX2K');
+  });
+
+  it('should return correct Price ID for Business Monthly', async () => {
+    const { getPriceId } = await import('@/lib/stripe');
+    
+    const priceId = getPriceId('business', 'monthly');
+    expect(priceId).toBe('price_1Sqy1qGGLTfcP2aLSY0AHqXC');
+  });
+
+  it('should return correct Price ID for Business Yearly', async () => {
+    const { getPriceId } = await import('@/lib/stripe');
+    
+    const priceId = getPriceId('business', 'yearly');
+    expect(priceId).toBe('price_1Sqy1xGGLTfcP2aL2K5RMkfW');
+  });
+
+  it('should export STRIPE_PRICES constant with all prices', async () => {
     const { STRIPE_PRICES } = await import('@/lib/stripe');
     expect(STRIPE_PRICES).toBeDefined();
-    expect(STRIPE_PRICES).toHaveProperty('PRO_MONTHLY');
-    expect(STRIPE_PRICES).toHaveProperty('PRO_YEARLY');
-    expect(STRIPE_PRICES).toHaveProperty('BUSINESS_MONTHLY');
-    expect(STRIPE_PRICES).toHaveProperty('BUSINESS_YEARLY');
+    expect(STRIPE_PRICES.PRO_MONTHLY).toBe('price_1Sqy1TGGLTfcP2aLy7MtCKIb');
+    expect(STRIPE_PRICES.PRO_YEARLY).toBe('price_1Sqy1ZGGLTfcP2aLbIVEtX2K');
+    expect(STRIPE_PRICES.BUSINESS_MONTHLY).toBe('price_1Sqy1qGGLTfcP2aLSY0AHqXC');
+    expect(STRIPE_PRICES.BUSINESS_YEARLY).toBe('price_1Sqy1xGGLTfcP2aL2K5RMkfW');
   });
 });
 
