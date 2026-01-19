@@ -30,8 +30,17 @@ export default function ContactPage() {
     setError(null);
 
     try {
-      // Simulation d'envoi (à remplacer par votre API)
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Erreur lors de l\'envoi');
+      }
+
       setSuccess(true);
       setFormData({
         name: '',
@@ -42,7 +51,7 @@ export default function ContactPage() {
         message: '',
       });
     } catch (err) {
-      setError('Une erreur est survenue. Veuillez réessayer.');
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
@@ -83,10 +92,30 @@ export default function ContactPage() {
                   <Mail className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-surface-900 mb-1">Email</h3>
-                  <a href="mailto:contact@wewinbid.com" className="text-primary-600 hover:underline">
-                    contact@wewinbid.com
+                  <h3 className="font-bold text-surface-900 mb-1">Email Commercial</h3>
+                  <a href="mailto:commercial@wewinbid.com" className="text-primary-600 hover:underline">
+                    commercial@wewinbid.com
                   </a>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-success-100 flex items-center justify-center text-success-600 flex-shrink-0">
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 4H5C3.89 4 3 4.9 3 6V18C3 19.1 3.89 20 5 20H19C20.11 20 21 19.1 21 18V6C21 4.9 20.11 4 19 4M19 18H5V8L12 13L19 8V18M12 11L5 6H19L12 11Z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-bold text-surface-900 mb-1">Prise de rendez-vous</h3>
+                  <a 
+                    href="https://calendly.com/commercial-wewinbid/30min" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-success-600 hover:underline font-medium"
+                  >
+                    Réserver un créneau (30min)
+                  </a>
+                  <p className="text-sm text-surface-500 mt-1">Échange avec notre équipe commerciale</p>
                 </div>
               </div>
 
@@ -111,8 +140,8 @@ export default function ContactPage() {
                   <h3 className="font-bold text-surface-900 mb-1">Adresse</h3>
                   <p className="text-surface-600">
                     JARVIS SAS<br />
-                    123 Avenue des Champs-Élysées<br />
-                    75008 Paris, France
+                    64 Avenue Marinville<br />
+                    94100 Saint-Maur-des-Fossés, France
                   </p>
                 </div>
               </div>

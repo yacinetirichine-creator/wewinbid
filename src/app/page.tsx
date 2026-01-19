@@ -246,6 +246,7 @@ export default function LandingPage() {
       'landing.footer.links.contact': 'Contact',
       'landing.footer.links.privacy': 'Confidentialité',
       'landing.footer.links.terms': 'CGU',
+      'landing.footer.links.cgv': 'CGV',
       'landing.footer.links.cookies': 'Cookies',
       'landing.footer.links.mentions': 'Mentions légales',
       'landing.footer.copyright': '© 2025 WeWinBid. Commercialisé par JARVIS SAS. Tous droits réservés.',
@@ -614,7 +615,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {/* Free Plan */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -744,8 +745,9 @@ export default function LandingPage() {
                 )}
               </div>
               <Link href="/auth/register?plan=business">
-                <Button variant="outline" className="w-full mb-8" size="lg">
-                  Demander une démo
+                <Button className="w-full mb-8" size="lg">
+                  Essayer gratuitement
+                  <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
               <ul className="space-y-4">
@@ -779,28 +781,62 @@ export default function LandingPage() {
                 </li>
               </ul>
             </motion.div>
-          </div>
 
-          {/* Enterprise CTA */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
-            className="mt-12 text-center bg-surface-900 rounded-3xl p-12 text-white"
-          >
-            <Building2 className="w-12 h-12 mx-auto mb-4 text-primary-400" />
-            <h3 className="text-2xl font-bold mb-4">Vous êtes une grande entreprise ?</h3>
-            <p className="text-surface-300 mb-6 max-w-2xl mx-auto">
-              Bénéficiez d'une solution sur mesure avec collaborateurs illimités, SSO, SLA garanti et un Account Manager dédié.
-            </p>
-            <Link href="/contact?type=enterprise">
-              <Button size="lg" variant="outline" className="text-white border-white/20 hover:bg-white/10">
-                Contactez notre équipe
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </Link>
-          </motion.div>
+            {/* Enterprise Plan */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="relative rounded-3xl border-2 border-surface-900 bg-gradient-to-br from-surface-900 to-surface-800 p-8 text-white"
+            >
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold mb-2">Enterprise</h3>
+                <p className="text-surface-300">Solution sur mesure</p>
+              </div>
+              <div className="mb-8">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-bold">Sur devis</span>
+                </div>
+                <p className="text-sm text-surface-400 mt-2">Volumes illimités et personnalisés</p>
+              </div>
+              <a href="https://calendly.com/commercial-wewinbid/30min" target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" className="w-full mb-8 bg-white text-surface-900 hover:bg-surface-100 border-white" size="lg">
+                  Prendre RDV (30min)
+                </Button>
+              </a>
+              <ul className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-400 flex-shrink-0 mt-0.5" />
+                  <span className="font-medium">Réponses AO illimitées</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-400 flex-shrink-0 mt-0.5" />
+                  <span className="font-medium">Utilisateurs illimités</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-400 flex-shrink-0 mt-0.5" />
+                  <span className="font-medium">Stockage illimité</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-400 flex-shrink-0 mt-0.5" />
+                  <span>API dédiée + Intégrations</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-400 flex-shrink-0 mt-0.5" />
+                  <span>Account Manager dédié</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-400 flex-shrink-0 mt-0.5" />
+                  <span>Formation équipe incluse</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success-400 flex-shrink-0 mt-0.5" />
+                  <span>SLA personnalisé</span>
+                </li>
+              </ul>
+            </motion.div>
+          </div>
         </div>
       </section>
 
@@ -882,6 +918,7 @@ export default function LandingPage() {
               <ul className="space-y-4 text-surface-500">
                 <li><a href="/legal/privacy" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.privacy')}</a></li>
                 <li><a href="/legal/terms" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.terms')}</a></li>
+                <li><a href="/legal/cgv" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.cgv')}</a></li>
                 <li><a href="/legal/cookies" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.cookies')}</a></li>
                 <li><a href="/legal/mentions" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.mentions')}</a></li>
               </ul>

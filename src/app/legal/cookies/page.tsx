@@ -20,7 +20,7 @@ export default function CookiesPage() {
         <h1 className="text-4xl font-display font-bold text-surface-900 mb-4">
           Politique de Cookies
         </h1>
-        <p className="text-surface-500 mb-12">Dernière mise à jour : 18 janvier 2026</p>
+        <p className="text-surface-500 mb-12">Dernière mise à jour : 19 janvier 2026</p>
 
         <div className="prose prose-lg max-w-none">
           <section className="mb-12">
@@ -94,14 +94,43 @@ export default function CookiesPage() {
             <h2 className="text-2xl font-bold text-surface-900 mb-4">Contact</h2>
             <div className="p-6 bg-white rounded-xl border border-surface-200">
               <p className="font-bold text-surface-900">JARVIS SAS</p>
+              <p className="text-surface-700">64 Avenue Marinville</p>
+              <p className="text-surface-700">94100 Saint-Maur-des-Fossés, France</p>
+              <p className="text-surface-700 mt-2">
+                Email DPO :{' '}
+                <a href="mailto:commercial@wewinbid.com" className="text-primary-600 hover:underline">
+                  commercial@wewinbid.com
+                </a>
+              </p>
               <p className="text-surface-700">
-                Email:{' '}
+                Support :{' '}
                 <a href="mailto:contact@wewinbid.com" className="text-primary-600 hover:underline">
                   contact@wewinbid.com
                 </a>
               </p>
             </div>
           </section>
+
+          <div className="mt-16 pt-8 border-t border-surface-200">
+            <p className="text-sm text-surface-500 text-center">
+              Documents légaux :{' '}
+              <Link href="/legal/privacy" className="text-primary-600 hover:underline">
+                Confidentialité
+              </Link>
+              {' · '}
+              <Link href="/legal/terms" className="text-primary-600 hover:underline">
+                CGU
+              </Link>
+              {' · '}
+              <Link href="/legal/cgv" className="text-primary-600 hover:underline">
+                CGV
+              </Link>
+              {' · '}
+              <Link href="/legal/mentions" className="text-primary-600 hover:underline">
+                Mentions Légales
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

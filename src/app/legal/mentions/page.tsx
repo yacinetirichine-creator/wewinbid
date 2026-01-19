@@ -20,7 +20,7 @@ export default function MentionsPage() {
         <h1 className="text-4xl font-display font-bold text-surface-900 mb-4">
           Mentions Légales
         </h1>
-        <p className="text-surface-500 mb-12">Dernière mise à jour : 18 janvier 2026</p>
+        <p className="text-surface-500 mb-12">Dernière mise à jour : 19 janvier 2026</p>
 
         <div className="prose prose-lg max-w-none">
           <section className="mb-12">
@@ -28,22 +28,27 @@ export default function MentionsPage() {
             <div className="p-6 bg-white rounded-xl border border-surface-200">
               <p className="text-surface-900"><strong>Raison sociale :</strong> JARVIS SAS</p>
               <p className="text-surface-700 mt-2"><strong>Forme juridique :</strong> Société par Actions Simplifiée</p>
-              <p className="text-surface-700"><strong>Capital social :</strong> [À compléter] €</p>
-              <p className="text-surface-700"><strong>SIRET :</strong> [À compléter]</p>
-              <p className="text-surface-700"><strong>RCS :</strong> Paris [À compléter]</p>
-              <p className="text-surface-700"><strong>N° TVA intracommunautaire :</strong> FR [À compléter]</p>
+              <p className="text-surface-700"><strong>Capital social :</strong> 1 000 €</p>
+              <p className="text-surface-700"><strong>SIRET :</strong> En cours d'attribution</p>
+              <p className="text-surface-700"><strong>RCS :</strong> Créteil (en cours)</p>
+              <p className="text-surface-700"><strong>N° TVA intracommunautaire :</strong> En cours d'attribution</p>
               <p className="text-surface-700 mt-4"><strong>Siège social :</strong></p>
-              <p className="text-surface-700">123 Avenue des Champs-Élysées</p>
-              <p className="text-surface-700">75008 Paris, France</p>
+              <p className="text-surface-700">64 Avenue Marinville</p>
+              <p className="text-surface-700">94100 Saint-Maur-des-Fossés, France</p>
               <p className="text-surface-700 mt-4">
-                <strong>Email :</strong>{' '}
+                <strong>Email commercial :</strong>{' '}
+                <a href="mailto:commercial@wewinbid.com" className="text-primary-600 hover:underline">
+                  commercial@wewinbid.com
+                </a>
+              </p>
+              <p className="text-surface-700">
+                <strong>Email support :</strong>{' '}
                 <a href="mailto:contact@wewinbid.com" className="text-primary-600 hover:underline">
                   contact@wewinbid.com
                 </a>
               </p>
-              <p className="text-surface-700"><strong>Téléphone :</strong> +33 1 23 45 67 89</p>
               <p className="text-surface-700 mt-4">
-                <strong>Directeur de la publication :</strong> [Nom du représentant légal]
+                <strong>Directeur de la publication :</strong> Représentant légal de JARVIS SAS
               </p>
             </div>
           </section>
