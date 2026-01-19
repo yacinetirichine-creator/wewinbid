@@ -1106,15 +1106,43 @@ export default function SettingsPage() {
                 </button>
               </Card>
 
+              {/* RGPD Data Management */}
+              <Card className="p-6 border-primary-200 bg-primary-50">
+                <div className="flex items-start gap-4">
+                  <Shield className="w-6 h-6 text-primary-600 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h2 className="text-lg font-semibold text-primary-900 mb-2">Mes Données Personnelles (RGPD)</h2>
+                    <p className="text-primary-700 mb-4">
+                      Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, de portabilité et de suppression de vos données personnelles.
+                    </p>
+                    <div className="flex gap-3">
+                      <a href="/data-privacy">
+                        <Button variant="primary">
+                          <Shield className="w-4 h-4 mr-2" />
+                          Gérer mes données RGPD
+                        </Button>
+                      </a>
+                      <a href="/legal/privacy" target="_blank">
+                        <Button variant="secondary">
+                          Politique de confidentialité
+                        </Button>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
               <Card className="p-6 border-red-200">
                 <h2 className="text-lg font-semibold text-red-600 mb-4">{t('settings.security.danger.title')}</h2>
                 <p className="text-gray-600 mb-4">
                   {t('settings.security.danger.hint')}
                 </p>
-                <Button variant="danger">
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  {t('settings.security.danger.delete')}
-                </Button>
+                <a href="/data-privacy">
+                  <Button variant="danger">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    {t('settings.security.danger.delete')}
+                  </Button>
+                </a>
               </Card>
             </div>
           )}

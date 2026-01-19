@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { withErrorHandler } from '@/lib/errors';
+import { 
+  sanitizeFileName, 
+  sanitizeText, 
+  isValidUuid,
+  checkUploadRateLimit,
+  isAllowedFileExtension,
+  hasMaliciousPatterns,
+} from '@/lib/sanitize';
+import { hasFeatureAccess } from '@/lib/subscription';
 import { z } from 'zod';
 
 // File validation constants
@@ -15,7 +24,9 @@ const ALLOWED_TYPES = [
   'image/jpg',
 ];
 
+const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const MAX_FILE_NAME_LENGTH = 255;
 
 // Validation schemas
 const DocumentQuerySchema = z.object({
@@ -105,6 +116,17 @@ async function postHandler(request: NextRequest) {
     return NextResponse.json({ error: 'No company associated' }, { status: 400 });
   }
 
+  // ✅ RATE LIMITING - Max 10 uploads per minute per IP
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 
+              request.headers.get('x-real-ip') || 
+              'unknown';
+  
+  if (!checkUploadRateLimit(ip)) {
+    return NextResponse.json({ 
+      error: 'Too many uploads. Please wait before uploading more files.' 
+    }, { status: 429 });
+  }
+
   // Parse and validate form data
   const formData = await request.formData();
   const file = formData.get('file') as File | null;
@@ -112,45 +134,80 @@ async function postHandler(request: NextRequest) {
   if (!file) {
     return NextResponse.json({ error: 'No file provided' }, { status: 400 });
   }
+
+  // ✅ VALIDATION DE LA TAILLE DU NOM DE FICHIER
+  if (file.name.length > MAX_FILE_NAME_LENGTH) {
+    return NextResponse.json({ 
+      error: `File name too long. Maximum ${MAX_FILE_NAME_LENGTH} characters.` 
+    }, { status: 400 });
+  }
+
+  // ✅ SANITIZATION DU NOM DE FICHIER (protection contre directory traversal)
+  const sanitizedOriginalName = sanitizeFileName(file.name);
   
   const FormDataSchema = z.object({
-    name: z.string().min(1).max(255),
+    name: z.string().min(1).max(255).transform(val => sanitizeText(val)),
     category: z.enum(['TECHNICAL', 'FINANCIAL', 'LEGAL', 'ADMINISTRATIVE', 'OTHER']).default('OTHER'),
-    tender_id: z.string().uuid().nullable().optional(),
+    tender_id: z.string().uuid().nullable().optional().refine(
+      val => !val || isValidUuid(val), 
+      { message: 'Invalid tender ID format' }
+    ),
     expires_at: z.string().datetime().nullable().optional(),
   });
   
   const data = FormDataSchema.parse({
-    name: formData.get('name') || file.name,
-    category: formData.get('category') || 'OTHER',
+    name: formData.get('name') || sanitizedOriginalName,
+    category: formData.get('category') || 'OTHER'),
     tender_id: formData.get('tender_id') || null,
     expires_at: formData.get('expires_at') || null,
   });
 
-  // Validate file type
+  // ✅ VALIDATION DU TYPE MIME
   if (!ALLOWED_TYPES.includes(file.type)) {
     return NextResponse.json({ 
-      error: 'Invalid file type. Allowed: PDF, DOC, DOCX, XLS, XLSX, PNG, JPG' 
+      error: 'Invalid file type. Allowed: PDF, DOC, DOCX, XLS, XLSX, PNG, JPG',
+      allowedTypes: ALLOWED_TYPES,
     }, { status: 400 });
   }
 
-  // Validate file size
+  // ✅ VALIDATION DE L'EXTENSION (double check)
+  if (!isAllowedFileExtension(sanitizedOriginalName, ALLOWED_EXTENSIONS)) {
+    return NextResponse.json({ 
+      error: 'Invalid file extension. Allowed: ' + ALLOWED_EXTENSIONS.join(', '),
+    }, { status: 400 });
+  }
+
+  // ✅ VALIDATION DE LA TAILLE
   if (file.size > MAX_FILE_SIZE) {
     return NextResponse.json({ 
-      error: 'File too large. Maximum size: 10 MB' 
+      error: `File too large. Maximum size: ${MAX_FILE_SIZE / 1024 / 1024} MB`,
+      maxSize: MAX_FILE_SIZE,
+      receivedSize: file.size,
     }, { status: 400 });
   }
 
-  // Generate unique file path
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${profile.company_id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+  // ✅ SCAN DU CONTENU (patterns malveillants)
+  const fileBuffer = Buffer.from(await file.arrayBuffer());
+  if (hasMaliciousPatterns(fileBuffer)) {
+    console.warn(`Malicious pattern detected in file upload from user ${user.id}`);
+    return NextResponse.json({ 
+      error: 'File rejected: suspicious content detected' 
+    }, { status: 400 });
+  }
 
-  // Upload to Supabase Storage
+  // Generate unique file path with company isolation
+  const fileExt = sanitizedOriginalName.split('.').pop() || 'bin';
+  const timestamp = Date.now();
+  const randomId = Math.random().toString(36).substring(2, 15);
+  const fileName = `${profile.company_id}/${timestamp}-${randomId}.${fileExt}`;
+
+  // Upload to Supabase Storage with security headers
   const { data: uploadData, error: uploadError } = await supabase.storage
     .from('documents')
-    .upload(fileName, file, {
+    .upload(fileName, fileBuffer, {
       contentType: file.type,
       cacheControl: '3600',
+      upsert: false, // Prevent overwriting existing files
     });
 
   if (uploadError) {
@@ -158,19 +215,19 @@ async function postHandler(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });
   }
 
-  // Get public URL
+  // Get public URL (Supabase handles access control via RLS)
   const { data: { publicUrl } } = supabase.storage
     .from('documents')
     .getPublicUrl(fileName);
 
-  // Create document record
+  // Create document record with sanitized data
   const { data: document, error: dbError } = await supabase
     .from('documents')
     .insert({
       company_id: profile.company_id,
       tender_id: data.tender_id,
       name: data.name,
-      file_name: file.name,
+      file_name: sanitizedOriginalName,
       file_type: file.type,
       file_size: file.size,
       file_path: fileName,
@@ -185,10 +242,13 @@ async function postHandler(request: NextRequest) {
 
   if (dbError) {
     console.error('Database error:', dbError);
-    // Try to delete uploaded file
+    // Rollback: delete uploaded file
     await supabase.storage.from('documents').remove([fileName]);
     return NextResponse.json({ error: 'Failed to save document' }, { status: 500 });
   }
+
+  // ✅ AUDIT LOG
+  console.info(`Document uploaded: ${document.id} by user ${user.id} (company: ${profile.company_id})`);
 
   return NextResponse.json({ document }, { status: 201 });
 }
