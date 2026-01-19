@@ -10,6 +10,7 @@ import {
   hasMaliciousPatterns,
 } from '@/lib/sanitize';
 import { hasFeatureAccess } from '@/lib/subscription';
+import { logDocumentEvent, logSecurityEvent, getIpAddress, getUserAgent } from '@/lib/audit-logger';
 import { z } from 'zod';
 
 // File validation constants
@@ -117,11 +118,22 @@ async function postHandler(request: NextRequest) {
   }
 
   // ✅ RATE LIMITING - Max 10 uploads per minute per IP
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 
-              request.headers.get('x-real-ip') || 
-              'unknown';
+  const ip = getIpAddress(request) || 'unknown';
   
   if (!checkUploadRateLimit(ip)) {
+    // Log rate limit exceeded
+    await logSecurityEvent(
+      'rate_limit_exceeded',
+      {
+        resource: 'documents',
+        action: 'upload',
+        ip_address: ip,
+      },
+      request,
+      user.id,
+      profile?.company_id
+    );
+    
     return NextResponse.json({ 
       error: 'Too many uploads. Please wait before uploading more files.' 
     }, { status: 429 });
@@ -189,7 +201,20 @@ async function postHandler(request: NextRequest) {
   // ✅ SCAN DU CONTENU (patterns malveillants)
   const fileBuffer = Buffer.from(await file.arrayBuffer());
   if (hasMaliciousPatterns(fileBuffer)) {
-    console.warn(`Malicious pattern detected in file upload from user ${user.id}`);
+    // Log malicious file attempt
+    await logSecurityEvent(
+      'malicious_file_blocked',
+      {
+        file_name: sanitizedOriginalName,
+        file_type: file.type,
+        file_size: file.size,
+        ip_address: ip,
+      },
+      request,
+      user.id,
+      profile.company_id
+    );
+    
     return NextResponse.json({ 
       error: 'File rejected: suspicious content detected' 
     }, { status: 400 });
@@ -247,8 +272,21 @@ async function postHandler(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to save document' }, { status: 500 });
   }
 
-  // ✅ AUDIT LOG
-  console.info(`Document uploaded: ${document.id} by user ${user.id} (company: ${profile.company_id})`);
+  // ✅ AUDIT LOG - Document uploadé avec succès
+  await logDocumentEvent(
+    'document_uploaded',
+    user.id,
+    profile.company_id,
+    document.id,
+    {
+      file_name: sanitizedOriginalName,
+      file_type: file.type,
+      file_size_mb: (file.size / 1024 / 1024).toFixed(2),
+      category: data.category,
+      tender_id: data.tender_id,
+    },
+    request
+  );
 
   return NextResponse.json({ document }, { status: 201 });
 }

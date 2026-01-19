@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { withErrorHandler } from '@/lib/errors';
+import { cache, cacheKeys, cacheTTL } from '@/lib/cache';
 import { z } from 'zod';
 
 // Validation schemas
@@ -362,6 +363,13 @@ async function postHandler(request: NextRequest) {
       return NextResponse.json({ error: 'No company associated' }, { status: 400 });
     }
 
+    // ✅ CACHE: Check if score already calculated recently (10 min TTL)
+    const cacheKey = cacheKeys.tenderScore(tender_id, profile.company_id);
+    const cachedScore = await cache.get<ScoringResult>(cacheKey);
+    if (cachedScore) {
+      return NextResponse.json(cachedScore);
+    }
+
     // Get company details
     const { data: company } = await supabase
       .from('companies')
@@ -403,6 +411,9 @@ async function postHandler(request: NextRequest) {
     if (updateError) {
       console.error('Error saving score:', updateError);
     }
+
+    // ✅ CACHE: Store result for 10 minutes
+    await cache.set(cacheKey, result, cacheTTL.MEDIUM * 2); // 10 minutes
 
     return NextResponse.json(result);
 }

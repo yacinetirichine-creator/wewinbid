@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -233,18 +234,16 @@ export default function DashboardPage() {
   );
 
   const { t } = useUiTranslations(locale, entries);
+  const supabase = createClient();
   
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [recentTenders, setRecentTenders] = useState<RecentTender[]>([]);
-  const [activities, setActivities] = useState<RecentActivity[]>([]);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showWelcome, setShowWelcome] = useState(false);
 
-  const loadDashboardData = useCallback(async () => {
-    try {
+  // ✅ React Query: Auto-caching with 5min stale time
+  const { data: dashboardData, isLoading } = useQuery({
+    queryKey: ['dashboard-data'],
+    queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) throw new Error('Not authenticated');
 
       // Get user's company
       const { data: profile } = await supabase
@@ -253,10 +252,7 @@ export default function DashboardPage() {
         .eq('id', user.id)
         .single();
 
-      if (!profile?.company_id) {
-        setLoading(false);
-        return;
-      }
+      if (!profile?.company_id) return null;
 
       // Load stats
       const { data: tenders } = await supabase
@@ -264,6 +260,7 @@ export default function DashboardPage() {
         .select('status, estimated_value, compatibility_score')
         .eq('company_id', profile.company_id);
 
+      let stats: DashboardStats | null = null;
       if (tenders) {
         const totalTenders = tenders.length;
         const activeTenders = tenders.filter(t => ['draft', 'in_progress', 'submitted'].includes(t.status)).length;
@@ -275,7 +272,7 @@ export default function DashboardPage() {
         const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
         const winRate = totalTenders > 0 ? Math.round((wonTenders / (wonTenders + lostTenders)) * 100) || 0 : 0;
 
-        setStats({
+        stats = {
           totalTenders,
           activeTenders,
           wonTenders,
@@ -284,7 +281,7 @@ export default function DashboardPage() {
           totalRevenue,
           avgScore,
           winRate,
-        });
+        };
       }
 
       // Load recent tenders
@@ -295,10 +292,6 @@ export default function DashboardPage() {
         .order('updated_at', { ascending: false })
         .limit(5);
 
-      if (recentTendersData) {
-        setRecentTenders(recentTendersData);
-      }
-
       // Load activities
       const { data: activitiesData } = await supabase
         .from('activities')
@@ -306,10 +299,6 @@ export default function DashboardPage() {
         .eq('company_id', profile.company_id)
         .order('created_at', { ascending: false })
         .limit(10);
-
-      if (activitiesData) {
-        setActivities(activitiesData);
-      }
 
       // Load notifications
       const { data: notificationsData } = await supabase
@@ -320,27 +309,30 @@ export default function DashboardPage() {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (notificationsData) {
-        setNotifications(notificationsData);
-      }
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [supabase]);
+      return {
+        stats,
+        recentTenders: recentTendersData || [],
+        activities: activitiesData || [],
+        notifications: notificationsData || [],
+      };
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    retry: 1,
+  });
 
-  useEffect(() => {
-    // Check for welcome param
+  const stats = dashboardData?.stats || null;
+  const recentTenders = dashboardData?.recentTenders || [];
+  const activities = dashboardData?.activities || [];
+  const notifications = dashboardData?.notifications || [];
+
+  // Check for welcome message on mount
+  useMemo(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('welcome') === 'true') {
       setShowWelcome(true);
-      // Remove the param from URL
       window.history.replaceState({}, '', '/dashboard');
     }
-
-    loadDashboardData();
-  }, [loadDashboardData]);
+  }, []);
 
   const container = {
     hidden: { opacity: 0 },
@@ -390,7 +382,7 @@ export default function DashboardPage() {
         </motion.div>
       )}
 
-      {loading ? (
+      {isLoading ? (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
