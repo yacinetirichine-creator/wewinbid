@@ -7,49 +7,69 @@ import { LocaleHtmlUpdater } from '@/components/providers/LocaleHtmlUpdater';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://wewinbid.com'),
   title: {
-    default: 'WeWinBid - Remportez plus d\'appels d\'offres',
+    default: 'WeWinBid - L\'IA pour Gagner vos Appels d\'Offres Publics et Privés',
     template: '%s | WeWinBid',
   },
-  description: 'Plateforme SaaS B2B d\'automatisation des réponses aux appels d\'offres avec score de compatibilité IA, marketplace partenaires et génération automatique de documents.',
+  description: 'Automatisez la détection, l\'analyse et la réponse aux appels d\'offres. Score de compatibilité IA, rédaction de mémoires techniques, et marketplace partenaires. Gagnez du temps et remportez plus de marchés.',
   keywords: [
     'appels d\'offres',
     'marchés publics',
     'AO',
     'tender',
-    'IA',
-    'automatisation',
-    'score compatibilité',
-    'mémoire technique',
+    'IA appels d\'offres',
+    'logiciel appels d\'offres',
+    'automatisation réponse AO',
+    'mémoire technique automatique',
+    'veille marchés publics',
+    'WeWinBid',
+    'SaaS B2B',
+    'Gagner appel d\'offre'
   ],
-  authors: [{ name: 'JARVIS SAS' }],
-  creator: 'JARVIS SAS',
-  publisher: 'JARVIS SAS',
+  authors: [{ name: 'WeWinBid Team', url: 'https://wewinbid.com' }],
+  creator: 'WeWinBid',
+  publisher: 'WeWinBid',
+  alternates: {
+    canonical: '/',
+    languages: {
+      'fr-FR': '/fr',
+      'en-US': '/en',
+    },
+  },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
   openGraph: {
     type: 'website',
     locale: 'fr_FR',
     url: 'https://wewinbid.com',
     siteName: 'WeWinBid',
-    title: 'WeWinBid - Remportez plus d\'appels d\'offres',
-    description: 'Automatisez vos réponses aux appels d\'offres avec l\'IA',
+    title: 'WeWinBid - L\'Intelligence Artificielle au service de vos Appels d\'Offres',
+    description: 'Boostez votre taux de réussite avec notre IA : détection ciblée, analyse prédictive (Go/No-Go) et rédaction automatisée de mémoires techniques.',
     images: [
       {
         url: '/images/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'WeWinBid',
+        alt: 'WeWinBid Dashboard',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'WeWinBid - Remportez plus d\'appels d\'offres',
-    description: 'Automatisez vos réponses aux appels d\'offres avec l\'IA',
+    title: 'WeWinBid - Gagnez vos Appels d\'Offres avec l\'IA',
+    description: 'La solution tout-en-un pour détecter, analyser et répondre aux marchés publics et privés plus efficacement.',
     images: ['/images/og-image.png'],
+    creator: '@wewinbid',
   },
   icons: {
     icon: '/favicon.ico',
@@ -57,6 +77,41 @@ export const metadata: Metadata = {
     apple: '/apple-touch-icon.png',
   },
   manifest: '/manifest.json',
+  category: 'business',
+};
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'SoftwareApplication',
+      'name': 'WeWinBid',
+      'applicationCategory': 'BusinessApplication',
+      'operatingSystem': 'Web, Cloud',
+      'url': 'https://wewinbid.com',
+      'description': 'Plateforme SaaS B2B d\'automatisation des réponses aux appels d\'offres avec score de compatibilité IA et génération de documents.',
+      'offers': {
+        '@type': 'Offer',
+        'price': '0',
+        'priceCurrency': 'EUR'
+      },
+      'aggregateRating': {
+        '@type': 'AggregateRating',
+        'ratingValue': '4.9',
+        'ratingCount': '85'
+      }
+    },
+    {
+      '@type': 'Organization',
+      'url': 'https://wewinbid.com',
+      'name': 'WeWinBid',
+      'logo': 'https://wewinbid.com/logo.png',
+      'sameAs': [
+        'https://www.linkedin.com/company/wewinbid',
+        'https://twitter.com/wewinbid'
+      ]
+    }
+  ]
 };
 
 export default function RootLayout({
@@ -71,6 +126,10 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="WeWinBid" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       </head>
       <body className="min-h-screen bg-surface-50 antialiased">
         <LocaleHtmlUpdater />

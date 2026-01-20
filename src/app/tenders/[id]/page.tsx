@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -66,22 +66,30 @@ export default function TenderDetailPage() {
   const [selectedAiModel, setSelectedAiModel] = useState<string>('gpt-4');
   const [editingTranslation, setEditingTranslation] = useState<any | null>(null);
   const [reviewForm, setReviewForm] = useState({ title: '', description: '', quality_score: 0 });
-  
-  const supabase = createClient();
+
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
+  const getSupabase = useCallback(() => {
+    if (!supabaseRef.current) {
+      supabaseRef.current = createClient();
+    }
+    return supabaseRef.current;
+  }, []);
 
   const tenderId = params.id as string;
 
   const fetchUser = useCallback(async () => {
     try {
+      const supabase = getSupabase();
       const { data: { user } } = await supabase.auth.getUser();
       if (user) setCurrentUserId(user.id);
     } catch (error) {
       console.error('Error fetching user:', error);
     }
-  }, [supabase]);
+  }, [getSupabase]);
 
   const fetchTender = useCallback(async () => {
     try {
+      const supabase = getSupabase();
       const { data, error } = await supabase
         .from('tenders')
         .select('*')
@@ -96,10 +104,11 @@ export default function TenderDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [supabase, tenderId]);
+  }, [getSupabase, tenderId]);
 
   const fetchDocuments = useCallback(async () => {
     try {
+      const supabase = getSupabase();
       const { data, error } = await supabase
         .from('documents')
         .select('*')
@@ -111,7 +120,7 @@ export default function TenderDetailPage() {
     } catch (error) {
       console.error('Error fetching documents:', error);
     }
-  }, [supabase, tenderId]);
+  }, [getSupabase, tenderId]);
 
   const fetchTranslations = useCallback(async () => {
     setLoadingTranslations(true);
@@ -254,6 +263,7 @@ export default function TenderDetailPage() {
     if (!tender) return;
     
     try {
+      const supabase = getSupabase();
       const { error } = await (supabase as any)
         .from('tenders')
         .update({ 
@@ -277,6 +287,7 @@ export default function TenderDetailPage() {
   async function calculateAIScore() {
     setIsCalculatingScore(true);
     try {
+      const supabase = getSupabase();
       // Simuler un calcul IA (à remplacer par l'appel API réel)
       await new Promise(resolve => setTimeout(resolve, 2000));
       
@@ -315,6 +326,7 @@ export default function TenderDetailPage() {
 
   async function deleteTender() {
     try {
+      const supabase = getSupabase();
       const { error } = await supabase
         .from('tenders')
         .delete()

@@ -8,7 +8,6 @@ import { createClient } from '@/lib/supabase/client';
 function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createClient();
   
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Vérification en cours...');
@@ -16,6 +15,7 @@ function CallbackContent() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
+        const supabase = createClient();
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error) {
@@ -51,7 +51,7 @@ function CallbackContent() {
     };
 
     handleCallback();
-  }, [router, searchParams, supabase.auth]);
+  }, [router, searchParams]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center p-4">

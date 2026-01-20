@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -39,7 +39,14 @@ const STEPS = [
 
 export default function RegisterPage() {
   const router = useRouter();
-  const supabase = createClient();
+
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
+  const getSupabase = useCallback(() => {
+    if (!supabaseRef.current) {
+      supabaseRef.current = createClient();
+    }
+    return supabaseRef.current;
+  }, []);
   
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -118,6 +125,7 @@ export default function RegisterPage() {
     setError(null);
 
     try {
+      const supabase = getSupabase();
       // Create auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -159,6 +167,7 @@ export default function RegisterPage() {
     setError(null);
 
     try {
+      const supabase = getSupabase();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {

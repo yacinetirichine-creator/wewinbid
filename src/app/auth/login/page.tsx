@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -10,7 +10,14 @@ import { Button, Input, Alert } from '@/components/ui';
 
 export default function LoginPage() {
   const router = useRouter();
-  const supabase = createClient();
+
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
+  const getSupabase = useCallback(() => {
+    if (!supabaseRef.current) {
+      supabaseRef.current = createClient();
+    }
+    return supabaseRef.current;
+  }, []);
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,6 +32,7 @@ export default function LoginPage() {
     setError(null);
 
     try {
+      const supabase = getSupabase();
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -53,6 +61,7 @@ export default function LoginPage() {
     setError(null);
 
     try {
+      const supabase = getSupabase();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {

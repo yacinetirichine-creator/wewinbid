@@ -127,7 +127,6 @@ export default function NewTenderPage() {
   const [formData, setFormData] = useState<TenderFormData>(INITIAL_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const supabase = createClient();
 
   const countryConfig = getCountryConfig(formData.country);
   const requiredDocs = getRequiredDocuments(formData.country, formData.type);
@@ -174,6 +173,7 @@ export default function NewTenderPage() {
 
     setIsSubmitting(true);
     try {
+      const supabase = createClient();
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Non authentifié');
 

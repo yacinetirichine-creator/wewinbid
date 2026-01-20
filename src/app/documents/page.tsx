@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { Button, Input, Card, Badge, Modal } from '@/components/ui';
 import { 
   Search, Upload, FileText, FilePlus, Trash2, Download, Eye, 
@@ -140,8 +139,6 @@ export default function DocumentsPage() {
     expiresAt: '',
     file: null as File | null,
   });
-
-  const supabase = createClient();
 
   // Fetch documents
   const fetchDocuments = useCallback(async () => {

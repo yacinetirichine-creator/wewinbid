@@ -11,7 +11,7 @@ describe('Button', () => {
   it('should apply primary variant by default', () => {
     render(<Button>Primary</Button>);
     const button = screen.getByRole('button');
-    expect(button).toHaveClass('bg-blue-600');
+    expect(button).toHaveClass('bg-primary-600');
   });
 
   it('should apply custom variant', () => {

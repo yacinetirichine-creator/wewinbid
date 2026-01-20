@@ -5,23 +5,39 @@
 
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set in environment variables');
+let stripeSingleton: Stripe | null = null;
+
+/**
+ * Lazily create the Stripe server-side client.
+ * Important: do not require env vars at module evaluation time, otherwise
+ * `next build` fails when collecting route data.
+ */
+export function getStripeServer(): Stripe {
+  if (stripeSingleton) return stripeSingleton;
+
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
+    throw new Error('STRIPE_SECRET_KEY is not set in environment variables');
+  }
+
+  stripeSingleton = new Stripe(secretKey, {
+    apiVersion: '2024-06-20' as any,
+    typescript: true,
+    httpClient: Stripe.createNodeHttpClient(),
+    appInfo: {
+      name: 'WeWinBid',
+      version: '1.0.0',
+      url: 'https://wewinbid.com',
+    },
+  });
+
+  return stripeSingleton;
 }
 
 /**
- * Stripe server-side instance.
- * Used in API routes and webhooks.
+ * Backward-compatible named export removed:
+ * use `getStripeServer()` inside request handlers.
  */
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-06-20' as any,
-  typescript: true,
-  appInfo: {
-    name: 'WeWinBid',
-    version: '1.0.0',
-    url: 'https://wewinbid.com',
-  },
-});
 
 /**
  * Stripe Price IDs from environment variables.
@@ -72,7 +88,7 @@ export function verifyWebhookSignature(
   secret: string
 ): Stripe.Event {
   try {
-    return stripe.webhooks.constructEvent(payload, signature, secret);
+    return getStripeServer().webhooks.constructEvent(payload, signature, secret);
   } catch (error) {
     throw new Error(`Webhook signature verification failed: ${error}`);
   }

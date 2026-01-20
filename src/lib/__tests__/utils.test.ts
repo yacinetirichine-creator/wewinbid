@@ -222,7 +222,13 @@ describe('utils', () => {
   });
 
   describe('debounce', () => {
-    jest.useFakeTimers();
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
 
     it('should debounce function calls', () => {
       const mockFn = jest.fn();
@@ -239,8 +245,6 @@ describe('utils', () => {
       expect(mockFn).toHaveBeenCalledTimes(1);
       expect(mockFn).toHaveBeenCalledWith('test3');
     });
-
-    jest.useRealTimers();
   });
 
   describe('generateId', () => {

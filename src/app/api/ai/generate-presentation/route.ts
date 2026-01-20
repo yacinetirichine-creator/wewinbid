@@ -2,12 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { createClient } from '@/lib/supabase/server';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+function getOpenAIClient() {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    // Ne pas échouer au build : on ne touche jamais à l'env tant que la route n'est pas appelée.
+    throw new Error('OPENAI_API_KEY is not configured');
+  }
+  return new OpenAI({ apiKey });
+}
 
 export async function POST(request: NextRequest) {
   try {
+    const openai = getOpenAIClient();
     const supabase = await createClient();
     
     // Vérifier l'authentification

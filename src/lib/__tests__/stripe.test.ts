@@ -1,3 +1,5 @@
+/** @jest-environment node */
+
 /**
  * @fileoverview Stripe Integration Tests
  * Tests for Stripe checkout, webhooks, and customer portal
@@ -27,7 +29,8 @@ describe('Stripe Configuration', () => {
   });
 
   it('should initialize Stripe client successfully', async () => {
-    const { stripe } = await import('@/lib/stripe');
+    const { getStripeServer } = await import('@/lib/stripe');
+    const stripe = getStripeServer();
     expect(stripe).toBeDefined();
     expect(stripe).toBeInstanceOf(Stripe);
   });
@@ -157,7 +160,8 @@ describe('Stripe Real API Test (Optional - Requires Network)', () => {
   const runRealApiTests = process.env.RUN_STRIPE_API_TESTS === 'true';
 
   (runRealApiTests ? it : it.skip)('should connect to Stripe API', async () => {
-    const { stripe } = await import('@/lib/stripe');
+    const { getStripeServer } = await import('@/lib/stripe');
+    const stripe = getStripeServer();
     
     try {
       // Try to retrieve account to verify API key works
@@ -174,7 +178,8 @@ describe('Stripe Real API Test (Optional - Requires Network)', () => {
   });
 
   (runRealApiTests ? it : it.skip)('should list products from Stripe', async () => {
-    const { stripe } = await import('@/lib/stripe');
+    const { getStripeServer } = await import('@/lib/stripe');
+    const stripe = getStripeServer();
     
     try {
       const products = await stripe.products.list({ limit: 10 });
@@ -188,7 +193,8 @@ describe('Stripe Real API Test (Optional - Requires Network)', () => {
 
 describe('Stripe Type Safety', () => {
   it('should have proper TypeScript types for Stripe instance', async () => {
-    const { stripe } = await import('@/lib/stripe');
+    const { getStripeServer } = await import('@/lib/stripe');
+    const stripe = getStripeServer();
     
     // TypeScript should ensure these methods exist
     expect(stripe.customers).toBeDefined();

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe, getPriceId } from '@/lib/stripe';
+import { getStripeServer, getPriceId } from '@/lib/stripe';
 import { createClient } from '@/lib/supabase/server';
 import { withErrorHandler } from '@/lib/errors';
 import { z } from 'zod';
@@ -15,6 +15,8 @@ const CheckoutSchema = z.object({
 });
 
 async function handler(req: NextRequest) {
+  const stripe = getStripeServer();
+
   // Parse and validate request
   const body = await req.json();
   const { plan, interval } = CheckoutSchema.parse(body);

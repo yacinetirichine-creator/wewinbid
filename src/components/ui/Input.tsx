@@ -71,7 +71,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <label
             htmlFor={inputId}
             className={cn(
-              'text-sm font-medium text-gray-700',
+              'text-sm font-medium text-slate-700',
               disabled && 'opacity-50 cursor-not-allowed'
             )}
           >
@@ -82,7 +82,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
         <div className="relative">
           {leftIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true">
               {leftIcon}
             </div>
           )}
@@ -91,14 +91,14 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             id={inputId}
             className={cn(
-              'flex h-10 w-full rounded-md border bg-white px-3 py-2 text-sm transition-colors',
-              'placeholder:text-gray-400',
+              'flex h-10 w-full rounded-lg border bg-white px-3 py-2 text-sm transition-all duration-200',
+              'placeholder:text-slate-400',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
-              'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50',
+              'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-50',
               // Border colors
-              !hasError && !success && 'border-gray-300 focus-visible:ring-blue-600',
-              hasError && 'border-rose-500 focus-visible:ring-rose-600',
-              success && 'border-emerald-500 focus-visible:ring-emerald-600',
+              !hasError && !success && 'border-slate-200 hover:border-slate-300 focus-visible:border-primary-600 focus-visible:ring-primary-600/20',
+              hasError && 'border-rose-500 focus-visible:ring-rose-600/20',
+              success && 'border-emerald-500 focus-visible:ring-emerald-600/20',
               // Icon padding
               leftIcon && 'pl-10',
               rightIcon && 'pr-10',

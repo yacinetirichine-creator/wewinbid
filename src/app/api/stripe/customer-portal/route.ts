@@ -4,11 +4,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
+import { getStripeServer } from '@/lib/stripe';
 import { createClient } from '@/lib/supabase/server';
 import { withErrorHandler } from '@/lib/errors';
 
 async function handler(req: NextRequest) {
+  const stripe = getStripeServer();
+
   // Get authenticated user
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();

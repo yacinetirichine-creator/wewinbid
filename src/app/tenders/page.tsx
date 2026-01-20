@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { 
@@ -179,7 +179,13 @@ function KanbanColumn({
 
 // Page principale
 export default function TendersPage() {
-  const supabase = useMemo(() => createClient(), []);
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
+  const getSupabase = useCallback(() => {
+    if (!supabaseRef.current) {
+      supabaseRef.current = createClient();
+    }
+    return supabaseRef.current;
+  }, []);
   const { locale } = useLocale();
   const [tenders, setTenders] = useState<Tender[]>([]);
   const [loading, setLoading] = useState(true);
@@ -225,6 +231,7 @@ export default function TendersPage() {
 
   const fetchTenders = useCallback(async () => {
     try {
+      const supabase = getSupabase();
       const { data, error } = await supabase
         .from('tenders')
         .select('*')
@@ -237,7 +244,7 @@ export default function TendersPage() {
     } finally {
       setLoading(false);
     }
-  }, [supabase]);
+  }, [getSupabase]);
 
   useEffect(() => {
     fetchTenders();
@@ -245,6 +252,7 @@ export default function TendersPage() {
 
   async function handleStatusChange(tenderId: string, newStatus: TenderStatus) {
     try {
+      const supabase = getSupabase();
       const { error } = await (supabase as any)
         .from('tenders')
         .update({ status: newStatus, updated_at: new Date().toISOString() })

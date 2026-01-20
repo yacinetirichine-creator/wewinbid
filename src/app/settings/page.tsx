@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { Button, Input, Card, Badge } from '@/components/ui';
 import { 
   User, Building2, Bell, Shield, CreditCard, Globe, Palette,
@@ -164,7 +163,6 @@ export default function SettingsPage() {
 
   const [newKeyword, setNewKeyword] = useState('');
 
-  const supabase = createClient();
   const { locale } = useLocale();
 
   const entries = useMemo(

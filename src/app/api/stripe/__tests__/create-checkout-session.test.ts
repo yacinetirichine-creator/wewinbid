@@ -1,3 +1,5 @@
+/** @jest-environment node */
+
 /**
  * Tests pour la route API /api/stripe/create-checkout-session
  * Vérifie la création de sessions Stripe et la gestion des erreurs

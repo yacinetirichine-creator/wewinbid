@@ -36,17 +36,17 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          'rounded-lg bg-white transition-all',
+          'rounded-xl transition-all duration-300',
           // Variants
-          variant === 'outlined' && 'border border-gray-200',
-          variant === 'elevated' && 'shadow-md',
-          variant === 'default' && 'border border-gray-100 shadow-sm',
+          variant === 'outlined' && 'bg-transparent border border-slate-200',
+          variant === 'elevated' && 'bg-white shadow-xl shadow-slate-200/50 border-none',
+          variant === 'default' && 'bg-white border border-slate-100 shadow-sm',
           // Padding
-          padding === 'sm' && 'p-3',
-          padding === 'md' && 'p-4',
-          padding === 'lg' && 'p-6',
+          padding === 'sm' && 'p-4',
+          padding === 'md' && 'p-6',
+          padding === 'lg' && 'p-8',
           // Hover
-          hoverable && 'hover:shadow-lg cursor-pointer',
+          hoverable && 'hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-200/50 cursor-pointer',
           className
         )}
         {...props}

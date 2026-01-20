@@ -3,13 +3,18 @@ import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+function getOpenAIClient() {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY is not configured');
+  }
+  return new OpenAI({ apiKey });
+}
 
 // POST /api/chat/analyze - Analyze a tender with AI
 export async function POST(request: NextRequest) {
   try {
+    const openai = getOpenAIClient();
     const supabase = createRouteHandlerClient({ cookies });
     
     const { data: { session } } = await supabase.auth.getSession();

@@ -14,19 +14,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import Stripe from 'stripe';
-import { stripe, verifyWebhookSignature, STRIPE_WEBHOOK_EVENTS } from '@/lib/stripe';
+import { verifyWebhookSignature, STRIPE_WEBHOOK_EVENTS } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 
-// Use service role key for database updates
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Use service role key for database updates (lazy to avoid build-time failures)
+let supabaseServiceClient: ReturnType<typeof createClient> | null = null;
+
+function getSupabaseServiceClient() {
+  if (supabaseServiceClient) return supabaseServiceClient;
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Supabase service role is not configured (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)');
+  }
+
+  supabaseServiceClient = createClient(supabaseUrl, serviceRoleKey);
+  return supabaseServiceClient;
+}
 
 /**
  * Handle checkout.session.completed event.
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  const supabase = getSupabaseServiceClient();
+
   const userId = session.metadata?.user_id;
   const plan = session.metadata?.plan;
   const interval = session.metadata?.interval;
@@ -54,6 +67,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
  * Handle customer.subscription.updated event.
  */
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
+  const supabase = getSupabaseServiceClient();
+
   const userId = subscription.metadata?.user_id;
 
   if (!userId) {
@@ -84,6 +99,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
  * Handle customer.subscription.deleted event.
  */
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
+  const supabase = getSupabaseServiceClient();
+
   const userId = subscription.metadata?.user_id;
 
   if (!userId) {
@@ -110,6 +127,8 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
  * Handle invoice.payment_failed event.
  */
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
+  const supabase = getSupabaseServiceClient();
+
   const customerId = invoice.customer as string;
 
   // Get user from customer ID

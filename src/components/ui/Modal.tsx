@@ -160,24 +160,24 @@ export const Modal: React.FC<ModalProps> = ({
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
         className={cn(
-          'relative z-50 w-full rounded-lg bg-white shadow-xl',
+          'relative z-50 w-full rounded-xl bg-white shadow-2xl ring-1 ring-slate-900/5 transition-all',
           sizeClasses[size],
           className
         )}
       >
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-gray-200 p-4">
+        <div className="flex items-start justify-between border-b border-slate-100 p-6">
           <div className="flex-1">
             <h2
               id={titleId}
-              className="text-lg font-semibold text-gray-900"
+              className="text-xl font-semibold text-slate-900 leading-none tracking-tight"
             >
               {title}
             </h2>
             {description && (
               <p
                 id={descriptionId}
-                className="mt-1 text-sm text-gray-500"
+                className="mt-1.5 text-sm text-slate-500"
               >
                 {description}
               </p>
@@ -187,11 +187,11 @@ export const Modal: React.FC<ModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="ml-4 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="ml-4 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
               aria-label="Close modal"
             >
               <svg
-                className="h-6 w-6"
+                className="h-5 w-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -208,7 +208,7 @@ export const Modal: React.FC<ModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-4">{children}</div>
+        <div className="p-6">{children}</div>
       </div>
     </div>
   );
@@ -228,7 +228,7 @@ export const ModalFooter: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
 }) => (
   <div
     className={cn(
-      'flex items-center justify-end gap-2 border-t border-gray-200 pt-4 mt-4',
+      'flex items-center justify-end gap-3 border-t border-slate-100 p-6 bg-slate-50/50 rounded-b-xl',
       className
     )}
     {...props}

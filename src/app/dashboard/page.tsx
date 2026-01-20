@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState, useEffect } from 'react';
+import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -192,7 +192,13 @@ function ActivityItem({ activity }: { activity: RecentActivity }) {
 }
 
 export default function DashboardPage() {
-  const supabase = useMemo(() => createClient(), []);
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
+  const getSupabase = useCallback(() => {
+    if (!supabaseRef.current) {
+      supabaseRef.current = createClient();
+    }
+    return supabaseRef.current;
+  }, []);
   const { locale } = useLocale();
 
   const entries = useMemo(
@@ -241,6 +247,7 @@ export default function DashboardPage() {
   const { data: dashboardData, isLoading } = useQuery({
     queryKey: ['dashboard-data'],
     queryFn: async () => {
+      const supabase = getSupabase();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
