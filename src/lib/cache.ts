@@ -17,13 +17,22 @@
 
 import { Redis } from '@upstash/redis';
 
-// Initialize Redis client - environment variables required:
-// UPSTASH_REDIS_REST_URL
-// UPSTASH_REDIS_REST_TOKEN
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL || '',
-  token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
-});
+let redis: Redis | null = null;
+
+function getRedisClient(): Redis | null {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!url || !token) {
+    return null;
+  }
+
+  if (!redis) {
+    redis = new Redis({ url, token });
+  }
+
+  return redis;
+}
 
 /**
  * Cache utility with type-safe operations
@@ -36,12 +45,10 @@ export const cache = {
    */
   async get<T>(key: string): Promise<T | null> {
     try {
-      if (!process.env.UPSTASH_REDIS_REST_URL) {
-        console.warn('Redis not configured, skipping cache get');
-        return null;
-      }
+      const client = getRedisClient();
+      if (!client) return null;
 
-      const value = await redis.get<T>(key);
+      const value = await client.get<T>(key);
       return value;
     } catch (error) {
       console.error('Cache get error:', error);
@@ -57,12 +64,10 @@ export const cache = {
    */
   async set<T>(key: string, value: T, ttl: number = 300): Promise<void> {
     try {
-      if (!process.env.UPSTASH_REDIS_REST_URL) {
-        console.warn('Redis not configured, skipping cache set');
-        return;
-      }
+      const client = getRedisClient();
+      if (!client) return;
 
-      await redis.setex(key, ttl, JSON.stringify(value));
+      await client.setex(key, ttl, JSON.stringify(value));
     } catch (error) {
       console.error('Cache set error:', error);
     }
@@ -74,11 +79,10 @@ export const cache = {
    */
   async del(key: string): Promise<void> {
     try {
-      if (!process.env.UPSTASH_REDIS_REST_URL) {
-        return;
-      }
+      const client = getRedisClient();
+      if (!client) return;
 
-      await redis.del(key);
+      await client.del(key);
     } catch (error) {
       console.error('Cache delete error:', error);
     }
@@ -90,14 +94,13 @@ export const cache = {
    */
   async invalidate(pattern: string): Promise<void> {
     try {
-      if (!process.env.UPSTASH_REDIS_REST_URL) {
-        return;
-      }
+      const client = getRedisClient();
+      if (!client) return;
 
       // Scan for matching keys (Upstash supports SCAN)
-      const keys = await redis.keys(pattern);
+      const keys = await client.keys(pattern);
       if (keys.length > 0) {
-        await redis.del(...keys);
+        await client.del(...keys);
       }
     } catch (error) {
       console.error('Cache invalidate error:', error);
