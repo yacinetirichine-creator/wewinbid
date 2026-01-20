@@ -3,34 +3,35 @@ import { updateSession } from '@/lib/supabase/middleware';
 import { rateLimit } from '@/lib/security';
 
 /**
- * Next.js middleware for authentication and rate limiting.
- * Runs on every request matching the config matcher.
- * 
+ * Next.js proxy for authentication and rate limiting.
+ *
  * Flow:
  * 1. Check rate limits for API routes
  * 2. Update Supabase auth session
- * 3. Handle redirects for protected routes
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Apply rate limiting to API routes
   if (pathname.startsWith('/api/')) {
     try {
-      const identifier = request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || 'unknown';
+      const identifier =
+        request.headers.get('x-forwarded-for')?.split(',')[0] ||
+        request.headers.get('x-real-ip') ||
+        'unknown';
       rateLimit(request, identifier, pathname);
     } catch (error: any) {
       return NextResponse.json(
-        { 
+        {
           error: 'Too many requests',
           message: error.message || 'Rate limit exceeded.',
-          retryAfter: error.metadata?.retryAfter
+          retryAfter: error.metadata?.retryAfter,
         },
-        { 
+        {
           status: 429,
           headers: {
             'Retry-After': String(error.metadata?.retryAfter || 60),
-          }
+          },
         }
       );
     }
@@ -39,6 +40,9 @@ export async function middleware(request: NextRequest) {
   // Update Supabase session
   return await updateSession(request);
 }
+
+// Also export as default to be compatible across Next versions.
+export default proxy;
 
 export const config = {
   matcher: [
