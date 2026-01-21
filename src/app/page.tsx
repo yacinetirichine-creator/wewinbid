@@ -203,24 +203,24 @@ export default function LandingPage() {
       'landing.features.badge': 'Fonctionnalités',
       'landing.features.title': 'Tout ce dont vous avez besoin pour gagner',
       'landing.features.subtitle':
-        "Une suite complète d'outils pour maximiser vos chances de succès sur les marchés publics et privés.",
+        "Une suite complète d'outils IA pour maximiser vos chances de succès sur les marchés publics et privés.",
       'landing.features.aiScore.title': 'Score de compatibilité IA',
       'landing.features.aiScore.description':
-        'Analysez vos chances de succès avant de candidater grâce à notre algorithme prédictif.',
+        'Notre algorithme analyse vos compétences, références et historique pour évaluer vos chances de succès (0-100) avant de candidater. Priorisez les AO où vous avez vraiment vos chances.',
       'landing.features.winners.title': 'Analyse des attributaires',
       'landing.features.winners.description':
-        "Consultez l'historique des gagnants, leurs prix et stratégies pour mieux vous positionner.",
+        "Accédez à l'historique complet des entreprises gagnantes, leurs prix moyens et stratégies de positionnement. Benchmark concurrentiel en temps réel.",
       'landing.features.marketplace.title': 'Marketplace partenaires',
       'landing.features.marketplace.description':
-        'Trouvez des partenaires pour répondre en groupement et décrocher les gros marchés.',
-      'landing.features.generation.title': 'Génération automatique',
+        'Identifiez des co-traitants et sous-traitants qualifiés par secteur et certification. Constituez des groupements gagnants pour les gros marchés.',
+      'landing.features.generation.title': 'Génération automatique IA',
       'landing.features.generation.description':
-        'Créez vos mémoires techniques, DC1, DC2 et autres documents en quelques clics.',
-      'landing.features.alerts.title': 'Alertes intelligentes',
+        'Créez mémoires techniques, DC1, DC2, DC4, DPGF, actes d\'engagement en quelques clics. L\'IA adapte le contenu à chaque cahier des charges.',
+      'landing.features.alerts.title': 'Alertes intelligentes 24/7',
       'landing.features.alerts.description':
-        'Recevez les AO correspondant à votre profil en temps réel sur votre canal préféré.',
-      'landing.features.roi.title': 'Tableau de bord ROI',
-      'landing.features.roi.description': 'Mesurez votre performance, analysez vos stats et optimisez votre stratégie.',
+        'Recevez en temps réel les AO correspondant à votre profil par email, SMS ou notification. Ne manquez plus aucune opportunité.',
+      'landing.features.roi.title': 'Dashboard ROI & Analytics',
+      'landing.features.roi.description': 'Suivez vos KPIs : taux de réussite, temps moyen, CA généré. Optimisez votre stratégie commerciale avec des données concrètes.',
       'landing.pricing.badge': 'Tarifs',
       'landing.pricing.title': 'Des plans pour toutes les tailles',
       'landing.pricing.subtitle': 'Commencez gratuitement, passez à Pro quand vous êtes prêt.',
@@ -343,8 +343,12 @@ export default function LandingPage() {
               >
                 {t('landing.nav.pricing')}
               </a>
-              <a href="#testimonials" className="text-sm font-medium text-surface-600 hover:text-primary-600 transition-colors">
-                {t('landing.nav.testimonials')}
+              <a 
+                href="#roi" 
+                onClick={(e) => handleSmoothScroll(e, 'roi')}
+                className="text-sm font-medium text-surface-600 hover:text-primary-600 transition-colors cursor-pointer"
+              >
+                ROI & Performances
               </a>
             </div>
             <div className="flex items-center gap-4">
@@ -840,6 +844,168 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ROI & Performances Section */}
+      <section id="roi" className="py-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-surface-50 to-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+            <Badge variant="secondary" className="mb-4">ROI & Performances</Badge>
+            <h2 className="text-4xl sm:text-5xl font-display font-bold text-surface-900 mb-6">
+              Maximisez votre retour sur investissement
+            </h2>
+            <p className="text-xl text-surface-600 max-w-2xl mx-auto">
+              Des résultats mesurables qui transforment votre approche des marchés publics
+            </p>
+          </div>
+
+          {/* Performance Stats */}
+          <div className="grid md:grid-cols-4 gap-8 mb-20">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center p-8 rounded-3xl bg-gradient-to-br from-primary-50 to-primary-100 border border-primary-200"
+            >
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary-500 flex items-center justify-center">
+                <TrendingUp className="w-8 h-8 text-white" />
+              </div>
+              <div className="text-5xl font-bold text-primary-600 mb-2">+45%</div>
+              <p className="text-surface-700 font-medium">Taux de réussite moyen</p>
+              <p className="text-sm text-surface-500 mt-2">vs. méthodes traditionnelles</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="text-center p-8 rounded-3xl bg-gradient-to-br from-success-50 to-success-100 border border-success-200"
+            >
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-success-500 flex items-center justify-center">
+                <Clock className="w-8 h-8 text-white" />
+              </div>
+              <div className="text-5xl font-bold text-success-600 mb-2">-60%</div>
+              <p className="text-surface-700 font-medium">Temps de préparation</p>
+              <p className="text-sm text-surface-500 mt-2">Génération IA automatique</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="text-center p-8 rounded-3xl bg-gradient-to-br from-secondary-50 to-secondary-100 border border-secondary-200"
+            >
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-secondary-500 flex items-center justify-center">
+                <Target className="w-8 h-8 text-white" />
+              </div>
+              <div className="text-5xl font-bold text-secondary-600 mb-2">3x</div>
+              <p className="text-surface-700 font-medium">Plus d'AO traités</p>
+              <p className="text-sm text-surface-500 mt-2">À effort équivalent</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="text-center p-8 rounded-3xl bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200"
+            >
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-500 flex items-center justify-center">
+                <Award className="w-8 h-8 text-white" />
+              </div>
+              <div className="text-5xl font-bold text-amber-600 mb-2">233 Mds€</div>
+              <p className="text-surface-700 font-medium">Marchés accessibles</p>
+              <p className="text-sm text-surface-500 mt-2">France + Europe</p>
+            </motion.div>
+          </div>
+
+          {/* Languages Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-white rounded-3xl border border-surface-200 p-12 shadow-xl"
+          >
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-50 text-primary-600 text-sm font-medium mb-4">
+                <Globe className="w-4 h-4" />
+                Support Multilingue
+              </div>
+              <h3 className="text-3xl font-bold text-surface-900 mb-4">
+                Disponible dans 7+ langues
+              </h3>
+              <p className="text-surface-600 max-w-xl mx-auto">
+                Répondez aux appels d'offres internationaux dans la langue de votre choix. Notre IA s'adapte automatiquement.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
+              {[
+                { flag: '🇫🇷', name: 'Français', code: 'FR' },
+                { flag: '🇬🇧', name: 'English', code: 'EN' },
+                { flag: '🇪🇸', name: 'Español', code: 'ES' },
+                { flag: '🇩🇪', name: 'Deutsch', code: 'DE' },
+                { flag: '🇮🇹', name: 'Italiano', code: 'IT' },
+                { flag: '🇵🇹', name: 'Português', code: 'PT' },
+                { flag: '🇸🇦', name: 'العربية', code: 'AR' },
+              ].map((lang, index) => (
+                <motion.div
+                  key={lang.code}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.05 }}
+                  className="flex flex-col items-center p-4 rounded-2xl bg-surface-50 hover:bg-primary-50 hover:border-primary-200 border border-surface-200 transition-all cursor-default"
+                >
+                  <span className="text-4xl mb-2">{lang.flag}</span>
+                  <span className="font-medium text-surface-900 text-sm">{lang.name}</span>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-surface-500 text-sm">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-success-500" />
+                <span>Génération de documents multilingue</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-success-500" />
+                <span>Interface traduite</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-success-500" />
+                <span>Support client multilingue</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Secteurs couverts */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-16 text-center"
+          >
+            <h3 className="text-2xl font-bold text-surface-900 mb-8">15+ secteurs d'activité couverts</h3>
+            <div className="flex flex-wrap justify-center gap-3">
+              {[
+                'Sécurité privée', 'Sécurité électronique', 'BTP', 'Logistique', 
+                'IT & Software', 'Maintenance', 'Conseil', 'Nettoyage', 
+                'Restauration', 'Transport', 'Énergie', 'Santé', 
+                'Éducation', 'Télécoms', 'Environnement'
+              ].map((sector) => (
+                <span
+                  key={sector}
+                  className="px-4 py-2 rounded-full bg-surface-100 text-surface-700 text-sm font-medium hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                >
+                  {sector}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-32 px-4 sm:px-6 lg:px-8 bg-surface-900 relative overflow-hidden">
         <div className="absolute inset-0">
@@ -898,7 +1064,7 @@ export default function LandingPage() {
               <ul className="space-y-4 text-surface-500">
                 <li><a href="#features" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.features')}</a></li>
                 <li><a href="#pricing" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.pricing')}</a></li>
-                <li><a href="#testimonials" className="hover:text-primary-600 transition-colors">{t('landing.nav.testimonials')}</a></li>
+                <li><a href="#roi" className="hover:text-primary-600 transition-colors">ROI & Performances</a></li>
               </ul>
             </div>
             
@@ -927,19 +1093,22 @@ export default function LandingPage() {
             <p className="text-surface-400 text-sm">
               {t('landing.footer.copyright')}
             </p>
-            <div className="flex items-center gap-4 bg-surface-100 px-3 py-1.5 rounded-full">
-              <Globe className="w-4 h-4 text-surface-500" />
-              <select
-                className="bg-transparent text-surface-600 text-sm border-none focus:ring-0 cursor-pointer outline-none"
-                value={locale}
-                onChange={(event) => handleLocaleChange(event.target.value as Locale)}
-              >
-                {LOCALES.map((option) => (
-                  <option key={option} value={option}>
-                    {LOCALE_FLAGS[option]} {LOCALE_NAMES[option]}
-                  </option>
-                ))}
-              </select>
+            <div className="flex items-center gap-2">
+              <span className="text-surface-500 text-sm">Langue :</span>
+              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-surface-200 shadow-sm">
+                <Globe className="w-4 h-4 text-primary-500" />
+                <select
+                  className="bg-transparent text-surface-700 text-sm font-medium border-none focus:ring-0 cursor-pointer outline-none pr-6"
+                  value={locale}
+                  onChange={(event) => handleLocaleChange(event.target.value as Locale)}
+                >
+                  {LOCALES.map((option) => (
+                    <option key={option} value={option}>
+                      {LOCALE_FLAGS[option]} {LOCALE_NAMES[option]}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         </div>

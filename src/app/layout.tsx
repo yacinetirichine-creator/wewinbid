@@ -4,6 +4,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import { AnalyticsProvider } from '@/components/providers/AnalyticsProvider';
 import { LocaleHtmlUpdater } from '@/components/providers/LocaleHtmlUpdater';
+import AIChatWidget from '@/components/chat/AIChatWidget';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
@@ -137,6 +138,7 @@ export default function RootLayout({
           <QueryProvider>
             <AnalyticsProvider>
               {children}
+              <AIChatWidget />
             </AnalyticsProvider>
           </QueryProvider>
         </ErrorBoundary>
