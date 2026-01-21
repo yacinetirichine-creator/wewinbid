@@ -13,102 +13,144 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm"; -- Pour la recherche full-text
 -- ===========================================
 
 -- Types d'abonnement
-CREATE TYPE subscription_plan AS ENUM ('FREE', 'PRO', 'BUSINESS', 'ENTERPRISE');
+DO $$ BEGIN
+  CREATE TYPE subscription_plan AS ENUM ('FREE', 'PRO', 'BUSINESS', 'ENTERPRISE');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Types de marchés
-CREATE TYPE tender_type AS ENUM ('PUBLIC', 'PRIVATE');
+DO $$ BEGIN
+  CREATE TYPE tender_type AS ENUM ('PUBLIC', 'PRIVATE');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Statuts des appels d'offres
-CREATE TYPE tender_status AS ENUM (
-  'DRAFT', 
-  'ANALYSIS', 
-  'IN_PROGRESS', 
-  'REVIEW', 
-  'SUBMITTED', 
-  'WON', 
-  'LOST', 
-  'ABANDONED'
-);
+DO $$ BEGIN
+  CREATE TYPE tender_status AS ENUM (
+    'DRAFT', 
+    'ANALYSIS', 
+    'IN_PROGRESS', 
+    'REVIEW', 
+    'SUBMITTED', 
+    'WON', 
+    'LOST', 
+    'ABANDONED'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Secteurs d'activité
-CREATE TYPE sector AS ENUM (
-  'SECURITY_PRIVATE',
-  'SECURITY_ELECTRONIC', 
-  'CONSTRUCTION',
-  'LOGISTICS',
-  'IT_SOFTWARE',
-  'MAINTENANCE',
-  'CONSULTING',
-  'CLEANING',
-  'CATERING',
-  'TRANSPORT',
-  'ENERGY',
-  'HEALTHCARE',
-  'EDUCATION',
-  'OTHER'
-);
+DO $$ BEGIN
+  CREATE TYPE sector AS ENUM (
+    'SECURITY_PRIVATE',
+    'SECURITY_ELECTRONIC', 
+    'CONSTRUCTION',
+    'LOGISTICS',
+    'IT_SOFTWARE',
+    'MAINTENANCE',
+    'CONSULTING',
+    'CLEANING',
+    'CATERING',
+    'TRANSPORT',
+    'ENERGY',
+    'HEALTHCARE',
+    'EDUCATION',
+    'OTHER'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Types d'acheteurs
-CREATE TYPE buyer_type AS ENUM (
-  'STATE',
-  'REGION',
-  'DEPARTMENT',
-  'MUNICIPALITY',
-  'PUBLIC_ESTABLISHMENT',
-  'HOSPITAL',
-  'PRIVATE_COMPANY',
-  'ASSOCIATION',
-  'OTHER'
-);
+DO $$ BEGIN
+  CREATE TYPE buyer_type AS ENUM (
+    'STATE',
+    'REGION',
+    'DEPARTMENT',
+    'MUNICIPALITY',
+    'PUBLIC_ESTABLISHMENT',
+    'HOSPITAL',
+    'PRIVATE_COMPANY',
+    'ASSOCIATION',
+    'OTHER'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Types de documents
-CREATE TYPE document_type AS ENUM (
-  'DC1', 'DC2', 'DC4',
-  'TECHNICAL_MEMO', 'DPGF', 'BPU',
-  'ACTE_ENGAGEMENT', 'PLANNING', 'METHODOLOGY',
-  'QUALITY_PLAN', 'SAFETY_PLAN', 'ENVIRONMENTAL_PLAN',
-  'REFERENCES_LIST', 'COMMERCIAL_PROPOSAL', 'QUOTE',
-  'COMPANY_PRESENTATION', 'COVER_LETTER', 'APPENDIX',
-  'INSURANCE_RC', 'INSURANCE_DECENNALE',
-  'TAX_ATTESTATION', 'SOCIAL_ATTESTATION',
-  'KBIS', 'RIB', 'OTHER'
-);
+DO $$ BEGIN
+  CREATE TYPE document_type AS ENUM (
+    'DC1', 'DC2', 'DC4',
+    'TECHNICAL_MEMO', 'DPGF', 'BPU',
+    'ACTE_ENGAGEMENT', 'PLANNING', 'METHODOLOGY',
+    'QUALITY_PLAN', 'SAFETY_PLAN', 'ENVIRONMENTAL_PLAN',
+    'REFERENCES_LIST', 'COMMERCIAL_PROPOSAL', 'QUOTE',
+    'COMPANY_PRESENTATION', 'COVER_LETTER', 'APPENDIX',
+    'INSURANCE_RC', 'INSURANCE_DECENNALE',
+    'TAX_ATTESTATION', 'SOCIAL_ATTESTATION',
+    'KBIS', 'RIB', 'OTHER'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Statuts des documents
-CREATE TYPE document_status AS ENUM ('DRAFT', 'IN_PROGRESS', 'REVIEW', 'VALIDATED', 'SUBMITTED');
+DO $$ BEGIN
+  CREATE TYPE document_status AS ENUM ('DRAFT', 'IN_PROGRESS', 'REVIEW', 'VALIDATED', 'SUBMITTED');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Statuts des partenariats
-CREATE TYPE partnership_status AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED', 'BLOCKED');
+DO $$ BEGIN
+  CREATE TYPE partnership_status AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED', 'BLOCKED');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Rôles collaborateur
-CREATE TYPE collaborator_role AS ENUM ('OWNER', 'EDITOR', 'COMMENTER', 'VIEWER');
+DO $$ BEGIN
+  CREATE TYPE collaborator_role AS ENUM ('OWNER', 'EDITOR', 'COMMENTER', 'VIEWER');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Types de contenu créatif
-CREATE TYPE content_type AS ENUM ('LINKEDIN_POST', 'PRESS_RELEASE', 'CASE_STUDY', 'NEWSLETTER', 'TWEET');
+DO $$ BEGIN
+  CREATE TYPE content_type AS ENUM ('LINKEDIN_POST', 'PRESS_RELEASE', 'CASE_STUDY', 'NEWSLETTER', 'TWEET');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Plateformes sociales
-CREATE TYPE social_platform AS ENUM ('LINKEDIN', 'TWITTER', 'FACEBOOK', 'INSTAGRAM');
+DO $$ BEGIN
+  CREATE TYPE social_platform AS ENUM ('LINKEDIN', 'TWITTER', 'FACEBOOK', 'INSTAGRAM');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Statuts du contenu
-CREATE TYPE content_status AS ENUM ('DRAFT', 'SCHEDULED', 'PUBLISHED', 'ARCHIVED');
+DO $$ BEGIN
+  CREATE TYPE content_status AS ENUM ('DRAFT', 'SCHEDULED', 'PUBLISHED', 'ARCHIVED');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Types d'activité
-CREATE TYPE activity_type AS ENUM (
-  'TENDER_CREATED', 'TENDER_UPDATED', 'TENDER_SUBMITTED',
-  'TENDER_WON', 'TENDER_LOST',
-  'DOCUMENT_CREATED', 'DOCUMENT_UPDATED', 'DOCUMENT_VALIDATED',
-  'COLLABORATION_ADDED', 'COLLABORATION_REMOVED',
-  'PARTNERSHIP_REQUEST', 'PARTNERSHIP_ACCEPTED',
-  'SCORE_CALCULATED', 'ALERT_RECEIVED'
-);
+DO $$ BEGIN
+  CREATE TYPE activity_type AS ENUM (
+    'TENDER_CREATED', 'TENDER_UPDATED', 'TENDER_SUBMITTED',
+    'TENDER_WON', 'TENDER_LOST',
+    'DOCUMENT_CREATED', 'DOCUMENT_UPDATED', 'DOCUMENT_VALIDATED',
+    'COLLABORATION_ADDED', 'COLLABORATION_REMOVED',
+    'PARTNERSHIP_REQUEST', 'PARTNERSHIP_ACCEPTED',
+    'SCORE_CALCULATED', 'ALERT_RECEIVED'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Types de notification
-CREATE TYPE notification_type AS ENUM (
-  'TENDER_DEADLINE', 'TENDER_RESULT',
-  'DOCUMENT_EXPIRING', 'PARTNERSHIP_REQUEST',
-  'COLLABORATION_INVITE', 'SCORE_READY',
-  'NEW_OPPORTUNITY', 'SYSTEM'
-);
+DO $$ BEGIN
+  CREATE TYPE notification_type AS ENUM (
+    'TENDER_DEADLINE', 'TENDER_RESULT',
+    'DOCUMENT_EXPIRING', 'PARTNERSHIP_REQUEST',
+    'COLLABORATION_INVITE', 'SCORE_READY',
+    'NEW_OPPORTUNITY', 'SYSTEM'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ===========================================
 -- TABLES PRINCIPALES
@@ -398,25 +440,25 @@ CREATE TABLE IF NOT EXISTS client_references (
 -- INDEXES
 -- ===========================================
 
-CREATE INDEX idx_profiles_email ON profiles(email);
-CREATE INDEX idx_companies_siret ON companies(siret);
-CREATE INDEX idx_companies_subscription ON companies(subscription_plan);
-CREATE INDEX idx_tenders_company ON tenders(company_id);
-CREATE INDEX idx_tenders_status ON tenders(status);
-CREATE INDEX idx_tenders_type ON tenders(type);
-CREATE INDEX idx_tenders_deadline ON tenders(deadline);
-CREATE INDEX idx_tenders_sector ON tenders(sector);
-CREATE INDEX idx_documents_tender ON documents(tender_id);
-CREATE INDEX idx_documents_company ON documents(company_id);
-CREATE INDEX idx_activities_user ON activities(user_id);
-CREATE INDEX idx_activities_company ON activities(company_id);
-CREATE INDEX idx_notifications_user ON notifications(user_id);
-CREATE INDEX idx_notifications_read ON notifications(read);
-CREATE INDEX idx_price_history_company ON price_history(company_id);
-CREATE INDEX idx_partnerships_company ON partnerships(company_id);
+CREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(email);
+CREATE INDEX IF NOT EXISTS idx_companies_siret ON companies(siret);
+CREATE INDEX IF NOT EXISTS idx_companies_subscription ON companies(subscription_plan);
+CREATE INDEX IF NOT EXISTS idx_tenders_company ON tenders(company_id);
+CREATE INDEX IF NOT EXISTS idx_tenders_status ON tenders(status);
+CREATE INDEX IF NOT EXISTS idx_tenders_type ON tenders(type);
+CREATE INDEX IF NOT EXISTS idx_tenders_deadline ON tenders(deadline);
+CREATE INDEX IF NOT EXISTS idx_tenders_sector ON tenders(sector);
+CREATE INDEX IF NOT EXISTS idx_documents_tender ON documents(tender_id);
+CREATE INDEX IF NOT EXISTS idx_documents_company ON documents(company_id);
+CREATE INDEX IF NOT EXISTS idx_activities_user ON activities(user_id);
+CREATE INDEX IF NOT EXISTS idx_activities_company ON activities(company_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
+CREATE INDEX IF NOT EXISTS idx_price_history_company ON price_history(company_id);
+CREATE INDEX IF NOT EXISTS idx_partnerships_company ON partnerships(company_id);
 
 -- Full-text search sur les AO
-CREATE INDEX idx_tenders_search ON tenders USING gin(to_tsvector('french', coalesce(title, '') || ' ' || coalesce(description, '')));
+CREATE INDEX IF NOT EXISTS idx_tenders_search ON tenders USING gin(to_tsvector('french', coalesce(title, '') || ' ' || coalesce(description, '')));
 
 -- ===========================================
 -- ROW LEVEL SECURITY (RLS)
@@ -499,6 +541,11 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Triggers pour updated_at
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
+DROP TRIGGER IF EXISTS update_companies_updated_at ON companies;
+DROP TRIGGER IF EXISTS update_tenders_updated_at ON tenders;
+DROP TRIGGER IF EXISTS update_documents_updated_at ON documents;
+
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER update_companies_updated_at BEFORE UPDATE ON companies FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER update_tenders_updated_at BEFORE UPDATE ON tenders FOR EACH ROW EXECUTE FUNCTION update_updated_at();
@@ -520,6 +567,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Trigger pour créer le profil automatiquement
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
@@ -545,6 +593,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS generate_tender_ref ON tenders;
 CREATE TRIGGER generate_tender_ref
   BEFORE INSERT ON tenders
   FOR EACH ROW
@@ -562,6 +611,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS on_tender_created ON tenders;
 CREATE TRIGGER on_tender_created
   AFTER INSERT ON tenders
   FOR EACH ROW EXECUTE FUNCTION increment_monthly_tenders();

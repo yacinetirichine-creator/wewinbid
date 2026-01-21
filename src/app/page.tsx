@@ -409,11 +409,11 @@ export default function LandingPage() {
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                 </Link>
-                <Link href="#demo" className="w-full sm:w-auto">
+                <a href="https://calendly.com/commercial-wewinbid/30min" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
                   <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 text-lg rounded-full bg-white/50 border-surface-200 hover:bg-white transition-all">
                     {t('landing.hero.ctaDemo')}
                   </Button>
-                </Link>
+                </a>
               </div>
 
               <div className="flex items-center gap-8 text-sm font-medium text-surface-500">
@@ -898,18 +898,16 @@ export default function LandingPage() {
               <ul className="space-y-4 text-surface-500">
                 <li><a href="#features" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.features')}</a></li>
                 <li><a href="#pricing" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.pricing')}</a></li>
-                <li><a href="#" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.integrations')}</a></li>
-                <li><a href="#" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.api')}</a></li>
+                <li><a href="#testimonials" className="hover:text-primary-600 transition-colors">{t('landing.nav.testimonials')}</a></li>
               </ul>
             </div>
             
             <div>
               <h4 className="font-bold text-surface-900 mb-6">{t('landing.footer.company')}</h4>
               <ul className="space-y-4 text-surface-500">
-                <li><a href="#" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.about')}</a></li>
-                <li><a href="#" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.blog')}</a></li>
-                <li><a href="#" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.careers')}</a></li>
-                <li><a href="#" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.contact')}</a></li>
+                <li><Link href="/contact" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.contact')}</Link></li>
+                <li><a href="https://calendly.com/commercial-wewinbid/30min" target="_blank" rel="noopener noreferrer" className="hover:text-primary-600 transition-colors">Prendre rendez-vous</a></li>
+                <li><a href="mailto:commercial@wewinbid.com" className="hover:text-primary-600 transition-colors">commercial@wewinbid.com</a></li>
               </ul>
             </div>
             

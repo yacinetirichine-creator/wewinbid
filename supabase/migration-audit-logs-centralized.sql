@@ -36,21 +36,22 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
 );
 
 -- 2. Index pour optimiser les requêtes
-CREATE INDEX idx_audit_logs_user ON audit_logs(user_id);
-CREATE INDEX idx_audit_logs_company ON audit_logs(company_id);
-CREATE INDEX idx_audit_logs_action ON audit_logs(action);
-CREATE INDEX idx_audit_logs_resource ON audit_logs(resource, resource_id);
-CREATE INDEX idx_audit_logs_created ON audit_logs(created_at DESC);
-CREATE INDEX idx_audit_logs_severity ON audit_logs(severity);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_company ON audit_logs(company_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_resource ON audit_logs(resource, resource_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_severity ON audit_logs(severity);
 
 -- Index composite pour les requêtes fréquentes
-CREATE INDEX idx_audit_logs_company_created ON audit_logs(company_id, created_at DESC);
-CREATE INDEX idx_audit_logs_user_action ON audit_logs(user_id, action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_company_created ON audit_logs(company_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_action ON audit_logs(user_id, action);
 
 -- 3. Row Level Security (RLS)
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- Les utilisateurs peuvent voir les logs de leur entreprise
+DROP POLICY IF EXISTS "Users can view their company audit logs" ON audit_logs;
 CREATE POLICY "Users can view their company audit logs"
   ON audit_logs
   FOR SELECT
@@ -64,6 +65,7 @@ CREATE POLICY "Users can view their company audit logs"
   );
 
 -- Seuls les admins peuvent voir tous les logs
+DROP POLICY IF EXISTS "Admins can view all audit logs" ON audit_logs;
 CREATE POLICY "Admins can view all audit logs"
   ON audit_logs
   FOR SELECT
@@ -77,6 +79,7 @@ CREATE POLICY "Admins can view all audit logs"
   );
 
 -- Seul le système peut insérer des logs (via service role)
+DROP POLICY IF EXISTS "System can insert audit logs" ON audit_logs;
 CREATE POLICY "System can insert audit logs"
   ON audit_logs
   FOR INSERT
