@@ -150,11 +150,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   }
 
   // Récupérer la demande
-  const { data: approvalRequest, error: fetchError } = await supabase
+  const { data: approvalRequestData, error: fetchError } = await supabase
     .from('approval_requests' as any)
     .select('*, current_step:approval_workflow_steps(id, name)')
     .eq('id', id)
     .single();
+
+  const approvalRequest = approvalRequestData as any;
 
   if (fetchError || !approvalRequest) {
     return NextResponse.json({ error: 'Request not found' }, { status: 404 });
@@ -261,12 +263,14 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   }
 
   // Vérifier que l'utilisateur est le demandeur
-  const { data: approvalRequest, error: fetchError } = await supabase
+  const { data: approvalRequestData, error: fetchError } = await supabase
     .from('approval_requests' as any)
     .select('*')
     .eq('id', id)
     .eq('requested_by', user.id)
     .single();
+
+  const approvalRequest = approvalRequestData as any;
 
   if (fetchError || !approvalRequest) {
     return NextResponse.json(
