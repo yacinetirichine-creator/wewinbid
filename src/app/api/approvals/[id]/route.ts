@@ -22,8 +22,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 
   // Récupérer la demande avec toutes les relations
-  const { data, error } = await supabase
-    .from('approval_requests' as any)
+  const { data, error } = await (supabase
+    .from('approval_requests') as any)
     .select(`
       *,
       workflow:approval_workflows(
@@ -90,10 +90,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   // Vérifier si l'utilisateur peut approuver l'étape courante
   let canApprove = false;
   if (approvalRequest.current_step_id && approvalRequest.status === 'in_progress') {
-    const { data: approvers } = await supabase
-      .from('approval_step_approvers' as any)
+    const { data: approvers } = await (supabase
+      .from('approval_step_approvers') as any)
       .select('*')
-      .eq('step_id', approvalRequest.current_step_id) as { data: any[] | null };
+      .eq('step_id', approvalRequest.current_step_id);
 
     if (approvers) {
       canApprove = approvers.some(
@@ -104,8 +104,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Vérifier si l'utilisateur a déjà voté
-    const { data: existingDecision } = await supabase
-      .from('approval_decisions' as any)
+    const { data: existingDecision } = await (supabase
+      .from('approval_decisions') as any)
       .select('id')
       .eq('request_id', id)
       .eq('step_id', approvalRequest.current_step_id)
@@ -150,8 +150,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   }
 
   // Récupérer la demande
-  const { data: approvalRequestData, error: fetchError } = await supabase
-    .from('approval_requests' as any)
+  const { data: approvalRequestData, error: fetchError } = await (supabase
+    .from('approval_requests') as any)
     .select('*, current_step:approval_workflow_steps(id, name)')
     .eq('id', id)
     .single();
@@ -170,10 +170,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   }
 
   // Vérifier que l'utilisateur est un approbateur de l'étape courante
-  const { data: approvers } = await supabase
-    .from('approval_step_approvers' as any)
+  const { data: approvers } = await (supabase
+    .from('approval_step_approvers') as any)
     .select('*')
-    .eq('step_id', approvalRequest.current_step_id) as { data: any[] | null };
+    .eq('step_id', approvalRequest.current_step_id);
 
   const isApprover = approvers?.some(
     (a: any) =>
@@ -189,8 +189,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   }
 
   // Vérifier si l'utilisateur a déjà voté
-  const { data: existingDecision } = await supabase
-    .from('approval_decisions' as any)
+  const { data: existingDecision } = await (supabase
+    .from('approval_decisions') as any)
     .select('id')
     .eq('request_id', id)
     .eq('step_id', approvalRequest.current_step_id)
@@ -205,8 +205,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   }
 
   // Créer la décision
-  const { data: newDecision, error: decisionError } = await supabase
-    .from('approval_decisions' as any)
+  const { data: newDecision, error: decisionError } = await (supabase
+    .from('approval_decisions') as any)
     .insert({
       request_id: id,
       step_id: approvalRequest.current_step_id,
@@ -223,7 +223,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   }
 
   // Log de la décision
-  await supabase.from('approval_audit_log' as any).insert({
+  await (supabase.from('approval_audit_log') as any).insert({
     request_id: id,
     action: 'decision_made',
     actor_id: user.id,
@@ -236,8 +236,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   });
 
   // Récupérer l'état mis à jour (le trigger aura peut-être avancé l'étape)
-  const { data: updatedRequest } = await supabase
-    .from('approval_requests' as any)
+  const { data: updatedRequest } = await (supabase
+    .from('approval_requests') as any)
     .select('*, current_step:approval_workflow_steps(id, name)')
     .eq('id', id)
     .single();
@@ -263,8 +263,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   }
 
   // Vérifier que l'utilisateur est le demandeur
-  const { data: approvalRequestData, error: fetchError } = await supabase
-    .from('approval_requests' as any)
+  const { data: approvalRequestData, error: fetchError } = await (supabase
+    .from('approval_requests') as any)
     .select('*')
     .eq('id', id)
     .eq('requested_by', user.id)
@@ -287,8 +287,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   }
 
   // Annuler la demande
-  const { error: updateError } = await supabase
-    .from('approval_requests' as any)
+  const { error: updateError } = await (supabase
+    .from('approval_requests') as any)
     .update({
       status: 'cancelled',
       completed_at: new Date().toISOString(),
@@ -301,7 +301,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   }
 
   // Log
-  await supabase.from('approval_audit_log' as any).insert({
+  await (supabase.from('approval_audit_log') as any).insert({
     request_id: id,
     action: 'cancelled',
     actor_id: user.id,
