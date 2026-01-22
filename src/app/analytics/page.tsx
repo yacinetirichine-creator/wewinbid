@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
 import { 
@@ -120,109 +120,26 @@ interface AnalyticsData {
   }[];
 }
 
-// Données de démonstration
-const DEMO_DATA: AnalyticsData = {
+// Données initiales vides (données réelles)
+const EMPTY_DATA: AnalyticsData = {
   overview: {
-    totalTenders: 156,
-    tendersThisMonth: 12,
-    tendersChange: 15,
-    wonTenders: 47,
-    wonThisMonth: 4,
-    wonChange: 33,
-    totalRevenue: 2340000,
-    revenueThisMonth: 280000,
-    revenueChange: 22,
-    winRate: 30.1,
-    winRateChange: 5.2,
+    totalTenders: 0,
+    tendersThisMonth: 0,
+    tendersChange: 0,
+    wonTenders: 0,
+    wonThisMonth: 0,
+    wonChange: 0,
+    totalRevenue: 0,
+    revenueThisMonth: 0,
+    revenueChange: 0,
+    winRate: 0,
+    winRateChange: 0,
   },
-  byStatus: [
-    { status: 'Gagnés', count: 47, value: 2340000 },
-    { status: 'Perdus', count: 89, value: 0 },
-    { status: 'En cours', count: 15, value: 890000 },
-    { status: 'Brouillons', count: 5, value: 120000 },
-  ],
-  bySector: [
-    { sector: 'Sécurité électronique', total: 45, won: 18, winRate: 40 },
-    { sector: 'Sécurité privée', total: 38, won: 12, winRate: 31.6 },
-    { sector: 'Informatique', total: 32, won: 8, winRate: 25 },
-    { sector: 'BTP', total: 25, won: 6, winRate: 24 },
-    { sector: 'Formation', total: 16, won: 3, winRate: 18.7 },
-  ],
-  winnerAnalysis: [
-    {
-      id: '1',
-      tender_title: 'Marché de vidéosurveillance - Commune de Lyon',
-      winner_name: 'SecurVision SAS',
-      winning_price: 245000,
-      your_price: 268000,
-      price_gap: -8.6,
-      sector: 'Sécurité électronique',
-      buyer: 'Ville de Lyon',
-      award_date: '2024-01-15',
-    },
-    {
-      id: '2',
-      tender_title: 'Gardiennage sites administratifs 2024',
-      winner_name: 'Groupe Securitas',
-      winning_price: 1200000,
-      your_price: 1350000,
-      price_gap: -11.1,
-      sector: 'Sécurité privée',
-      buyer: 'Ministère de l\'Intérieur',
-      award_date: '2024-01-10',
-    },
-    {
-      id: '3',
-      tender_title: 'Développement portail usagers',
-      winner_name: 'Sopra Steria',
-      winning_price: 890000,
-      your_price: 780000,
-      price_gap: 14.1,
-      sector: 'Informatique',
-      buyer: 'Région Occitanie',
-      award_date: '2024-01-08',
-    },
-    {
-      id: '4',
-      tender_title: 'Contrôle d\'accès bâtiments publics',
-      winner_name: 'Vous',
-      winning_price: 156000,
-      sector: 'Sécurité électronique',
-      buyer: 'Mairie de Bordeaux',
-      award_date: '2024-01-05',
-    },
-  ],
-  monthlyTrend: [
-    { month: 'Jan', submitted: 8, won: 2, revenue: 145000 },
-    { month: 'Fév', submitted: 12, won: 4, revenue: 320000 },
-    { month: 'Mar', submitted: 15, won: 5, revenue: 280000 },
-    { month: 'Avr', submitted: 10, won: 3, revenue: 195000 },
-    { month: 'Mai', submitted: 18, won: 6, revenue: 420000 },
-    { month: 'Juin', submitted: 14, won: 4, revenue: 310000 },
-    { month: 'Juil', submitted: 9, won: 2, revenue: 120000 },
-    { month: 'Août', submitted: 6, won: 2, revenue: 85000 },
-    { month: 'Sep', submitted: 16, won: 5, revenue: 380000 },
-    { month: 'Oct', submitted: 20, won: 7, revenue: 520000 },
-    { month: 'Nov', submitted: 16, won: 3, revenue: 210000 },
-    { month: 'Déc', submitted: 12, won: 4, revenue: 280000 },
-  ],
-  recommendations: [
-    {
-      type: 'success',
-      title: 'Excellent taux de réussite en sécurité électronique',
-      description: 'Votre taux de 40% est supérieur à la moyenne du secteur (28%). Continuez sur cette lancée !',
-    },
-    {
-      type: 'warning',
-      title: 'Prix souvent trop élevés',
-      description: 'Sur les 5 derniers AO perdus, votre prix était en moyenne 12% plus élevé que le gagnant.',
-    },
-    {
-      type: 'info',
-      title: 'Nouveau marché identifié',
-      description: 'Le secteur de la maintenance prédictive montre une forte croissance (+45% d\'AO publiés).',
-    },
-  ],
+  byStatus: [],
+  bySector: [],
+  winnerAnalysis: [],
+  monthlyTrend: [],
+  recommendations: [],
 };
 
 // Composant carte statistique
@@ -311,13 +228,136 @@ export default function AnalyticsPage() {
       'analytics.chart.monthlyTrend': 'Tendance mensuelle (Interactif)',
       'analytics.chart.submitted': 'Soumis',
       'analytics.chart.won': 'Gagnés',
+      'analytics.empty.title': 'Aucune donnée',
+      'analytics.empty.description': 'Commencez par créer vos premiers appels d\'offres pour voir vos statistiques ici.',
     }),
     []
   );
   const { t } = useUiTranslations(locale, entries);
-  const [data, setData] = useState<AnalyticsData>(DEMO_DATA);
+  const [data, setData] = useState<AnalyticsData>(EMPTY_DATA);
   const [period, setPeriod] = useState('12m');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Charger les données réelles depuis Supabase
+  useEffect(() => {
+    const loadAnalytics = async () => {
+      setLoading(true);
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Récupérer le company_id
+        const { data: profile } = await (supabase as any)
+          .from('profiles')
+          .select('company_id')
+          .eq('id', user.id)
+          .single();
+
+        if (!profile?.company_id) {
+          setLoading(false);
+          return;
+        }
+
+        // Charger tous les tenders de l'entreprise
+        const { data: tenders } = await (supabase as any)
+          .from('tenders')
+          .select('*')
+          .eq('company_id', profile.company_id);
+
+        if (!tenders || tenders.length === 0) {
+          setLoading(false);
+          return;
+        }
+
+        // Calculer les statistiques
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+        const totalTenders = tenders.length;
+        const tendersThisMonth = tenders.filter((t: any) => new Date(t.created_at) >= startOfMonth).length;
+        const tendersLastMonth = tenders.filter((t: any) => {
+          const d = new Date(t.created_at);
+          return d >= startOfLastMonth && d < startOfMonth;
+        }).length;
+
+        const wonTenders = tenders.filter((t: any) => t.status === 'won').length;
+        const lostTenders = tenders.filter((t: any) => t.status === 'lost').length;
+        const totalRevenue = tenders
+          .filter((t: any) => t.status === 'won')
+          .reduce((sum: number, t: any) => sum + (t.estimated_value || 0), 0);
+
+        const winRate = (wonTenders + lostTenders) > 0 
+          ? Math.round((wonTenders / (wonTenders + lostTenders)) * 1000) / 10 
+          : 0;
+
+        // Calculer les changements
+        const tendersChange = tendersLastMonth > 0 
+          ? Math.round(((tendersThisMonth - tendersLastMonth) / tendersLastMonth) * 100) 
+          : 0;
+
+        // Stats par statut
+        const byStatus = [
+          { status: 'Gagnés', count: wonTenders, value: totalRevenue },
+          { status: 'Perdus', count: lostTenders, value: 0 },
+          { status: 'En cours', count: tenders.filter((t: any) => ['draft', 'in_progress', 'submitted'].includes(t.status)).length, value: 0 },
+        ].filter(s => s.count > 0);
+
+        // Tendance mensuelle (12 derniers mois)
+        const monthlyTrend = [];
+        const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+        for (let i = 11; i >= 0; i--) {
+          const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const nextMonth = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+          const monthTenders = tenders.filter((t: any) => {
+            const d = new Date(t.created_at);
+            return d >= monthDate && d < nextMonth;
+          });
+          const monthWon = monthTenders.filter((t: any) => t.status === 'won');
+          monthlyTrend.push({
+            month: monthNames[monthDate.getMonth()],
+            submitted: monthTenders.length,
+            won: monthWon.length,
+            revenue: monthWon.reduce((sum: number, t: any) => sum + (t.estimated_value || 0), 0),
+          });
+        }
+
+        setData({
+          overview: {
+            totalTenders,
+            tendersThisMonth,
+            tendersChange,
+            wonTenders,
+            wonThisMonth: tenders.filter((t: any) => t.status === 'won' && new Date(t.updated_at) >= startOfMonth).length,
+            wonChange: 0,
+            totalRevenue,
+            revenueThisMonth: 0,
+            revenueChange: 0,
+            winRate,
+            winRateChange: 0,
+          },
+          byStatus,
+          bySector: [],
+          winnerAnalysis: [],
+          monthlyTrend,
+          recommendations: totalTenders === 0 ? [] : [
+            {
+              type: 'info',
+              title: 'Continuez ainsi !',
+              description: `Vous avez ${totalTenders} appel(s) d'offres en cours. ${wonTenders > 0 ? `Votre taux de réussite est de ${winRate}%.` : 'Bonne chance pour vos candidatures !'}`,
+            },
+          ],
+        });
+      } catch (error) {
+        console.error('Error loading analytics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAnalytics();
+  }, [period]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {

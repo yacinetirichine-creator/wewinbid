@@ -27,13 +27,24 @@ function CallbackContent() {
         if (session) {
           const isSignup = searchParams.get('signup') === 'true';
           
+          // Vérifier si l'entreprise est configurée
+          const { data: profile } = await (supabase as any)
+            .from('profiles')
+            .select('company_id')
+            .eq('id', session.user.id)
+            .single();
+
+          const needsOnboarding = !profile?.company_id;
+          
           setStatus('success');
           setMessage(isSignup ? 'Compte créé avec succès !' : 'Connexion réussie !');
           
           // Redirect after a short delay
           setTimeout(() => {
-            if (isSignup) {
-              // New users might need to complete their profile
+            if (needsOnboarding) {
+              // Rediriger vers l'onboarding si pas d'entreprise configurée
+              router.push('/onboarding');
+            } else if (isSignup) {
               router.push('/dashboard?welcome=true');
             } else {
               router.push('/dashboard');
