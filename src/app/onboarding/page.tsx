@@ -638,15 +638,15 @@ export default function OnboardingPage() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {keywords.map((keyword) => (
-                        <Badge
+                        <button
                           key={keyword}
-                          variant="primary"
-                          className="px-3 py-1.5 cursor-pointer hover:bg-red-500/20"
+                          type="button"
                           onClick={() => removeKeyword(keyword)}
+                          className="px-3 py-1.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-sm cursor-pointer hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-400 transition-colors"
                         >
                           {keyword}
                           <span className="ml-2 opacity-60">×</span>
-                        </Badge>
+                        </button>
                       ))}
                       {keywords.length === 0 && (
                         <span className="text-slate-500 text-sm">Aucun mot-clé ajouté</span>
