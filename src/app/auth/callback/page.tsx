@@ -30,11 +30,22 @@ function CallbackContent() {
           // Vérifier si l'entreprise est configurée
           const { data: profile } = await (supabase as any)
             .from('profiles')
-            .select('company_id')
+            .select('company_id, created_at, onboarding_skipped_at')
             .eq('id', session.user.id)
             .single();
 
-          const needsOnboarding = !profile?.company_id;
+          // Vérifier si l'onboarding est nécessaire (entreprise non configurée ET 24h écoulées)
+          let needsOnboarding = false;
+          if (!profile?.company_id) {
+            const skipDate = profile?.onboarding_skipped_at || profile?.created_at;
+            if (skipDate) {
+              const skipTime = new Date(skipDate).getTime();
+              const now = Date.now();
+              const twentyFourHours = 24 * 60 * 60 * 1000;
+              needsOnboarding = (now - skipTime) >= twentyFourHours;
+            }
+            // Si pas de date, c'est une nouvelle inscription - on laisse explorer
+          }
           
           setStatus('success');
           setMessage(isSignup ? 'Compte créé avec succès !' : 'Connexion réussie !');
@@ -42,7 +53,7 @@ function CallbackContent() {
           // Redirect after a short delay
           setTimeout(() => {
             if (needsOnboarding) {
-              // Rediriger vers l'onboarding si pas d'entreprise configurée
+              // Rediriger vers l'onboarding si pas d'entreprise configurée et 24h écoulées
               router.push('/onboarding');
             } else if (isSignup) {
               router.push('/dashboard?welcome=true');

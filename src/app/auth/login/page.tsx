@@ -51,12 +51,29 @@ export default function LoginPage() {
       if (data.user) {
         const { data: profile } = await (supabase as any)
           .from('profiles')
-          .select('company_id')
+          .select('company_id, created_at, onboarding_skipped_at')
           .eq('id', data.user.id)
           .single();
 
+        // Vérifier si les 24h d'exploration sont écoulées
         if (!profile?.company_id) {
-          router.push('/onboarding');
+          const skipDate = profile?.onboarding_skipped_at || profile?.created_at;
+          if (skipDate) {
+            const skipTime = new Date(skipDate).getTime();
+            const now = Date.now();
+            const twentyFourHours = 24 * 60 * 60 * 1000;
+            
+            if ((now - skipTime) >= twentyFourHours) {
+              // Les 24h sont écoulées, rediriger vers l'onboarding
+              router.push('/onboarding');
+            } else {
+              // Encore dans la période d'exploration
+              router.push('/dashboard');
+            }
+          } else {
+            // Nouvelle inscription, laisser explorer
+            router.push('/dashboard');
+          }
         } else {
           router.push('/dashboard');
         }

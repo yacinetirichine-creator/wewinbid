@@ -258,13 +258,27 @@ export default function DashboardPage() {
 
       const { data: profile } = await (supabase as any)
         .from('profiles')
-        .select('company_id')
+        .select('company_id, created_at, onboarding_skipped_at')
         .eq('id', user.id)
         .single();
 
       if (!profile?.company_id) {
-        setNeedsOnboarding(true);
-        router.push('/onboarding');
+        // Vérifier si l'utilisateur peut encore explorer (période de 24h)
+        const skipDate = profile?.onboarding_skipped_at || profile?.created_at;
+        if (skipDate) {
+          const skipTime = new Date(skipDate).getTime();
+          const now = Date.now();
+          const twentyFourHours = 24 * 60 * 60 * 1000;
+          
+          if ((now - skipTime) >= twentyFourHours) {
+            // Les 24h sont écoulées, rediriger vers l'onboarding
+            setNeedsOnboarding(true);
+            router.push('/onboarding');
+            return;
+          }
+        }
+        // L'utilisateur peut encore explorer, on ne bloque pas
+        setNeedsOnboarding(false);
       }
     };
     checkOnboarding();

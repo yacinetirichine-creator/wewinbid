@@ -17,6 +17,9 @@ import {
   Globe,
   Award,
   Loader2,
+  LogOut,
+  Clock,
+  Eye,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Input, Card, CardContent, Badge, Alert } from '@/components/ui';
@@ -103,6 +106,8 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [explorationTimeRemaining, setExplorationTimeRemaining] = useState<number | null>(null);
+  const [canSkip, setCanSkip] = useState(true);
 
   // Step 1: Entreprise
   const [companyName, setCompanyName] = useState('');
@@ -130,7 +135,7 @@ export default function OnboardingPage() {
   const [newKeyword, setNewKeyword] = useState('');
   const [competencies, setCompetencies] = useState('');
 
-  // Vérifier l'authentification
+  // Vérifier l'authentification et la période d'exploration
   useEffect(() => {
     const checkAuth = async () => {
       const supabase = getSupabase();
@@ -144,17 +149,79 @@ export default function OnboardingPage() {
       // Vérifier si l'entreprise existe déjà
       const { data: profile } = await (supabase as any)
         .from('profiles')
-        .select('company_id')
+        .select('company_id, created_at, onboarding_skipped_at')
         .eq('id', user.id)
         .single();
 
       if (profile?.company_id) {
         // Entreprise déjà configurée, rediriger vers dashboard
         router.push('/dashboard');
+        return;
+      }
+
+      // Calculer le temps restant pour l'exploration (24h depuis la création ou le skip)
+      const skipDate = profile?.onboarding_skipped_at || profile?.created_at;
+      if (skipDate) {
+        const skipTime = new Date(skipDate).getTime();
+        const now = Date.now();
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+        const remaining = twentyFourHours - (now - skipTime);
+        
+        if (remaining > 0) {
+          setExplorationTimeRemaining(remaining);
+          setCanSkip(true);
+        } else {
+          // Les 24h sont écoulées, l'utilisateur doit compléter l'onboarding
+          setCanSkip(false);
+          setExplorationTimeRemaining(0);
+        }
+      } else {
+        // Première visite, peut explorer
+        setCanSkip(true);
       }
     };
     checkAuth();
   }, [getSupabase, router]);
+
+  // Fonction de déconnexion
+  const handleLogout = async () => {
+    const supabase = getSupabase();
+    await supabase.auth.signOut();
+    router.push('/auth/login');
+  };
+
+  // Fonction pour explorer l'application (skip temporaire)
+  const handleExplore = async () => {
+    if (!canSkip) return;
+    
+    setLoading(true);
+    try {
+      const supabase = getSupabase();
+      
+      // Enregistrer la date du skip pour le compte à rebours
+      await (supabase as any)
+        .from('profiles')
+        .update({ onboarding_skipped_at: new Date().toISOString() })
+        .eq('id', userId);
+      
+      router.push('/dashboard?explore=true');
+    } catch (err) {
+      console.error('Error skipping onboarding:', err);
+      router.push('/dashboard?explore=true');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Formater le temps restant
+  const formatTimeRemaining = (ms: number) => {
+    const hours = Math.floor(ms / (1000 * 60 * 60));
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    if (hours > 0) {
+      return `${hours}h ${minutes}min`;
+    }
+    return `${minutes} minutes`;
+  };
 
   const toggleArrayItem = (array: string[], setArray: (arr: string[]) => void, value: string) => {
     if (array.includes(value)) {
@@ -298,6 +365,32 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center p-4">
+      {/* Bouton de déconnexion en haut à droite */}
+      <div className="absolute top-4 right-4 flex items-center gap-3">
+        {canSkip && (
+          <button
+            onClick={handleExplore}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all"
+          >
+            <Eye className="w-4 h-4" />
+            <span className="hidden sm:inline">Explorer d'abord</span>
+            {explorationTimeRemaining && explorationTimeRemaining > 0 && (
+              <span className="text-xs text-amber-400 ml-1">
+                ({formatTimeRemaining(explorationTimeRemaining)} restantes)
+              </span>
+            )}
+          </button>
+        )}
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:text-red-400 bg-white/5 hover:bg-red-500/10 rounded-lg transition-all"
+        >
+          <LogOut className="w-4 h-4" />
+          <span className="hidden sm:inline">Déconnexion</span>
+        </button>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -313,6 +406,22 @@ export default function OnboardingPage() {
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Configuration de votre entreprise</h1>
           <p className="text-slate-400">Ces informations permettent à notre IA de vous recommander les meilleurs appels d'offres</p>
+          
+          {/* Message de période d'exploration */}
+          {canSkip && explorationTimeRemaining && explorationTimeRemaining > 0 && (
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-300 text-sm">
+              <Clock className="w-4 h-4" />
+              <span>Vous avez {formatTimeRemaining(explorationTimeRemaining)} pour explorer avant de configurer votre entreprise</span>
+            </div>
+          )}
+          
+          {/* Message quand les 24h sont écoulées */}
+          {!canSkip && (
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-lg text-red-300 text-sm">
+              <Clock className="w-4 h-4" />
+              <span>Votre période d'exploration est terminée. Veuillez configurer votre entreprise pour continuer.</span>
+            </div>
+          )}
         </div>
 
         {/* Progress Steps */}
