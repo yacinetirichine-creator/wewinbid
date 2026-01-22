@@ -18,8 +18,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: event, error } = await supabase
-    .from('calendar_events')
+  const { data: event, error } = await (supabase
+    .from('calendar_events') as any)
     .select(`
       *,
       reminders:event_reminders(*)
@@ -83,8 +83,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   if (status !== undefined) updates.status = status;
   if (metadata !== undefined) updates.metadata = metadata;
 
-  const { data: event, error } = await supabase
-    .from('calendar_events')
+  const { data: event, error } = await (supabase
+    .from('calendar_events') as any)
     .update(updates)
     .eq('id', id)
     .eq('user_id', user.id)
@@ -112,8 +112,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   }
 
   // Supprimer l'événement (les rappels seront supprimés en cascade)
-  const { error } = await supabase
-    .from('calendar_events')
+  const { error } = await (supabase
+    .from('calendar_events') as any)
     .delete()
     .eq('id', id)
     .eq('user_id', user.id);
