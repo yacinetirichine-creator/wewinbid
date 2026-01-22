@@ -93,11 +93,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { data: approvers } = await supabase
       .from('approval_step_approvers' as any)
       .select('*')
-      .eq('step_id', approvalRequest.current_step_id);
+      .eq('step_id', approvalRequest.current_step_id) as { data: any[] | null };
 
     if (approvers) {
       canApprove = approvers.some(
-        (a) =>
+        (a: any) =>
           (a.approver_type === 'user' && a.user_id === user.id) ||
           a.approver_type === 'role' // Pour les rôles, vérifier via profiles
       );
@@ -171,10 +171,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   const { data: approvers } = await supabase
     .from('approval_step_approvers' as any)
     .select('*')
-    .eq('step_id', approvalRequest.current_step_id);
+    .eq('step_id', approvalRequest.current_step_id) as { data: any[] | null };
 
   const isApprover = approvers?.some(
-    (a) =>
+    (a: any) =>
       (a.approver_type === 'user' && a.user_id === user.id) ||
       a.approver_type === 'role'
   );
