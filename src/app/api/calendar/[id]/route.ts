@@ -16,8 +16,8 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const { data: event, error } = await (supabase as any)
-      .from('calendar_events' as any)
+    const { data: event, error } = await (supabase
+      .from('calendar_events') as any)
       .select(`
         *,
         tender:tenders(id, title, reference, status),
@@ -79,9 +79,9 @@ export async function PATCH(
     if (body.color !== undefined) updateData.color = body.color;
     if (body.attendees !== undefined) updateData.attendees = body.attendees;
     
-    const { data: event, error } = await (supabase as any)
-      .from('calendar_events' as any)
-      .update(updateData as any)
+    const { data: event, error } = await (supabase
+      .from('calendar_events') as any)
+      .update(updateData)
       .eq('id', id)
       .eq('user_id', user.id)
       .select()
@@ -118,8 +118,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const { error } = await (supabase as any)
-      .from('calendar_events' as any)
+    const { error } = await (supabase
+      .from('calendar_events') as any)
       .delete()
       .eq('id', id)
       .eq('user_id', user.id);

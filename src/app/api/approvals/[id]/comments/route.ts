@@ -18,8 +18,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: comments, error } = await supabase
-    .from('approval_comments' as any)
+  const { data: comments, error } = await (supabase
+    .from('approval_comments') as any)
     .select(`
       *,
       author:profiles!author_id(id, full_name, avatar_url)
@@ -55,8 +55,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   }
 
   // Vérifier que la demande existe
-  const { data: approvalRequest } = await supabase
-    .from('approval_requests' as any)
+  const { data: approvalRequest } = await (supabase
+    .from('approval_requests') as any)
     .select('id')
     .eq('id', id)
     .single();
@@ -66,15 +66,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   }
 
   // Créer le commentaire
-  const { data: comment, error } = await supabase
-    .from('approval_comments' as any)
+  const { data: comment, error } = await (supabase
+    .from('approval_comments') as any)
     .insert({
       request_id: id,
       author_id: user.id,
       content: content.trim(),
       parent_id,
       mentions: mentions || [],
-    } as any)
+    })
     .select(`
       *,
       author:profiles!author_id(id, full_name, avatar_url)

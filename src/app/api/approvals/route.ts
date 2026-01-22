@@ -19,8 +19,7 @@ export async function GET(request: NextRequest) {
   const entityType = searchParams.get('entity_type');
 
   // Construire la requête
-  let query = supabase
-    .from('approval_requests' as any)
+  let query = (supabase.from('approval_requests') as any)
     .select(`
       *,
       workflow:approval_workflows(id, name),
@@ -94,8 +93,8 @@ export async function POST(request: NextRequest) {
   }
 
   // Trouver la première étape du workflow
-  const { data: firstStep, error: stepError } = await supabase
-    .from('approval_workflow_steps' as any)
+  const { data: firstStep, error: stepError } = await (supabase
+    .from('approval_workflow_steps') as any)
     .select('id, name')
     .eq('workflow_id', workflow_id)
     .order('step_order', { ascending: true })
@@ -110,8 +109,8 @@ export async function POST(request: NextRequest) {
   }
 
   // Créer la demande d'approbation
-  const { data: newRequest, error: createError } = await supabase
-    .from('approval_requests' as any)
+  const { data: newRequest, error: createError } = await (supabase
+    .from('approval_requests') as any)
     .insert({
       workflow_id,
       entity_type,
@@ -133,7 +132,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Créer l'entrée d'audit
-  await supabase.from('approval_audit_log' as any).insert([
+  await (supabase.from('approval_audit_log') as any).insert([
     {
       request_id: newRequest.id,
       action: 'created',

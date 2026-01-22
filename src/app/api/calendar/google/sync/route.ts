@@ -16,8 +16,7 @@ export async function POST(request: Request) {
     }
 
     // Get sync connection
-    let query = supabase
-      .from('calendar_syncs')
+    let query = (supabase.from('calendar_syncs') as any)
       .select('*')
       .eq('user_id', user.id)
       .eq('provider', 'google')
@@ -45,8 +44,8 @@ export async function POST(request: Request) {
     );
 
     oauth2Client.setCredentials({
-      access_token: (sync as any).access_token,
-      refresh_token: (sync as any).refresh_token,
+      access_token: syncData.access_token,
+      refresh_token: syncData.refresh_token,
     });
 
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
@@ -69,8 +68,8 @@ export async function POST(request: Request) {
         if (googleEvents.items) {
           for (const googleEvent of googleEvents.items) {
             // Check if event already exists
-            const { data: existingEvent } = await (supabase as any)
-              .from('calendar_events' as any)
+            const { data: existingEvent } = await (supabase
+              .from('calendar_events') as any)
               .select('id')
               .eq('external_event_id', googleEvent.id)
               .eq('sync_provider', 'google')
@@ -79,8 +78,8 @@ export async function POST(request: Request) {
             if (existingEvent) continue;
 
             // Import event
-            const { error: insertError } = await (supabase as any)
-              .from('calendar_events' as any)
+            const { error: insertError } = await (supabase
+              .from('calendar_events') as any)
               .insert({
                 user_id: user.id,
                 title: googleEvent.summary || 'Untitled Event',
@@ -112,8 +111,8 @@ export async function POST(request: Request) {
     if (direction === 'export' || direction === 'bidirectional') {
       try {
         // Get events to export
-        const { data: localEvents } = await (supabase as any)
-          .from('calendar_events' as any)
+        const { data: localEvents } = await (supabase
+          .from('calendar_events') as any)
           .select('*')
           .eq('user_id', user.id)
           .is('external_event_id', null)
@@ -154,8 +153,8 @@ export async function POST(request: Request) {
 
               if (createdEvent) {
                 // Update local event with external ID
-                await (supabase as any)
-                  .from('calendar_events' as any)
+                await (supabase
+                  .from('calendar_events') as any)
                   .update({
                     external_event_id: createdEvent.id,
                     external_calendar_id: syncData.default_calendar_id,
@@ -177,8 +176,7 @@ export async function POST(request: Request) {
     }
 
     // Update sync status
-    await (supabase as any)
-      .from('calendar_syncs')
+    await (supabase.from('calendar_syncs') as any)
       .update({
         last_sync_at: new Date().toISOString(),
         last_sync_status: errors.length > 0 ? 'error' : 'success',
@@ -213,8 +211,8 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { error } = await (supabase as any)
-      .from('calendar_syncs')
+    const { error } = await (supabase
+      .from('calendar_syncs') as any)
       .delete()
       .eq('user_id', user.id)
       .eq('provider', 'google');

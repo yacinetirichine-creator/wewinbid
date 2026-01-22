@@ -75,8 +75,8 @@ export async function GET(req: NextRequest) {
     }
 
     // Get user's company
-    const { data: profile, error: profileError } = await (supabase as any)
-      .from('profiles')
+    const { data: profile, error: profileError } = await (supabase
+      .from('profiles') as any)
       .select('company_id')
       .eq('id', user.id)
       .single();
@@ -93,8 +93,7 @@ export async function GET(req: NextRequest) {
     const activeOnly = url.searchParams.get('active_only') === 'true';
 
     // Get alerts
-    let query = supabase
-      .from('search_alerts' as any)
+    let query = (supabase.from('search_alerts') as any)
       .select('*')
       .eq('user_id', user.id)
       .eq('company_id', profile.company_id)
@@ -143,8 +142,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Get user's company
-    const { data: profile, error: profileError } = await (supabase as any)
-      .from('profiles')
+    const { data: profile, error: profileError } = await (supabase
+      .from('profiles') as any)
       .select('company_id')
       .eq('id', user.id)
       .single();
@@ -171,8 +170,8 @@ export async function POST(req: NextRequest) {
       validation.data;
 
     // Create alert
-    const { data: alert, error: createError } = await (supabase as any)
-      .from('search_alerts' as any)
+    const { data: alert, error: createError } = await (supabase
+      .from('search_alerts') as any)
       .insert({
         user_id: user.id,
         company_id: profile.company_id,
@@ -235,8 +234,8 @@ export async function PATCH(req: NextRequest) {
     const { id, ...updates } = validation.data;
 
     // Check if user owns this alert
-    const { data: existing, error: checkError } = await (supabase as any)
-      .from('search_alerts' as any)
+    const { data: existing, error: checkError } = await (supabase
+      .from('search_alerts') as any)
       .select('id')
       .eq('id', id)
       .eq('user_id', user.id)
@@ -250,8 +249,8 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Update alert
-    const { data: alert, error: updateError } = await (supabase as any)
-      .from('search_alerts' as any)
+    const { data: alert, error: updateError } = await (supabase
+      .from('search_alerts') as any)
       .update(updates)
       .eq('id', id)
       .select()
@@ -305,8 +304,8 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Delete alert (RLS will ensure user owns it)
-    const { error: deleteError } = await supabase
-      .from('search_alerts' as any)
+    const { error: deleteError } = await (supabase
+      .from('search_alerts') as any)
       .delete()
       .eq('id', id)
       .eq('user_id', user.id);

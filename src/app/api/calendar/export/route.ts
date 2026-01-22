@@ -17,8 +17,8 @@ export async function GET(request: Request) {
     }
     
     // Fetch events
-    const { data: events, error } = await (supabase as any)
-      .from('calendar_events' as any)
+    const { data: events, error } = await (supabase
+      .from('calendar_events') as any)
       .select('*')
       .eq('user_id', user.id)
       .gte('start_date', startDate)
