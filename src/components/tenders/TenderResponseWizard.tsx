@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CheckCircle2,
@@ -28,10 +28,19 @@ import {
   FileSignature,
   Package,
   Lock,
+  Cloud,
+  Printer,
 } from 'lucide-react';
 import { Button, Card, Badge, Progress, Textarea, Input, Checkbox } from '@/components/ui';
+import { SaveIndicator } from '@/components/ui/SaveIndicator';
+import { useAutoSave } from '@/hooks/useAutoSave';
 import { cn } from '@/lib/utils';
 import { TenderAnalysisResult } from './TenderAIAnalysis';
+import { 
+  generateDC1, 
+  generateMemoireTechnique, 
+  downloadPDF,
+} from '@/lib/pdf-generation';
 
 // Types pour le wizard
 interface WizardStep {
@@ -161,6 +170,47 @@ export function TenderResponseWizard({
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [checklist, setChecklist] = useState<Record<string, boolean>>({});
 
+  // Auto-save hook
+  const {
+    draft,
+    loading: draftLoading,
+    saveStatus,
+    lastSaved,
+    updateDraft,
+    updateNotes: saveNotes,
+    updateChecklist: saveChecklist,
+    setCurrentStep: saveCurrentStep,
+    updateDocumentStatus,
+    saveNow,
+  } = useAutoSave(tenderId, {
+    debounceMs: 1500,
+    onSave: (savedDraft) => {
+      console.log('Brouillon sauvegardé:', savedDraft.id);
+    },
+    onError: (error) => {
+      console.error('Erreur sauvegarde:', error);
+    },
+  });
+
+  // Restaurer le brouillon au chargement
+  useEffect(() => {
+    if (draft && !draftLoading) {
+      if (draft.current_step > 0) {
+        setCurrentStepIndex(draft.current_step);
+        setSteps(prev => prev.map((s, i) => ({
+          ...s,
+          status: i < draft.current_step ? 'completed' : i === draft.current_step ? 'current' : 'pending',
+        })));
+      }
+      if (Object.keys(draft.notes).length > 0) {
+        setNotes(draft.notes);
+      }
+      if (Object.keys(draft.checklist).length > 0) {
+        setChecklist(draft.checklist);
+      }
+    }
+  }, [draft, draftLoading]);
+
   const currentStep = steps[currentStepIndex];
   const currentDocuments = documents[currentStep.id] || [];
 
@@ -171,29 +221,45 @@ export function TenderResponseWizard({
     return Math.round((completedDocs.length / allDocs.length) * 100);
   };
 
-  // Aller à l'étape suivante
+  // Aller à l'étape suivante avec sauvegarde
   const nextStep = () => {
     if (currentStepIndex < steps.length - 1) {
+      const newIndex = currentStepIndex + 1;
       setSteps(prev => prev.map((s, i) => ({
         ...s,
-        status: i < currentStepIndex + 1 ? 'completed' : i === currentStepIndex + 1 ? 'current' : s.status,
+        status: i < newIndex ? 'completed' : i === newIndex ? 'current' : s.status,
       })));
-      setCurrentStepIndex(prev => prev + 1);
+      setCurrentStepIndex(newIndex);
+      saveCurrentStep(newIndex);
     }
   };
 
-  // Retourner à l'étape précédente
+  // Retourner à l'étape précédente avec sauvegarde
   const prevStep = () => {
     if (currentStepIndex > 0) {
+      const newIndex = currentStepIndex - 1;
       setSteps(prev => prev.map((s, i) => ({
         ...s,
-        status: i === currentStepIndex - 1 ? 'current' : i < currentStepIndex - 1 ? 'completed' : 'pending',
+        status: i === newIndex ? 'current' : i < newIndex ? 'completed' : 'pending',
       })));
-      setCurrentStepIndex(prev => prev - 1);
+      setCurrentStepIndex(newIndex);
+      saveCurrentStep(newIndex);
     }
   };
 
-  // Générer les documents avec l'IA
+  // Mettre à jour les notes avec sauvegarde
+  const handleNotesChange = useCallback((stepId: string, note: string) => {
+    setNotes(prev => ({ ...prev, [stepId]: note }));
+    saveNotes(stepId, note);
+  }, [saveNotes]);
+
+  // Mettre à jour la checklist avec sauvegarde
+  const handleChecklistChange = useCallback((itemId: string, checked: boolean) => {
+    setChecklist(prev => ({ ...prev, [itemId]: checked }));
+    saveChecklist(itemId, checked);
+  }, [saveChecklist]);
+
+  // Générer les documents avec l'IA et PDF
   const generateDocuments = async () => {
     setIsGenerating(true);
     setGenerationProgress(0);
@@ -203,7 +269,7 @@ export function TenderResponseWizard({
     for (let i = 0; i < docsToGenerate.length; i++) {
       const doc = docsToGenerate[i];
       
-      // Simuler la génération
+      // Marquer comme en génération
       setDocuments(prev => ({
         ...prev,
         [currentStep.id]: prev[currentStep.id].map(d => 
@@ -211,19 +277,103 @@ export function TenderResponseWizard({
         ),
       }));
 
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      try {
+        // Générer le PDF selon le type de document
+        if (doc.name.toLowerCase().includes('dc1')) {
+          const companyInfo = {
+            name: '',
+            siret: '',
+            address: '',
+            city: '',
+            postalCode: '',
+            email: '',
+            phone: '',
+            legalForm: '',
+          };
+          
+          const tenderInfo = {
+            reference: analysis.reference,
+            title: analysis.title,
+            buyer: analysis.buyer || 'Acheteur public',
+            deadline: analysis.dates.submissionDeadline,
+          };
+          
+          const blob = await generateDC1(companyInfo, tenderInfo, false);
+          // Stocker le blob pour téléchargement ultérieur
+          setDocuments(prev => ({
+            ...prev,
+            [currentStep.id]: prev[currentStep.id].map(d => 
+              d.id === doc.id ? { ...d, status: 'ready' as const, downloadUrl: URL.createObjectURL(blob) } : d
+            ),
+          }));
+        } else if (doc.name.toLowerCase().includes('mémoire') || doc.name.toLowerCase().includes('technique')) {
+          const companyInfo = {
+            name: '',
+            siret: '',
+            address: '',
+            city: '',
+            postalCode: '',
+            email: '',
+            phone: '',
+            legalForm: '',
+          };
+          
+          const tenderInfo = {
+            reference: analysis.reference,
+            title: analysis.title,
+            buyer: analysis.buyer || 'Acheteur public',
+            deadline: analysis.dates.submissionDeadline,
+          };
 
-      setDocuments(prev => ({
-        ...prev,
-        [currentStep.id]: prev[currentStep.id].map(d => 
-          d.id === doc.id ? { ...d, status: 'ready' as const } : d
-        ),
-      }));
+          const analysisData = {
+            summary: analysis.summary || 'Résumé de l\'appel d\'offres',
+            requirements: analysis.requirements || [],
+            methodology: 'Méthodologie de réponse',
+          };
+
+          const references: { clientName: string; projectTitle: string; year: number; value: number; description: string }[] = [];
+
+          const blob = await generateMemoireTechnique(companyInfo, tenderInfo, analysisData, references);
+          setDocuments(prev => ({
+            ...prev,
+            [currentStep.id]: prev[currentStep.id].map(d => 
+              d.id === doc.id ? { ...d, status: 'ready' as const, downloadUrl: URL.createObjectURL(blob) } : d
+            ),
+          }));
+        } else {
+          // Pour les autres documents, simuler la génération
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          setDocuments(prev => ({
+            ...prev,
+            [currentStep.id]: prev[currentStep.id].map(d => 
+              d.id === doc.id ? { ...d, status: 'ready' as const } : d
+            ),
+          }));
+        }
+      } catch (error) {
+        console.error('Erreur génération document:', error);
+        setDocuments(prev => ({
+          ...prev,
+          [currentStep.id]: prev[currentStep.id].map(d => 
+            d.id === doc.id ? { ...d, status: 'missing' as const } : d
+          ),
+        }));
+      }
 
       setGenerationProgress(Math.round(((i + 1) / docsToGenerate.length) * 100));
     }
 
     setIsGenerating(false);
+  };
+
+  // Télécharger un document généré
+  const downloadDocument = (doc: DocumentItem) => {
+    if (doc.downloadUrl) {
+      const link = document.createElement('a');
+      link.href = doc.downloadUrl;
+      link.download = `${doc.name}.pdf`;
+      link.click();
+    }
   };
 
   // Uploader un document
@@ -267,13 +417,14 @@ export function TenderResponseWizard({
               <p className="text-sm text-surface-500">{analysis.reference} - {analysis.title}</p>
             </div>
             <div className="flex items-center gap-4">
+              <SaveIndicator status={saveStatus} lastSaved={lastSaved} />
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="w-4 h-4 text-orange-500" />
                 <span className="text-surface-600">
                   Date limite: {new Date(analysis.dates.submissionDeadline).toLocaleDateString('fr-FR')}
                 </span>
               </div>
-              <Button variant="outline" size="sm" onClick={onCancel}>
+              <Button variant="outline" size="sm" onClick={() => { saveNow(); onCancel(); }}>
                 Sauvegarder & Quitter
               </Button>
             </div>
@@ -446,7 +597,12 @@ export function TenderResponseWizard({
                                 <Button variant="ghost" size="sm">
                                   <Eye className="w-4 h-4" />
                                 </Button>
-                                <Button variant="ghost" size="sm">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => downloadDocument(doc)}
+                                  title="Télécharger le document"
+                                >
                                   <Download className="w-4 h-4" />
                                 </Button>
                               </>
@@ -465,7 +621,7 @@ export function TenderResponseWizard({
                     </h3>
                     <Textarea
                       value={notes[currentStep.id] || ''}
-                      onChange={(e) => setNotes(prev => ({ ...prev, [currentStep.id]: e.target.value }))}
+                      onChange={(e) => handleNotesChange(currentStep.id, e.target.value)}
                       placeholder="Ajoutez vos notes, remarques ou points d'attention..."
                       rows={4}
                     />
@@ -641,7 +797,7 @@ export function TenderResponseWizard({
                         <label key={idx} className="flex items-center gap-3 cursor-pointer">
                           <Checkbox
                             checked={checklist[`check_${idx}`] || false}
-                            onChange={(e) => setChecklist(prev => ({ ...prev, [`check_${idx}`]: e.target.checked }))}
+                            onChange={(e) => handleChecklistChange(`check_${idx}`, e.target.checked)}
                           />
                           <span className="text-surface-700">{item}</span>
                         </label>
