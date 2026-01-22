@@ -1,5 +1,16 @@
 'use client';
 
+/**
+ * @fileoverview Legacy Sidebar Component - Re-exports new components for compatibility
+ * This file maintains backward compatibility while using the new improved components
+ */
+
+// Re-export new components for backward compatibility
+export { NewSidebar as Sidebar } from './NewSidebar';
+export { NewAppLayout as AppLayout, PageHeader } from './NewAppLayout';
+export { NewTopBar as TopBar } from './NewTopBar';
+
+// Legacy imports for existing code that may still use them
 import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -25,7 +36,7 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { Avatar } from '@/components/ui';
-import { TopBar } from '@/components/layout/TopBar';
+import { TopBar as OldTopBar } from '@/components/layout/TopBar';
 import { useLocale } from '@/hooks/useLocale';
 import { useUiTranslations } from '@/hooks/useUiTranslations';
 import { createClient } from '@/lib/supabase/client';

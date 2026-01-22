@@ -14,9 +14,10 @@ import {
   ArrowTrendingUpIcon,
   EllipsisVerticalIcon,
   DocumentTextIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { Button, Badge, Card, Input, Select, Modal, ScoreGauge, EmptyState } from '@/components/ui';
-import { AppLayout, PageHeader } from '@/components/layout/Sidebar';
+import { NewAppLayout as AppLayout, PageHeader } from '@/components/layout/NewAppLayout';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate, getDaysRemaining, getScoreColor } from '@/lib/utils';
 import type { Tender, TenderStatus, TenderType } from '@/types/database';
@@ -324,6 +325,12 @@ export default function TendersPage() {
               <FunnelIcon className="w-4 h-4 mr-2" />
               {t('tenders.actions.filters')}
             </Button>
+            <Link href="/tenders/analyze">
+              <Button variant="secondary" size="sm">
+                <SparklesIcon className="w-4 h-4 mr-2" />
+                Analyser un AO
+              </Button>
+            </Link>
             <Link href="/tenders/new">
               <Button size="sm">
                 <PlusIcon className="w-4 h-4 mr-2" />

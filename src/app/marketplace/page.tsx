@@ -9,8 +9,7 @@ import {
   Input, 
   Badge 
 } from '@/components/ui';
-import { AppLayout } from '@/components/layout/AppLayout';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { NewAppLayout as AppLayout, PageHeader } from '@/components/layout/NewAppLayout';
 import {
   Search,
   Filter,

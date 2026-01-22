@@ -214,6 +214,49 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
 Select.displayName = 'Select';
 
 // ============================================
+// CHECKBOX
+// ============================================
+interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
+  label?: string;
+  error?: string;
+}
+
+export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
+  ({ className, label, error, checked, ...props }, ref) => {
+    return (
+      <label className={cn('inline-flex items-center gap-2 cursor-pointer', className)}>
+        <div className="relative">
+          <input
+            ref={ref}
+            type="checkbox"
+            checked={checked}
+            className={cn(
+              'w-5 h-5 rounded border-2 appearance-none cursor-pointer transition-all duration-200',
+              'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
+              checked
+                ? 'bg-primary-600 border-primary-600'
+                : 'bg-white border-surface-300 hover:border-primary-400',
+              error && 'border-danger-500'
+            )}
+            {...props}
+          />
+          {checked && (
+            <Check className="absolute top-0.5 left-0.5 w-4 h-4 text-white pointer-events-none" />
+          )}
+        </div>
+        {label && (
+          <span className="text-sm text-surface-700">{label}</span>
+        )}
+        {error && (
+          <span className="text-sm text-danger-600">{error}</span>
+        )}
+      </label>
+    );
+  }
+);
+Checkbox.displayName = 'Checkbox';
+
+// ============================================
 // CARD
 // ============================================
 interface CardProps {

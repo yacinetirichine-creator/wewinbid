@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { AppLayout, PageHeader } from '@/components/layout/Sidebar';
+import { NewAppLayout as AppLayout, PageHeader } from '@/components/layout/NewAppLayout';
 import { Card, Badge, Button } from '@/components/ui';
 import NotificationList from '@/components/notifications/NotificationList';
 import NotificationPreferences from '@/components/notifications/NotificationPreferences';

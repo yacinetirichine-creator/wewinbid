@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import { Button, Input, Card, Badge } from '@/components/ui';
+import { NewAppLayout as AppLayout, PageHeader } from '@/components/layout/NewAppLayout';
 import { 
   User, Building2, Bell, Shield, CreditCard, Globe, Palette,
   Save, Camera, Trash2, CheckCircle, AlertTriangle, Key, Mail,
@@ -432,14 +433,17 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <AppLayout pageTitle="Paramètres">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <AppLayout pageTitle="Paramètres">
+    <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">{t('settings.title')}</h1>
@@ -1334,5 +1338,6 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+    </AppLayout>
   );
 }

@@ -10,8 +10,7 @@ import {
   Badge,
   Skeleton,
 } from '@/components/ui';
-import { AppLayout } from '@/components/layout/Sidebar';
-import { PageHeader } from '@/components/layout/Sidebar';
+import { NewAppLayout as AppLayout, PageHeader } from '@/components/layout/NewAppLayout';
 import { formatCurrency } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import {

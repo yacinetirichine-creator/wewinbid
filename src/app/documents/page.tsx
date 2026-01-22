@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button, Input, Card, Badge, Modal } from '@/components/ui';
+import { NewAppLayout as AppLayout, PageHeader } from '@/components/layout/NewAppLayout';
 import { 
   Search, Upload, FileText, FilePlus, Trash2, Download, Eye, 
   FolderOpen, CheckCircle, XCircle, Clock, Filter, Grid, List,
@@ -408,7 +409,8 @@ export default function DocumentsPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+    <AppLayout pageTitle="Documents">
+    <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
@@ -706,5 +708,6 @@ export default function DocumentsPage() {
         </div>
       </Modal>
     </div>
+    </AppLayout>
   );
 }

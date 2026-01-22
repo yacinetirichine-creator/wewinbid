@@ -10,12 +10,14 @@ import {
   Plus, Trophy, AlertTriangle, CheckCircle, Activity, Calendar,
   Euro, Percent, Briefcase, Bell
 } from 'lucide-react';
-import { AppLayout, PageHeader } from '@/components/layout/Sidebar';
+import { NewAppLayout as AppLayout, PageHeader } from '@/components/layout/NewAppLayout';
 import { Card, CardContent, CardHeader, Badge, Progress, Button, Skeleton, ScoreGauge, Alert } from '@/components/ui';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { TendersTable } from '@/components/dashboard/TendersTable';
 import { MatchedTendersWidget } from '@/components/dashboard/MatchedTendersWidget';
 import { DashboardStatsWidget } from '@/components/dashboard/DashboardStatsWidget';
+import { AIAnalysisWidget } from '@/components/dashboard/AIAnalysisWidget';
+import { OnboardingReminder } from '@/components/onboarding/OnboardingReminder';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate, getDaysRemaining } from '@/lib/utils';
 import { useLocale } from '@/hooks/useLocale';
@@ -431,6 +433,9 @@ export default function DashboardPage() {
         </motion.div>
       )}
 
+      {/* Rappel d'onboarding - s'affiche tant que le profil n'est pas complété */}
+      <OnboardingReminder variant="banner" />
+
       {isLoading ? (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -488,7 +493,12 @@ export default function DashboardPage() {
 
           {/* Main Content */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Matched Tenders Widget - New */}
+            {/* AI Analysis Widget - New */}
+            <motion.div variants={item}>
+              <AIAnalysisWidget />
+            </motion.div>
+
+            {/* Matched Tenders Widget */}
             <motion.div variants={item} className="lg:col-span-2">
               <MatchedTendersWidget minScore={70} limit={10} />
             </motion.div>

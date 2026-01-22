@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import CalendarView from '@/components/CalendarView';
+import { NewAppLayout as AppLayout } from '@/components/layout/NewAppLayout';
 import { Download, Settings, Calendar, X } from 'lucide-react';
 
 type CalendarEvent = {
@@ -61,15 +62,16 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <AppLayout pageTitle="Calendrier">
+    <div className="bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="bg-white border-b rounded-xl mb-6">
+        <div className="px-4 sm:px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Calendar className="w-8 h-8 text-blue-600" />
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Calendrier</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Calendrier</h1>
                 <p className="text-sm text-gray-500 mt-1">
                   Gérez vos deadlines, réunions et rappels
                 </p>
@@ -80,7 +82,7 @@ export default function CalendarPage() {
       </div>
 
       {/* Calendar View */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="py-4">
         <CalendarView
           onEventClick={handleEventClick}
           onCreateEvent={handleCreateEvent}
@@ -123,6 +125,7 @@ export default function CalendarPage() {
         />
       )}
     </div>
+    </AppLayout>
   );
 }
 

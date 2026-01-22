@@ -303,7 +303,7 @@ export default function OnboardingPage() {
     try {
       const supabase = getSupabase();
 
-      // Créer l'entreprise
+      // Créer l'entreprise avec toutes les données pour l'IA
       const { data: company, error: companyError } = await (supabase as any)
         .from('companies')
         .insert({
@@ -318,7 +318,14 @@ export default function OnboardingPage() {
           sectors: sectors,
           certifications: certifications,
           employee_count: companySize ? parseInt(companySize.split('-')[0]) : null,
-          // Metadata pour l'IA
+          // Données de ciblage pour l'IA
+          geographic_zones: geographicZones,
+          market_types: marketTypes,
+          keywords: keywords,
+          min_budget: minBudget ? parseInt(minBudget) : null,
+          max_budget: maxBudget ? parseInt(maxBudget) : null,
+          competencies: competencies || null,
+          // Métadonnées supplémentaires (fallback si colonnes non créées)
           metadata: {
             geographic_zones: geographicZones,
             market_types: marketTypes,
@@ -326,6 +333,7 @@ export default function OnboardingPage() {
             max_budget: maxBudget ? parseInt(maxBudget) : null,
             keywords: keywords,
             competencies: competencies,
+            company_size_category: companySize,
             onboarding_completed: true,
             onboarding_date: new Date().toISOString(),
           }
@@ -335,10 +343,14 @@ export default function OnboardingPage() {
 
       if (companyError) throw companyError;
 
-      // Lier l'utilisateur à l'entreprise
+      // Lier l'utilisateur à l'entreprise et marquer l'onboarding comme complété
       const { error: profileError } = await (supabase as any)
         .from('profiles')
-        .update({ company_id: company.id })
+        .update({ 
+          company_id: company.id,
+          onboarding_completed: true,
+          onboarding_completed_at: new Date().toISOString(),
+        })
         .eq('id', userId);
 
       if (profileError) throw profileError;

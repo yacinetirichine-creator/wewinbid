@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AppLayout, PageHeader } from '@/components/layout/Sidebar';
+import { NewAppLayout as AppLayout, PageHeader } from '@/components/layout/NewAppLayout';
 import { Button, Card } from '@/components/ui';
 import TeamCard from '@/components/teams/TeamCard';
 import { Plus, Users, Loader2 } from 'lucide-react';

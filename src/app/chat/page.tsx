@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import ChatInterface from '@/components/chat/ChatInterface';
 import ChatSessions from '@/components/chat/ChatSessions';
+import { NewAppLayout as AppLayout } from '@/components/layout/NewAppLayout';
 import { MessageSquarePlus, Menu, X } from 'lucide-react';
 
 export default function ChatPage() {
@@ -18,7 +19,8 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-gray-50 dark:bg-gray-900">
+    <AppLayout pageTitle="Assistant IA" noPadding>
+    <div className="flex h-[calc(100vh-8rem)] bg-gray-50 dark:bg-gray-900">
       <button
         onClick={() => setShowSidebar(!showSidebar)}
         className="lg:hidden fixed top-20 left-4 z-50 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
@@ -84,5 +86,6 @@ export default function ChatPage() {
         </div>
       </div>
     </div>
+    </AppLayout>
   );
 }
