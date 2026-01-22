@@ -20,12 +20,12 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', loading, leftIcon, rightIcon, children, disabled, ...props }, ref) => {
     const variants = {
-      primary: 'bg-primary-600 text-white hover:bg-primary-700 shadow-md hover:shadow-lg',
-      secondary: 'bg-secondary-600 text-white hover:bg-secondary-700 shadow-md',
-      ghost: 'bg-transparent text-surface-700 hover:bg-surface-100',
-      danger: 'bg-danger-600 text-white hover:bg-danger-700',
-      success: 'bg-success-600 text-white hover:bg-success-700',
-      outline: 'border-2 border-primary-600 text-primary-600 hover:bg-primary-50',
+      primary: 'bg-primary-600 text-white hover:bg-primary-700 shadow-md hover:shadow-lg dark:bg-primary-500 dark:hover:bg-primary-600',
+      secondary: 'bg-secondary-600 text-white hover:bg-secondary-700 shadow-md dark:bg-secondary-500 dark:hover:bg-secondary-600',
+      ghost: 'bg-transparent text-surface-700 hover:bg-surface-100 dark:text-surface-200 dark:hover:bg-surface-800',
+      danger: 'bg-danger-600 text-white hover:bg-danger-700 dark:bg-danger-500 dark:hover:bg-danger-600',
+      success: 'bg-success-600 text-white hover:bg-success-700 dark:bg-success-500 dark:hover:bg-success-600',
+      outline: 'border-2 border-primary-600 text-primary-600 hover:bg-primary-50 dark:border-primary-400 dark:text-primary-400 dark:hover:bg-primary-900/30',
     };
 
     const sizes = {
@@ -77,13 +77,13 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-surface-700 mb-1.5">
+          <label className="block text-sm font-medium text-surface-700 dark:text-surface-200 mb-1.5">
             {label}
           </label>
         )}
         <div className="relative">
           {leftIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400 dark:text-surface-500">
               {leftIcon}
             </div>
           )}
@@ -91,11 +91,11 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             className={cn(
               'w-full px-4 py-2.5 rounded-lg border transition-all duration-200',
-              'bg-white text-surface-900 placeholder:text-surface-400',
-              'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
+              'bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 placeholder:text-surface-400 dark:placeholder:text-surface-500',
+              'focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent',
               error
                 ? 'border-danger-500 focus:ring-danger-500'
-                : 'border-surface-200 hover:border-surface-300',
+                : 'border-surface-200 dark:border-surface-700 hover:border-surface-300 dark:hover:border-surface-600',
               leftIcon && 'pl-10',
               rightIcon && 'pr-10',
               className
@@ -103,19 +103,19 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           {rightIcon && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 dark:text-surface-500">
               {rightIcon}
             </div>
           )}
         </div>
         {error && (
-          <p className="mt-1.5 text-sm text-danger-600 flex items-center gap-1">
+          <p className="mt-1.5 text-sm text-danger-600 dark:text-danger-400 flex items-center gap-1">
             <AlertCircle className="w-3.5 h-3.5" />
             {error}
           </p>
         )}
         {hint && !error && (
-          <p className="mt-1.5 text-sm text-surface-500">{hint}</p>
+          <p className="mt-1.5 text-sm text-surface-500 dark:text-surface-400">{hint}</p>
         )}
       </div>
     );
@@ -137,7 +137,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-surface-700 mb-1.5">
+          <label className="block text-sm font-medium text-surface-700 dark:text-surface-200 mb-1.5">
             {label}
           </label>
         )}
@@ -145,21 +145,21 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           className={cn(
             'w-full px-4 py-2.5 rounded-lg border transition-all duration-200',
-            'bg-white text-surface-900 placeholder:text-surface-400',
-            'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
+            'bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 placeholder:text-surface-400 dark:placeholder:text-surface-500',
+            'focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent',
             'resize-none',
             error
               ? 'border-danger-500 focus:ring-danger-500'
-              : 'border-surface-200 hover:border-surface-300',
+              : 'border-surface-200 dark:border-surface-700 hover:border-surface-300 dark:hover:border-surface-600',
             className
           )}
           {...props}
         />
         {error && (
-          <p className="mt-1.5 text-sm text-danger-600">{error}</p>
+          <p className="mt-1.5 text-sm text-danger-600 dark:text-danger-400">{error}</p>
         )}
         {hint && !error && (
-          <p className="mt-1.5 text-sm text-surface-500">{hint}</p>
+          <p className="mt-1.5 text-sm text-surface-500 dark:text-surface-400">{hint}</p>
         )}
       </div>
     );
@@ -181,7 +181,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-surface-700 mb-1.5">
+          <label className="block text-sm font-medium text-surface-700 dark:text-surface-200 mb-1.5">
             {label}
           </label>
         )}
@@ -189,11 +189,11 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           ref={ref}
           className={cn(
             'w-full px-4 py-2.5 rounded-lg border transition-all duration-200',
-            'bg-white text-surface-900',
-            'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
+            'bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100',
+            'focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent',
             error
               ? 'border-danger-500'
-              : 'border-surface-200 hover:border-surface-300',
+              : 'border-surface-200 dark:border-surface-700 hover:border-surface-300 dark:hover:border-surface-600',
             className
           )}
           {...props}
@@ -232,10 +232,10 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             checked={checked}
             className={cn(
               'w-5 h-5 rounded border-2 appearance-none cursor-pointer transition-all duration-200',
-              'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
+              'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-surface-900',
               checked
-                ? 'bg-primary-600 border-primary-600'
-                : 'bg-white border-surface-300 hover:border-primary-400',
+                ? 'bg-primary-600 border-primary-600 dark:bg-primary-500 dark:border-primary-500'
+                : 'bg-white dark:bg-surface-800 border-surface-300 dark:border-surface-600 hover:border-primary-400 dark:hover:border-primary-500',
               error && 'border-danger-500'
             )}
             {...props}
@@ -245,10 +245,10 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           )}
         </div>
         {label && (
-          <span className="text-sm text-surface-700">{label}</span>
+          <span className="text-sm text-surface-700 dark:text-surface-200">{label}</span>
         )}
         {error && (
-          <span className="text-sm text-danger-600">{error}</span>
+          <span className="text-sm text-danger-600 dark:text-danger-400">{error}</span>
         )}
       </label>
     );
@@ -277,8 +277,8 @@ export function Card({ children, className, hover = false, padding = 'md' }: Car
   return (
     <div
       className={cn(
-        'bg-white rounded-xl border border-surface-200 shadow-soft',
-        hover && 'transition-all duration-200 hover:shadow-lg hover:border-surface-300',
+        'bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 shadow-soft',
+        hover && 'transition-all duration-200 hover:shadow-lg hover:border-surface-300 dark:hover:border-surface-600',
         paddings[padding],
         className
       )}
@@ -290,7 +290,7 @@ export function Card({ children, className, hover = false, padding = 'md' }: Car
 
 export function CardHeader({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('border-b border-surface-200 pb-4 mb-4', className)}>
+    <div className={cn('border-b border-surface-200 dark:border-surface-700 pb-4 mb-4', className)}>
       {children}
     </div>
   );
@@ -302,7 +302,7 @@ export function CardContent({ children, className }: { children: React.ReactNode
 
 export function CardFooter({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('border-t border-surface-200 pt-4 mt-4', className)}>
+    <div className={cn('border-t border-surface-200 dark:border-surface-700 pt-4 mt-4', className)}>
       {children}
     </div>
   );
@@ -320,19 +320,19 @@ interface BadgeProps {
 
 export function Badge({ children, variant = 'default', size = 'md', className }: BadgeProps) {
   const variants = {
-    default: 'bg-surface-100 text-surface-700',
-    primary: 'bg-primary-100 text-primary-700',
-    secondary: 'bg-secondary-100 text-secondary-700',
-    success: 'bg-success-100 text-success-700',
-    warning: 'bg-warning-100 text-warning-700',
-    danger: 'bg-danger-100 text-danger-700',
-    info: 'bg-blue-100 text-blue-700',
-    blue: 'bg-blue-100 text-blue-700',
-    purple: 'bg-purple-100 text-purple-700',
-    gray: 'bg-gray-100 text-gray-700',
-    green: 'bg-green-100 text-green-700',
-    red: 'bg-red-100 text-red-700',
-    yellow: 'bg-yellow-100 text-yellow-700',
+    default: 'bg-surface-100 text-surface-700 dark:bg-surface-700 dark:text-surface-200',
+    primary: 'bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300',
+    secondary: 'bg-secondary-100 text-secondary-700 dark:bg-secondary-900/50 dark:text-secondary-300',
+    success: 'bg-success-100 text-success-700 dark:bg-success-900/50 dark:text-success-300',
+    warning: 'bg-warning-100 text-warning-700 dark:bg-warning-900/50 dark:text-warning-300',
+    danger: 'bg-danger-100 text-danger-700 dark:bg-danger-900/50 dark:text-danger-300',
+    info: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+    blue: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+    purple: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
+    gray: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+    green: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300',
+    red: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
+    yellow: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300',
   };
 
   const sizes = {
@@ -453,7 +453,7 @@ export function Progress({
 
   return (
     <div className={cn('w-full', className)}>
-      <div className={cn('w-full bg-surface-200 rounded-full overflow-hidden', sizes[size])}>
+      <div className={cn('w-full bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden', sizes[size])}>
         <motion.div
           className={cn('h-full rounded-full', colors[color])}
           initial={{ width: 0 }}
@@ -462,7 +462,7 @@ export function Progress({
         />
       </div>
       {showLabel && (
-        <p className="mt-1 text-sm text-surface-600 text-right">{Math.round(percentage)}%</p>
+        <p className="mt-1 text-sm text-surface-600 dark:text-surface-400 text-right">{Math.round(percentage)}%</p>
       )}
     </div>
   );
@@ -490,28 +490,28 @@ export function Alert({
 }: AlertProps) {
   const config = {
     info: {
-      bg: 'bg-blue-50 border-blue-200',
-      icon: <Info className="w-5 h-5 text-blue-600" />,
-      title: 'text-blue-800',
-      text: 'text-blue-700',
+      bg: 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800',
+      icon: <Info className="w-5 h-5 text-blue-600 dark:text-blue-400" />,
+      title: 'text-blue-800 dark:text-blue-200',
+      text: 'text-blue-700 dark:text-blue-300',
     },
     success: {
-      bg: 'bg-success-50 border-success-200',
-      icon: <Check className="w-5 h-5 text-success-600" />,
-      title: 'text-success-800',
-      text: 'text-success-700',
+      bg: 'bg-success-50 dark:bg-success-900/30 border-success-200 dark:border-success-800',
+      icon: <Check className="w-5 h-5 text-success-600 dark:text-success-400" />,
+      title: 'text-success-800 dark:text-success-200',
+      text: 'text-success-700 dark:text-success-300',
     },
     warning: {
-      bg: 'bg-warning-50 border-warning-200',
-      icon: <AlertTriangle className="w-5 h-5 text-warning-600" />,
-      title: 'text-warning-800',
-      text: 'text-warning-700',
+      bg: 'bg-warning-50 dark:bg-warning-900/30 border-warning-200 dark:border-warning-800',
+      icon: <AlertTriangle className="w-5 h-5 text-warning-600 dark:text-warning-400" />,
+      title: 'text-warning-800 dark:text-warning-200',
+      text: 'text-warning-700 dark:text-warning-300',
     },
     error: {
-      bg: 'bg-danger-50 border-danger-200',
-      icon: <AlertCircle className="w-5 h-5 text-danger-600" />,
-      title: 'text-danger-800',
-      text: 'text-danger-700',
+      bg: 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-800',
+      icon: <AlertCircle className="w-5 h-5 text-danger-600 dark:text-danger-400" />,
+      title: 'text-danger-800 dark:text-danger-200',
+      text: 'text-danger-700 dark:text-danger-300',
     },
   };
 
@@ -555,7 +555,7 @@ export function Skeleton({ className, variant = 'text', width, height }: Skeleto
   return (
     <div
       className={cn(
-        'bg-surface-200 animate-pulse',
+        'bg-surface-200 dark:bg-surface-700 animate-pulse',
         variants[variant],
         className
       )}
@@ -607,13 +607,13 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
               sizes[size]
             )}
           >
-            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-white dark:bg-surface-800 rounded-2xl shadow-xl overflow-hidden">
               {title && (
-                <div className="flex items-center justify-between px-6 py-4 border-b border-surface-200">
-                  <h2 className="text-lg font-semibold text-surface-900">{title}</h2>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-surface-200 dark:border-surface-700">
+                  <h2 className="text-lg font-semibold text-surface-900 dark:text-surface-100">{title}</h2>
                   <button
                     onClick={onClose}
-                    className="p-1 rounded-lg text-surface-400 hover:text-surface-600 hover:bg-surface-100"
+                    className="p-1 rounded-lg text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:hover:text-surface-200 dark:hover:bg-surface-700"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -661,7 +661,7 @@ export function Tooltip({ content, children, position = 'top' }: TooltipProps) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             className={cn(
-              'absolute z-50 px-3 py-1.5 text-sm text-white bg-surface-900 rounded-lg whitespace-nowrap',
+              'absolute z-50 px-3 py-1.5 text-sm text-white bg-surface-900 dark:bg-surface-700 rounded-lg whitespace-nowrap',
               positions[position]
             )}
           >
@@ -691,7 +691,7 @@ interface TabsProps {
 
 export function Tabs({ tabs, activeTab, onChange, className }: TabsProps) {
   return (
-    <div className={cn('flex gap-1 p-1 bg-surface-100 rounded-lg', className)}>
+    <div className={cn('flex gap-1 p-1 bg-surface-100 dark:bg-surface-800 rounded-lg', className)}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -699,8 +699,8 @@ export function Tabs({ tabs, activeTab, onChange, className }: TabsProps) {
           className={cn(
             'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all',
             activeTab === tab.id
-              ? 'bg-white text-primary-600 shadow-sm'
-              : 'text-surface-600 hover:text-surface-900'
+              ? 'bg-white dark:bg-surface-700 text-primary-600 dark:text-primary-400 shadow-sm'
+              : 'text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-200'
           )}
         >
           {tab.icon}
@@ -726,12 +726,12 @@ export function EmptyState({ icon, title, description, action, className }: Empt
   return (
     <div className={cn('flex flex-col items-center justify-center py-12 text-center', className)}>
       {icon && (
-        <div className="w-16 h-16 mb-4 rounded-full bg-surface-100 flex items-center justify-center text-surface-400">
+        <div className="w-16 h-16 mb-4 rounded-full bg-surface-100 dark:bg-surface-800 flex items-center justify-center text-surface-400 dark:text-surface-500">
           {icon}
         </div>
       )}
-      <h3 className="text-lg font-medium text-surface-900 mb-1">{title}</h3>
-      {description && <p className="text-surface-500 mb-4 max-w-sm">{description}</p>}
+      <h3 className="text-lg font-medium text-surface-900 dark:text-surface-100 mb-1">{title}</h3>
+      {description && <p className="text-surface-500 dark:text-surface-400 mb-4 max-w-sm">{description}</p>}
       {action}
     </div>
   );
@@ -775,7 +775,8 @@ export function ScoreGauge({ score, size = 'md', showLabel = true, className }: 
           cy={width / 2}
           r={radius}
           fill="none"
-          stroke="#e2e8f0"
+          stroke="currentColor"
+          className="text-surface-200 dark:text-surface-700"
           strokeWidth={stroke}
         />
         <motion.circle

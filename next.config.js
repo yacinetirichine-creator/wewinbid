@@ -58,8 +58,10 @@ const nextConfig = {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   },
 
-  // Headers de sécurité
+  // Headers de sécurité enterprise-grade
   async headers() {
+    const isDev = process.env.NODE_ENV === 'development';
+    
     return [
       {
         source: '/(.*)',
@@ -77,40 +79,103 @@ const nextConfig = {
           // Referrer policy
           {
             key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
+            value: 'strict-origin-when-cross-origin',
           },
-          // Permissions policy
+          // Permissions policy (restrictif)
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=(), payment=(self), usb=(), magnetometer=(), gyroscope=(), accelerometer=()',
           },
-          // Content Security Policy (CSP)
+          // Content Security Policy (CSP) - Enterprise grade
           {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://cdn.vercel-insights.com https://vercel.live",
+              // Scripts - strictement contrôlés
+              isDev 
+                ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://cdn.vercel-insights.com https://vercel.live"
+                : "script-src 'self' 'unsafe-inline' https://js.stripe.com https://cdn.vercel-insights.com",
+              // Styles
               "style-src 'self' 'unsafe-inline'",
+              // Images - sources autorisées uniquement
               "img-src 'self' data: blob: https://*.supabase.co https://avatars.githubusercontent.com https://lh3.googleusercontent.com https://oaidalleapiprodscus.blob.core.windows.net",
+              // Fonts
               "font-src 'self' data:",
-              "connect-src 'self' https://*.supabase.co https://api.openai.com https://api.stripe.com https://vitals.vercel-insights.com wss://*.supabase.co",
-              "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://calendly.com",
+              // Connexions - API autorisées
+              "connect-src 'self' https://*.supabase.co https://api.openai.com https://api.stripe.com https://vitals.vercel-insights.com wss://*.supabase.co https://*.sentry.io",
+              // Frames - paiement uniquement
+              "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+              // Objets interdits
               "object-src 'none'",
+              // Base URI restreint
               "base-uri 'self'",
-              "form-action 'self'",
+              // Forms restreints
+              "form-action 'self' https://checkout.stripe.com",
+              // Frames ancestors - empêche l'embedding
               "frame-ancestors 'none'",
+              // Workers
+              "worker-src 'self' blob:",
+              // Manifests
+              "manifest-src 'self'",
+              // Media
+              "media-src 'self' blob:",
+              // Mise à niveau automatique vers HTTPS
               "upgrade-insecure-requests",
+              // Block mixed content
+              "block-all-mixed-content",
             ].join('; '),
           },
-          // HTTP Strict Transport Security (HSTS)
+          // HTTP Strict Transport Security (HSTS) - Max security
           {
             key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains; preload',
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
           // XSS Protection (legacy browsers)
           {
             key: 'X-XSS-Protection',
             value: '1; mode=block',
+          },
+          // Empêcher le téléchargement automatique de fichiers
+          {
+            key: 'X-Download-Options',
+            value: 'noopen',
+          },
+          // Contrôle du prefetch DNS
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'off',
+          },
+          // Politique cross-domain restrictive
+          {
+            key: 'X-Permitted-Cross-Domain-Policies',
+            value: 'none',
+          },
+          // Cross-Origin policies
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'same-origin',
+          },
+        ],
+      },
+      // Headers spécifiques pour les API
+      {
+        source: '/api/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
           },
         ],
       },

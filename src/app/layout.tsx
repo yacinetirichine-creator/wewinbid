@@ -4,6 +4,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import { AnalyticsProvider } from '@/components/providers/AnalyticsProvider';
 import { LocaleHtmlUpdater } from '@/components/providers/LocaleHtmlUpdater';
+import { ThemeProvider, themeScript } from '@/components/providers/ThemeProvider';
 import AIChatWidget from '@/components/chat/AIChatWidget';
 import '@/styles/globals.css';
 
@@ -128,19 +129,24 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="WeWinBid" />
         <script
+          dangerouslySetInnerHTML={{ __html: themeScript }}
+        />
+        <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-screen bg-surface-50 antialiased">
+      <body className="min-h-screen bg-surface-50 dark:bg-surface-900 antialiased theme-transition">
         <LocaleHtmlUpdater />
         <ErrorBoundary>
-          <QueryProvider>
-            <AnalyticsProvider>
-              {children}
-              <AIChatWidget />
-            </AnalyticsProvider>
-          </QueryProvider>
+          <ThemeProvider defaultTheme="system" enableSystem>
+            <QueryProvider>
+              <AnalyticsProvider>
+                {children}
+                <AIChatWidget />
+              </AnalyticsProvider>
+            </QueryProvider>
+          </ThemeProvider>
         </ErrorBoundary>
         <Toaster
           position="top-right"
