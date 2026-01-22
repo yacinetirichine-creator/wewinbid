@@ -43,8 +43,8 @@ export function AIAnalysisWidget() {
           return;
         }
 
-        const { data, error } = await supabase
-          .from('tender_analyses' as any)
+        const { data, error } = await (supabase
+          .from('tender_analyses') as any)
           .select('id, analysis_data, created_at')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })

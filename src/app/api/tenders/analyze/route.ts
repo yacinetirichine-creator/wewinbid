@@ -275,12 +275,12 @@ export async function POST(request: NextRequest) {
     analysis.matchDetails = details;
 
     // Sauvegarder l'analyse en base (optionnel)
-    await supabase.from('tender_analyses' as any).insert({
+    await (supabase.from('tender_analyses') as any).insert({
       user_id: user.id,
       analysis_data: analysis,
       documents_count: documents.length,
       created_at: new Date().toISOString(),
-    } as any);
+    });
 
     return NextResponse.json({
       success: true,
@@ -308,8 +308,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data: analyses, error } = await supabase
-      .from('tender_analyses' as any)
+    const { data: analyses, error } = await (supabase
+      .from('tender_analyses') as any)
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
