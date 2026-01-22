@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { Button, Card, Badge } from '@/components/ui';
 import { DEFAULT_LOCALE, isRTL, LOCALES, LOCALE_FLAGS, LOCALE_NAMES, type Locale } from '@/lib/i18n';
-import { useUiTranslations } from '@/hooks/useUiTranslations';
+import { useLandingTranslations } from '@/lib/i18n/landing-translations';
 
 const features = [
   {
@@ -178,103 +178,8 @@ export default function LandingPage() {
   const headerOpacity = useTransform(scrollY, [0, 100], [0, 1]);
   const headerY = useTransform(scrollY, [0, 100], [-20, 0]);
 
-  const entries = useMemo(
-    () => ({
-      'landing.nav.features': 'Fonctionnalités',
-      'landing.nav.pricing': 'Tarifs',
-      'landing.nav.testimonials': 'Témoignages',
-      'landing.nav.login': 'Connexion',
-      'landing.nav.trial': 'Essai gratuit',
-      'landing.hero.badge': 'Nouveau: Score IA v2.0',
-      'landing.hero.titlePrefix': "Remportez plus d'",
-      'landing.hero.titleHighlight': "appels d'offres",
-      'landing.hero.subtitle':
-        "Automatisez vos réponses, analysez la concurrence et augmentez votre taux de réussite grâce à l'intelligence artificielle.",
-      'landing.hero.ctaStart': 'Démarrer gratuitement',
-      'landing.hero.ctaDemo': 'Voir la démo',
-      'landing.hero.trust.freeTrial': 'Essai gratuit 14 jours',
-      'landing.hero.trust.noCommitment': 'Sans engagement',
-      'landing.hero.trust.gdpr': 'RGPD compliant',
-      'landing.hero.preview': "[Capture d'écran du tableau de bord]",
-      'landing.stats.market': 'Marché français annuel',
-      'landing.stats.success': 'Taux de réussite moyen',
-      'landing.stats.time': 'Temps de préparation',
-      'landing.stats.sectors': 'Secteurs couverts',
-      'landing.features.badge': 'Fonctionnalités',
-      'landing.features.title': 'Tout ce dont vous avez besoin pour gagner',
-      'landing.features.subtitle':
-        "Une suite complète d'outils IA pour maximiser vos chances de succès sur les marchés publics et privés.",
-      'landing.features.aiScore.title': 'Score de compatibilité IA',
-      'landing.features.aiScore.description':
-        'Notre algorithme analyse vos compétences, références et historique pour évaluer vos chances de succès (0-100) avant de candidater. Priorisez les AO où vous avez vraiment vos chances.',
-      'landing.features.winners.title': 'Analyse des attributaires',
-      'landing.features.winners.description':
-        "Accédez à l'historique complet des entreprises gagnantes, leurs prix moyens et stratégies de positionnement. Benchmark concurrentiel en temps réel.",
-      'landing.features.marketplace.title': 'Marketplace partenaires',
-      'landing.features.marketplace.description':
-        'Identifiez des co-traitants et sous-traitants qualifiés par secteur et certification. Constituez des groupements gagnants pour les gros marchés.',
-      'landing.features.generation.title': 'Génération automatique IA',
-      'landing.features.generation.description':
-        'Créez mémoires techniques, DC1, DC2, DC4, DPGF, actes d\'engagement en quelques clics. L\'IA adapte le contenu à chaque cahier des charges.',
-      'landing.features.alerts.title': 'Alertes intelligentes 24/7',
-      'landing.features.alerts.description':
-        'Recevez en temps réel les AO correspondant à votre profil par email, SMS ou notification. Ne manquez plus aucune opportunité.',
-      'landing.features.roi.title': 'Dashboard ROI & Analytics',
-      'landing.features.roi.description': 'Suivez vos KPIs : taux de réussite, temps moyen, CA généré. Optimisez votre stratégie commerciale avec des données concrètes.',
-      'landing.pricing.badge': 'Tarifs',
-      'landing.pricing.title': 'Des plans pour toutes les tailles',
-      'landing.pricing.subtitle': 'Commencez gratuitement, passez à Pro quand vous êtes prêt.',
-      'landing.pricing.monthly': 'Mensuel',
-      'landing.pricing.yearly': 'Annuel',
-      'landing.pricing.popular': 'Populaire',
-      'landing.cta.title': 'Prêt à remporter plus de marchés ?',
-      'landing.cta.subtitle':
-        'Rejoignez les entreprises qui ont déjà multiplié leur taux de succès avec WeWinBid.',
-      'landing.cta.primary': 'Commencer gratuitement',
-      'landing.cta.secondary': "Contacter l'équipe",
-      'landing.footer.about': "La plateforme qui vous aide à remporter plus d'appels d'offres.",
-      'landing.footer.product': 'Produit',
-      'landing.footer.company': 'Entreprise',
-      'landing.footer.legal': 'Légal',
-      'landing.footer.links.features': 'Fonctionnalités',
-      'landing.footer.links.pricing': 'Tarifs',
-      'landing.footer.links.integrations': 'Intégrations',
-      'landing.footer.links.api': 'API',
-      'landing.footer.links.about': 'À propos',
-      'landing.footer.links.blog': 'Blog',
-      'landing.footer.links.careers': 'Carrières',
-      'landing.footer.links.contact': 'Contact',
-      'landing.footer.links.privacy': 'Confidentialité',
-      'landing.footer.links.terms': 'CGU',
-      'landing.footer.links.cgv': 'CGV',
-      'landing.footer.links.cookies': 'Cookies',
-      'landing.footer.links.mentions': 'Mentions légales',
-      'landing.footer.copyright': '© 2025 WeWinBid. Commercialisé par JARVIS SAS. Tous droits réservés.',
-      'landing.testimonials.quote1':
-        'WeWinBid a transformé notre approche des marchés publics. Notre taux de succès a doublé en 6 mois.',
-      'landing.testimonials.role1': 'DG, Sécurité Plus SARL',
-      'landing.testimonials.quote2':
-        'Le score IA nous permet de prioriser nos efforts sur les AO où nous avons vraiment nos chances.',
-      'landing.testimonials.role2': 'Responsable commercial, BatiPro',
-      'landing.testimonials.quote3':
-        "La marketplace nous a permis de remporter notre premier marché de plus d'1M€ en groupement.",
-      'landing.testimonials.role3': 'CEO, CleanTech Solutions',
-    }),
-    []
-  );
-
-  const context = useMemo(
-    () => ({
-      'landing.stats.market': 'Label under 233 Mds € market stat',
-      'landing.stats.success': 'Label under +45% stat',
-      'landing.stats.time': 'Label under -60% stat',
-      'landing.stats.sectors': 'Label under 15+ stat',
-      'landing.hero.titleHighlight': 'Highlight word(s) for hero title',
-    }),
-    []
-  );
-
-  const { t } = useUiTranslations(locale, entries, context);
+  // Utiliser les traductions statiques
+  const { t } = useLandingTranslations(locale);
 
   const normalizeLocale = (value?: string | null): Locale => {
     if (!value) return DEFAULT_LOCALE;
