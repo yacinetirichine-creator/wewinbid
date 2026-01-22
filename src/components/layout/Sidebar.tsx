@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,6 +28,7 @@ import { Avatar } from '@/components/ui';
 import { TopBar } from '@/components/layout/TopBar';
 import { useLocale } from '@/hooks/useLocale';
 import { useUiTranslations } from '@/hooks/useUiTranslations';
+import { createClient } from '@/lib/supabase/client';
 
 interface NavItem {
   labelKey: string;
@@ -320,20 +321,64 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-  // Ces données viendraient normalement de l'authentification
-  const user = {
-    name: 'Jean Dupont',
-    email: 'jean@entreprise.fr',
-  };
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
+  const getSupabase = useCallback(() => {
+    if (!supabaseRef.current) {
+      supabaseRef.current = createClient();
+    }
+    return supabaseRef.current;
+  }, []);
 
-  const company = {
-    name: 'Sécurité Plus SARL',
-    plan: 'Pro',
-  };
+  const [user, setUser] = useState<{ name: string; email: string; avatar?: string } | null>(null);
+  const [company, setCompany] = useState<{ name: string; plan: string } | null>(null);
+
+  // Charger les vraies données de l'utilisateur connecté
+  useEffect(() => {
+    const loadUserData = async () => {
+      const supabase = getSupabase();
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      
+      if (authUser) {
+        // Charger le profil
+        const { data: profile } = await (supabase as any)
+          .from('profiles')
+          .select('first_name, last_name, avatar_url, company_id')
+          .eq('id', authUser.id)
+          .single();
+
+        const displayName = profile?.first_name && profile?.last_name 
+          ? `${profile.first_name} ${profile.last_name}`
+          : profile?.first_name || authUser.email?.split('@')[0] || 'Utilisateur';
+
+        setUser({
+          name: displayName,
+          email: authUser.email || '',
+          avatar: profile?.avatar_url,
+        });
+
+        // Charger l'entreprise si elle existe
+        if (profile?.company_id) {
+          const { data: companyData } = await (supabase as any)
+            .from('companies')
+            .select('name')
+            .eq('id', profile.company_id)
+            .single();
+
+          if (companyData) {
+            setCompany({
+              name: companyData.name,
+              plan: 'Pro', // À charger depuis les abonnements Stripe si nécessaire
+            });
+          }
+        }
+      }
+    };
+    loadUserData();
+  }, [getSupabase]);
 
   return (
     <div className="min-h-screen bg-surface-50">
-      <Sidebar user={user} company={company} />
+      <Sidebar user={user || undefined} company={company || undefined} />
       <main className="lg:pl-[280px] min-h-screen">
         <TopBar />
         <div className="p-4 lg:p-8">{children}</div>
