@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
 import {
   ArrowRight,
@@ -172,6 +173,8 @@ function Hero3DCard({ children }: { children: React.ReactNode }) {
 }
 
 export default function LandingPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const { scrollY } = useScroll();
@@ -180,6 +183,14 @@ export default function LandingPage() {
 
   // Utiliser les traductions statiques
   const { t } = useLandingTranslations(locale);
+
+  // Rediriger vers le callback si un code OAuth est présent
+  useEffect(() => {
+    const code = searchParams.get('code');
+    if (code) {
+      router.replace(`/auth/callback?code=${code}`);
+    }
+  }, [searchParams, router]);
 
   const normalizeLocale = (value?: string | null): Locale => {
     if (!value) return DEFAULT_LOCALE;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/lib/supabase/client';
 import {
   Card,
   CardContent,
@@ -72,7 +72,7 @@ const CATEGORIES = [
 ];
 
 export default function DocumentsPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [activeTab, setActiveTab] = useState<'documents' | 'templates'>('documents');
   const [documents, setDocuments] = useState<GeneratedDocument[]>([]);
   const [templates, setTemplates] = useState<DocumentTemplate[]>([]);
