@@ -1,17 +1,15 @@
 'use client';
 
 import Link from 'next/link';
+import Logo, { LogoNavbar } from '@/components/ui/Logo';
 
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-surface-50">
       <header className="border-b border-surface-200 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-secondary-600 flex items-center justify-center text-white font-bold text-lg">
-              W
-            </div>
-            <span className="font-display font-bold text-xl">WeWinBid</span>
+          <Link href="/" className="flex items-center">
+            <LogoNavbar />
           </Link>
         </div>
       </header>

@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, Building2, Chrome } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Input, Alert } from '@/components/ui';
+import Logo, { LogoAuth } from '@/components/ui/Logo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -124,11 +125,8 @@ export default function LoginPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <Link href="/" className="flex items-center gap-3 mb-12">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center">
-                <Building2 className="w-7 h-7 text-white" />
-              </div>
-              <span className="text-3xl font-bold text-white">WeWinBid</span>
+            <Link href="/" className="flex items-center mb-12">
+              <LogoAuth />
             </Link>
 
             <h1 className="text-4xl font-bold text-white mb-6">
@@ -179,11 +177,8 @@ export default function LoginPage() {
           className="w-full max-w-md"
         >
           <div className="lg:hidden mb-8 text-center">
-            <Link href="/" className="inline-flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-white">WeWinBid</span>
+            <Link href="/" className="inline-flex items-center mb-6">
+              <Logo size="md" />
             </Link>
           </div>
 

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Input, Select, Alert } from '@/components/ui';
+import Logo, { LogoAuth } from '@/components/ui/Logo';
 
 const SECTORS = [
   { value: 'security', label: 'Sécurité privée' },
@@ -198,11 +199,8 @@ export default function RegisterPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <Link href="/" className="flex items-center gap-3 mb-12">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center">
-                <Building2 className="w-7 h-7 text-white" />
-              </div>
-              <span className="text-3xl font-bold text-white">WeWinBid</span>
+            <Link href="/" className="flex items-center mb-12">
+              <LogoAuth />
             </Link>
 
             <h1 className="text-4xl font-bold text-white mb-6">

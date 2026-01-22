@@ -42,6 +42,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { Avatar } from '@/components/ui';
+import Logo, { LogoSidebar, LogoIcon } from '@/components/ui/Logo';
 import { OnboardingReminder } from '@/components/onboarding/OnboardingReminder';
 import { useLocale } from '@/hooks/useLocale';
 import { useUiTranslations } from '@/hooks/useUiTranslations';
@@ -378,22 +379,9 @@ export function NewSidebar({ user, company }: NewSidebarProps) {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-surface-200">
-        <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-primary-500/25 flex-shrink-0">
-            W
-          </div>
-          <AnimatePresence mode="wait">
-            {!collapsed && (
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-              >
-                <span className="font-display font-bold text-xl text-surface-900">WeWinBid</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+      <div className="flex items-center px-4 py-5 border-b border-surface-200">
+        <Link href="/dashboard" className="flex items-center">
+          <LogoSidebar collapsed={collapsed} />
         </Link>
       </div>
 

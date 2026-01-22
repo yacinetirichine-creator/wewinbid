@@ -36,6 +36,7 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { Avatar } from '@/components/ui';
+import { LogoSidebar } from '@/components/ui/Logo';
 import { TopBar as OldTopBar } from '@/components/layout/TopBar';
 import { useLocale } from '@/hooks/useLocale';
 import { useUiTranslations } from '@/hooks/useUiTranslations';
@@ -148,21 +149,10 @@ export function Sidebar({ user, company }: SidebarProps) {
   const SidebarContent = () => (
     <>
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-surface-200">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold text-lg">
-          W
-        </div>
-        <AnimatePresence>
-          {!collapsed && (
-            <motion.div
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: 'auto' }}
-              exit={{ opacity: 0, width: 0 }}
-            >
-              <span className="font-display font-bold text-xl text-surface-900">WeWinBid</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      <div className="flex items-center px-4 py-5 border-b border-surface-200">
+        <Link href="/dashboard" className="flex items-center">
+          <LogoSidebar collapsed={collapsed} />
+        </Link>
       </div>
 
       {/* Company */}
