@@ -33,7 +33,7 @@ export default function LoginPage() {
 
     try {
       const supabase = getSupabase();
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -47,7 +47,22 @@ export default function LoginPage() {
         return;
       }
 
-      router.push('/dashboard');
+      // Vérifier si l'entreprise est configurée
+      if (data.user) {
+        const { data: profile } = await (supabase as any)
+          .from('profiles')
+          .select('company_id')
+          .eq('id', data.user.id)
+          .single();
+
+        if (!profile?.company_id) {
+          router.push('/onboarding');
+        } else {
+          router.push('/dashboard');
+        }
+      } else {
+        router.push('/dashboard');
+      }
       router.refresh();
     } catch (err) {
       setError('Une erreur est survenue. Veuillez réessayer.');

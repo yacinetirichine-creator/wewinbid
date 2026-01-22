@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -240,8 +241,34 @@ export default function DashboardPage() {
   );
 
   const { t } = useUiTranslations(locale, entries);
+  const router = useRouter();
   
   const [showWelcome, setShowWelcome] = useState(false);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+
+  // Vérifier si l'utilisateur a configuré son entreprise
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      const supabase = getSupabase();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/auth/login');
+        return;
+      }
+
+      const { data: profile } = await (supabase as any)
+        .from('profiles')
+        .select('company_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.company_id) {
+        setNeedsOnboarding(true);
+        router.push('/onboarding');
+      }
+    };
+    checkOnboarding();
+  }, [getSupabase, router]);
 
   // ✅ React Query: Auto-caching with 5min stale time
   const { data: dashboardData, isLoading } = useQuery({
