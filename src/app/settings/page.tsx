@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { Button, Input, Card, Badge } from '@/components/ui';
 import { NewAppLayout as AppLayout, PageHeader } from '@/components/layout/NewAppLayout';
 import { 
-  User, Building2, Bell, Shield, CreditCard, Globe, Palette,
+  User, Building2, Bell, Shield, CreditCard, Globe, Palette, FileText,
   Save, Camera, Trash2, CheckCircle, AlertTriangle, Key, Mail,
   Smartphone, LogOut, Download, Eye, EyeOff, ChevronRight, Target, TrendingUp
 } from 'lucide-react';
