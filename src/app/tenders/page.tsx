@@ -136,10 +136,12 @@ function TenderCard({
               <Link 
                 href={`/tenders/${tender.id}/respond`}
                 onClick={(e) => e.stopPropagation()}
-                className="flex items-center justify-center gap-1.5 w-full py-1.5 text-xs font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors"
+                className="flex items-center justify-center gap-1.5 w-full py-1.5 text-xs font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors group"
+                title="Reprenez votre travail là où vous vous êtes arrêté. Vos progrès sont automatiquement sauvegardés."
               >
                 <SparklesIcon className="w-3.5 h-3.5" />
-                Continuer la réponse
+                <span>Continuer la réponse</span>
+                <span className="text-[10px] opacity-60 group-hover:opacity-100">• Auto-sauvegardé</span>
               </Link>
             </div>
           )}
@@ -247,9 +249,32 @@ export default function TendersPage() {
   const fetchTenders = useCallback(async () => {
     try {
       const supabase = getSupabase();
+      
+      // Récupérer l'utilisateur connecté
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      // Récupérer le company_id de l'utilisateur via company_members
+      const { data: memberData } = await supabase
+        .from('company_members')
+        .select('company_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!memberData?.company_id) {
+        console.warn('Utilisateur sans entreprise associée');
+        setLoading(false);
+        return;
+      }
+
+      // Récupérer uniquement les AO de l'entreprise de l'utilisateur
       const { data, error } = await supabase
         .from('tenders')
         .select('*')
+        .eq('company_id', memberData.company_id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

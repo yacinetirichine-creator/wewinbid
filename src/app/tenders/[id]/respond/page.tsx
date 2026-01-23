@@ -32,13 +32,44 @@ export default function TenderRespondPage() {
     async function fetchTender() {
       try {
         const supabase = getSupabase();
+        
+        // Vérifier l'utilisateur
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setError('Vous devez être connecté');
+          setLoading(false);
+          return;
+        }
+
+        // Récupérer le company_id
+        const { data: memberData } = await supabase
+          .from('company_members')
+          .select('company_id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!memberData?.company_id) {
+          setError('Entreprise non trouvée');
+          setLoading(false);
+          return;
+        }
+
+        // Récupérer l'AO avec vérification company_id
         const { data, error } = await supabase
           .from('tenders')
           .select('*')
           .eq('id', tenderId)
+          .eq('company_id', memberData.company_id) // ⚠️ Vérification de sécurité
           .single();
 
-        if (error) throw error;
+        if (error) {
+          if (error.code === 'PGRST116') {
+            setError('Appel d\'offres non trouvé ou accès refusé');
+            setLoading(false);
+            return;
+          }
+          throw error;
+        }
         if (!data) throw new Error('AO non trouvé');
 
         const tenderData = data as any;

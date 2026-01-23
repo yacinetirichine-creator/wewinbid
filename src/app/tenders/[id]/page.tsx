@@ -90,13 +90,45 @@ export default function TenderDetailPage() {
   const fetchTender = useCallback(async () => {
     try {
       const supabase = getSupabase();
+      
+      // Vérifier l'accès de l'utilisateur
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Vous devez être connecté');
+        router.push('/auth/login');
+        return;
+      }
+
+      // Récupérer le company_id de l'utilisateur
+      const { data: memberData } = await supabase
+        .from('company_members')
+        .select('company_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!memberData?.company_id) {
+        toast.error('Entreprise non trouvée');
+        router.push('/tenders');
+        return;
+      }
+
+      // Récupérer l'AO avec vérification company_id
       const { data, error } = await supabase
         .from('tenders')
         .select('*')
         .eq('id', tenderId)
+        .eq('company_id', memberData.company_id) // ⚠️ Vérification de sécurité
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === 'PGRST116') {
+          toast.error('Appel d\'offres non trouvé ou accès refusé');
+          router.push('/tenders');
+          return;
+        }
+        throw error;
+      }
+      
       setTender(data);
     } catch (error) {
       console.error('Error fetching tender:', error);

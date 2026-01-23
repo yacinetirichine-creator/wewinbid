@@ -171,8 +171,21 @@ export default function TenderAnalyzePage() {
         return null;
       }
 
+      // Récupérer le company_id de l'utilisateur
+      const { data: memberData } = await supabase
+        .from('company_members')
+        .select('company_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!memberData?.company_id) {
+        console.error('Utilisateur sans entreprise associée');
+        return null;
+      }
+
       const tenderData = {
-        user_id: user.id,
+        company_id: memberData.company_id, // ⚠️ CLÉ D'ISOLATION
+        created_by: user.id,
         title: analysis.title,
         reference: analysis.reference || `AO-${Date.now()}`,
         buyer_name: analysis.buyer?.name,
