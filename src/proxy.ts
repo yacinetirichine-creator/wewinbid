@@ -14,6 +14,11 @@ const BLOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 const authAttempts = new Map<string, { count: number; resetTime: number; blockedUntil?: number }>();
 const suspiciousIPs = new Map<string, { count: number; lastAttempt: number }>();
 
+// Durée avant reset du compteur d'IPs suspectes (30 minutes)
+const SUSPICIOUS_IP_RESET_MS = 30 * 60 * 1000;
+// Seuil de blocage des IPs suspectes
+const SUSPICIOUS_IP_THRESHOLD = 50;
+
 // Patterns de requêtes suspectes
 const SUSPICIOUS_PATTERNS = [
   /(\.\.|\/\/|\\\\)/, // Path traversal
@@ -132,12 +137,19 @@ export async function proxy(request: NextRequest) {
   if (suspicious) {
     logSecurityEvent('suspicious_request', ip, { reason }, request);
     
-    const record = suspiciousIPs.get(ip) || { count: 0, lastAttempt: 0 };
+    const now = Date.now();
+    let record = suspiciousIPs.get(ip) || { count: 0, lastAttempt: 0 };
+    
+    // Reset du compteur si la dernière tentative est trop ancienne
+    if (now - record.lastAttempt > SUSPICIOUS_IP_RESET_MS) {
+      record = { count: 0, lastAttempt: now };
+    }
+    
     record.count++;
-    record.lastAttempt = Date.now();
+    record.lastAttempt = now;
     suspiciousIPs.set(ip, record);
     
-    if (record.count > 10) {
+    if (record.count > SUSPICIOUS_IP_THRESHOLD) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
