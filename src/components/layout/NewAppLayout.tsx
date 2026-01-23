@@ -134,34 +134,13 @@ export function NewAppLayout({
         </AnimatePresence>
       </main>
       
-      {/* Footer avec liens légaux */}
-      <footer className="lg:pl-[280px] mt-auto py-6 px-4 border-t border-surface-200 bg-white">
+      {/* Footer simple */}
+      <footer className="lg:pl-[280px] mt-auto py-4 px-4 border-t border-surface-200 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-surface-500">
+          <div className="flex items-center justify-center text-sm text-surface-500">
             <p>
-              © {new Date().getFullYear()} WeWinBid · Commercialisé par JARVIS SAS
+              © {new Date().getFullYear()} WeWinBid - Commercialisé par JARVIS SAS
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              <Link href="/legal/privacy" className="hover:text-primary-600 transition-colors">
-                Confidentialité
-              </Link>
-              <span className="text-surface-300">·</span>
-              <Link href="/legal/terms" className="hover:text-primary-600 transition-colors">
-                CGU
-              </Link>
-              <span className="text-surface-300">·</span>
-              <Link href="/legal/cgv" className="hover:text-primary-600 transition-colors">
-                CGV
-              </Link>
-              <span className="text-surface-300">·</span>
-              <Link href="/legal/cookies" className="hover:text-primary-600 transition-colors">
-                Cookies
-              </Link>
-              <span className="text-surface-300">·</span>
-              <Link href="/legal/mentions" className="hover:text-primary-600 transition-colors">
-                Mentions légales
-              </Link>
-            </div>
           </div>
         </div>
       </footer>

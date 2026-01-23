@@ -70,22 +70,14 @@ interface TenderResponseWizardProps {
   onCancel: () => void;
 }
 
-// Configuration des étapes
+// Configuration des étapes - Documents administratifs à la fin
 const WIZARD_STEPS: WizardStep[] = [
-  {
-    id: 'administrative',
-    title: 'Documents administratifs',
-    description: 'Attestations, KBIS, documents légaux',
-    icon: FileText,
-    status: 'current',
-    aiAssisted: true,
-  },
   {
     id: 'technical',
     title: 'Offre technique',
     description: 'Mémoire technique, méthodologie, références',
     icon: FileCheck,
-    status: 'pending',
+    status: 'current',
     aiAssisted: true,
   },
   {
@@ -103,6 +95,14 @@ const WIZARD_STEPS: WizardStep[] = [
     icon: Euro,
     status: 'pending',
     aiAssisted: false,
+  },
+  {
+    id: 'administrative',
+    title: 'Documents administratifs',
+    description: 'Attestations, KBIS, documents légaux',
+    icon: FileText,
+    status: 'pending',
+    aiAssisted: true,
   },
   {
     id: 'review',

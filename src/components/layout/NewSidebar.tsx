@@ -202,6 +202,7 @@ export function NewSidebar({ user, company }: NewSidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     navigationConfig.forEach(cat => {
@@ -209,6 +210,11 @@ export function NewSidebar({ user, company }: NewSidebarProps) {
     });
     return initial;
   });
+
+  // Marquer comme initialisé après le premier rendu
+  useEffect(() => {
+    setIsInitialized(true);
+  }, []);
 
   const { locale } = useLocale();
 
@@ -282,18 +288,11 @@ export function NewSidebar({ user, company }: NewSidebarProps) {
           isActive ? 'text-white' : 'text-surface-500 group-hover:text-primary-500'
         )} />
         
-        <AnimatePresence mode="wait">
-          {!collapsed && (
-            <motion.span
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              className="font-medium text-sm truncate flex-1"
-            >
-              {t(item.labelKey)}
-            </motion.span>
-          )}
-        </AnimatePresence>
+        {!collapsed && (
+          <span className="font-medium text-sm truncate flex-1">
+            {t(item.labelKey)}
+          </span>
+        )}
         
         {item.badge && (
           <span className={cn(
@@ -354,23 +353,15 @@ export function NewSidebar({ user, company }: NewSidebarProps) {
         </button>
         
         {/* Items de la catégorie */}
-        <AnimatePresence mode="wait">
-          {(isOpen || collapsed) && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className={cn('overflow-hidden', !collapsed && 'ml-2 mt-1')}
-            >
-              <div className="space-y-1">
-                {category.items.map((item) => (
-                  <NavLink key={item.href} item={item} showTooltip={collapsed} />
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {(isOpen || collapsed) && (
+          <div className={cn('overflow-hidden', !collapsed && 'ml-2 mt-1')}>
+            <div className="space-y-1">
+              {category.items.map((item) => (
+                <NavLink key={item.href} item={item} showTooltip={collapsed} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -436,19 +427,12 @@ export function NewSidebar({ user, company }: NewSidebarProps) {
             'hover:bg-surface-100 transition-colors cursor-pointer group'
           )}>
             <Avatar src={user.avatar} name={user.name} size="sm" />
-            <AnimatePresence mode="wait">
-              {!collapsed && (
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  className="flex-1 min-w-0"
-                >
-                  <p className="text-sm font-semibold text-surface-900 truncate">{user.name}</p>
-                  <p className="text-xs text-surface-500 truncate">{user.email}</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {!collapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-surface-900 truncate">{user.name}</p>
+                <p className="text-xs text-surface-500 truncate">{user.email}</p>
+              </div>
+            )}
             {!collapsed && (
               <button 
                 className="p-1.5 text-surface-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
@@ -522,16 +506,15 @@ export function NewSidebar({ user, company }: NewSidebarProps) {
       </AnimatePresence>
 
       {/* Desktop Sidebar */}
-      <motion.aside
-        animate={{ width: collapsed ? 80 : 280 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+      <aside
+        style={{ width: collapsed ? 80 : 280 }}
         className={cn(
           'hidden lg:flex fixed left-0 top-0 bottom-0 bg-white border-r border-surface-200',
-          'flex-col z-30 shadow-sm'
+          'flex-col z-30 shadow-sm transition-[width] duration-300 ease-in-out'
         )}
       >
         <SidebarContent />
-      </motion.aside>
+      </aside>
     </>
   );
 }

@@ -331,7 +331,7 @@ export default function CompanyProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'general' | 'qualifications' | 'documents' | 'references' | 'preferences'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'qualifications' | 'documents' | 'references' | 'preferences' | 'library'>('general');
 
   // Charger le profil
   useEffect(() => {
@@ -482,9 +482,10 @@ export default function CompanyProfilePage() {
   const tabs = [
     { id: 'general', label: 'Informations générales', icon: Building2 },
     { id: 'qualifications', label: 'Qualifications', icon: Award },
-    { id: 'documents', label: 'Documents', icon: FileText },
-    { id: 'references', label: 'Références', icon: Briefcase },
-    { id: 'preferences', label: 'Préférences', icon: Target },
+    { id: 'documents', label: 'Documents administratifs', icon: FileText },
+    { id: 'library', label: 'Bibliothèque IA', icon: Briefcase },
+    { id: 'references', label: 'Références', icon: Target },
+    { id: 'preferences', label: 'Préférences', icon: TrendingUp },
   ];
 
   return (
@@ -900,6 +901,150 @@ export default function CompanyProfilePage() {
                 </div>
               </div>
             </Card>
+          )}
+
+          {activeTab === 'library' && (
+            <div className="space-y-6">
+              {/* Section Modèles de réponses */}
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold text-surface-900 mb-2 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-primary-500" />
+                  Modèles de réponses aux AO
+                </h3>
+                <p className="text-sm text-surface-500 mb-6">
+                  Uploadez vos anciennes réponses aux appels d'offres réussies. L'IA les analysera pour s'en inspirer lors de la génération de nouvelles réponses.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
+                    <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
+                    <p className="font-medium text-surface-700">Mémoire technique</p>
+                    <p className="text-xs text-surface-500 mt-1">PDF, DOCX - Max 50 Mo</p>
+                    <Button variant="outline" size="sm" className="mt-3">
+                      <Plus className="w-4 h-4 mr-1" />
+                      Uploader
+                    </Button>
+                  </div>
+                  
+                  <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
+                    <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
+                    <p className="font-medium text-surface-700">BPU / DPGF gagnants</p>
+                    <p className="text-xs text-surface-500 mt-1">XLS, PDF - Max 20 Mo</p>
+                    <Button variant="outline" size="sm" className="mt-3">
+                      <Plus className="w-4 h-4 mr-1" />
+                      Uploader
+                    </Button>
+                  </div>
+                  
+                  <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
+                    <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
+                    <p className="font-medium text-surface-700">Actes d'engagement</p>
+                    <p className="text-xs text-surface-500 mt-1">PDF - Max 10 Mo</p>
+                    <Button variant="outline" size="sm" className="mt-3">
+                      <Plus className="w-4 h-4 mr-1" />
+                      Uploader
+                    </Button>
+                  </div>
+                  
+                  <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
+                    <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
+                    <p className="font-medium text-surface-700">Autres documents modèles</p>
+                    <p className="text-xs text-surface-500 mt-1">Tous formats - Max 50 Mo</p>
+                    <Button variant="outline" size="sm" className="mt-3">
+                      <Plus className="w-4 h-4 mr-1" />
+                      Uploader
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Section Documents entreprise pour l'IA */}
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold text-surface-900 mb-2 flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-primary-500" />
+                  Documents entreprise pour l'IA
+                </h3>
+                <p className="text-sm text-surface-500 mb-6">
+                  Ces documents seront analysés par l'IA pour mieux comprendre votre entreprise et personnaliser les réponses.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
+                    <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
+                    <p className="font-medium text-surface-700">Plaquette commerciale</p>
+                    <p className="text-xs text-surface-500 mt-1">PDF - Max 20 Mo</p>
+                    <Button variant="outline" size="sm" className="mt-3">
+                      <Plus className="w-4 h-4 mr-1" />
+                      Uploader
+                    </Button>
+                  </div>
+                  
+                  <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
+                    <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
+                    <p className="font-medium text-surface-700">Organigramme</p>
+                    <p className="text-xs text-surface-500 mt-1">PDF, PNG, JPG</p>
+                    <Button variant="outline" size="sm" className="mt-3">
+                      <Plus className="w-4 h-4 mr-1" />
+                      Uploader
+                    </Button>
+                  </div>
+                  
+                  <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
+                    <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
+                    <p className="font-medium text-surface-700">CV dirigeants/équipe</p>
+                    <p className="text-xs text-surface-500 mt-1">PDF, DOCX</p>
+                    <Button variant="outline" size="sm" className="mt-3">
+                      <Plus className="w-4 h-4 mr-1" />
+                      Uploader
+                    </Button>
+                  </div>
+                  
+                  <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
+                    <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
+                    <p className="font-medium text-surface-700">Politique QSE</p>
+                    <p className="text-xs text-surface-500 mt-1">PDF</p>
+                    <Button variant="outline" size="sm" className="mt-3">
+                      <Plus className="w-4 h-4 mr-1" />
+                      Uploader
+                    </Button>
+                  </div>
+                  
+                  <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
+                    <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
+                    <p className="font-medium text-surface-700">Plan RSE</p>
+                    <p className="text-xs text-surface-500 mt-1">PDF</p>
+                    <Button variant="outline" size="sm" className="mt-3">
+                      <Plus className="w-4 h-4 mr-1" />
+                      Uploader
+                    </Button>
+                  </div>
+                  
+                  <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
+                    <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
+                    <p className="font-medium text-surface-700">Méthodologie type</p>
+                    <p className="text-xs text-surface-500 mt-1">PDF, DOCX</p>
+                    <Button variant="outline" size="sm" className="mt-3">
+                      <Plus className="w-4 h-4 mr-1" />
+                      Uploader
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Info box */}
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Shield className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-blue-900">Confidentialité garantie</p>
+                    <p className="text-sm text-blue-700 mt-1">
+                      Vos documents sont stockés de manière sécurisée et ne sont jamais partagés. 
+                      L'IA les utilise uniquement pour personnaliser vos réponses aux AO.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </motion.div>
       </AnimatePresence>

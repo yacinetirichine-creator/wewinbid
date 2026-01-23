@@ -20,6 +20,7 @@ import { NewAppLayout } from '@/components/layout/NewAppLayout';
 import { TenderDocumentsUpload } from '@/components/tenders/TenderDocumentsUpload';
 import { TenderAIAnalysis, TenderAnalysisResult } from '@/components/tenders/TenderAIAnalysis';
 import { TenderResponseWizard } from '@/components/tenders/TenderResponseWizard';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
 // États du workflow
@@ -152,10 +153,63 @@ export default function TenderAnalyzePage() {
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
   const [analysisResult, setAnalysisResult] = useState<TenderAnalysisResult | null>(null);
   const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [savedTenderId, setSavedTenderId] = useState<string | null>(null);
 
   // Gestionnaire de changement de fichiers
   const handleFilesChange = useCallback((files: any[]) => {
     setUploadedFiles(files);
+  }, []);
+
+  // Sauvegarder l'AO analysé dans la base de données
+  const saveTenderToDatabase = useCallback(async (analysis: TenderAnalysisResult) => {
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.error('Utilisateur non connecté');
+        return null;
+      }
+
+      const tenderData = {
+        user_id: user.id,
+        title: analysis.title,
+        reference: analysis.reference || `AO-${Date.now()}`,
+        buyer_name: analysis.buyer?.name,
+        buyer_type: analysis.buyer?.type,
+        estimated_value: analysis.financials?.estimatedValue ? 
+          parseFloat(analysis.financials.estimatedValue.replace(/[^\d]/g, '')) : null,
+        deadline: analysis.dates?.submissionDeadline,
+        publication_date: analysis.dates?.publicationDate,
+        description: analysis.summary,
+        status: 'ANALYSIS' as const,
+        type: 'PUBLIC' as const,
+        compatibility_score: analysis.matchScore,
+        sectors: analysis.sectors,
+        keywords: analysis.keywords,
+        requirements: analysis.requirements,
+        ai_analysis: analysis,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data, error } = await supabase
+        .from('tenders')
+        .insert(tenderData)
+        .select('id')
+        .single();
+
+      if (error) {
+        console.error('Erreur sauvegarde AO:', error);
+        return null;
+      }
+
+      console.log('AO sauvegardé avec ID:', data.id);
+      return data.id;
+    } catch (err) {
+      console.error('Erreur sauvegarde:', err);
+      return null;
+    }
   }, []);
 
   // Lancer l'analyse IA
@@ -181,8 +235,15 @@ export default function TenderAnalyzePage() {
 
     // Définir le résultat de l'analyse
     setAnalysisResult(DEMO_ANALYSIS);
+    
+    // Sauvegarder automatiquement l'AO analysé
+    const tenderId = await saveTenderToDatabase(DEMO_ANALYSIS);
+    if (tenderId) {
+      setSavedTenderId(tenderId);
+    }
+    
     setWorkflowStep('analysis');
-  }, []);
+  }, [saveTenderToDatabase]);
 
   // Commencer la réponse
   const handleRespond = useCallback(() => {
@@ -210,7 +271,7 @@ export default function TenderAnalyzePage() {
     return (
       <TenderResponseWizard
         analysis={analysisResult}
-        tenderId="new"
+        tenderId={savedTenderId || "new"}
         onComplete={handleResponseComplete}
         onCancel={handleCancel}
       />

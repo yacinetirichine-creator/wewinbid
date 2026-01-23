@@ -68,7 +68,7 @@ interface BillingInfo {
   invoices: { id: string; date: string; amount: number; status: string }[];
 }
 
-type TabType = 'profile' | 'company' | 'notifications' | 'security' | 'billing' | 'matching' | 'preferences';
+type TabType = 'profile' | 'company' | 'notifications' | 'security' | 'billing' | 'matching' | 'preferences' | 'legal';
 
 const SECTORS = [
   'Sécurité privée',
@@ -177,6 +177,9 @@ export default function SettingsPage() {
       'settings.tabs.security': 'Sécurité',
       'settings.tabs.billing': 'Facturation',
       'settings.tabs.preferences': 'Préférences',
+      'settings.tabs.legal': 'Légal',
+      'settings.legal.title': 'Informations légales',
+      'settings.legal.description': 'Consultez nos documents juridiques',
       'settings.message.passwordMismatch': 'Les mots de passe ne correspondent pas',
       'settings.message.passwordTooShort': 'Le mot de passe doit contenir au moins 8 caractères',
       'settings.message.passwordChanged': 'Mot de passe modifié avec succès',
@@ -429,6 +432,7 @@ export default function SettingsPage() {
     { id: 'security' as TabType, label: t('settings.tabs.security'), icon: Shield },
     { id: 'billing' as TabType, label: t('settings.tabs.billing'), icon: CreditCard },
     { id: 'preferences' as TabType, label: t('settings.tabs.preferences'), icon: Palette },
+    { id: 'legal' as TabType, label: t('settings.tabs.legal'), icon: FileText },
   ];
 
   if (loading) {
@@ -1332,6 +1336,91 @@ export default function SettingsPage() {
                   <Save className="w-4 h-4 mr-2" />
                   {t('settings.actions.save')}
                 </Button>
+              </div>
+            </Card>
+          )}
+
+          {/* Legal Tab */}
+          {activeTab === 'legal' && (
+            <Card className="p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">{t('settings.legal.title')}</h2>
+              <p className="text-gray-500 mb-6">{t('settings.legal.description')}</p>
+              
+              <div className="space-y-4">
+                <a
+                  href="/legal/privacy"
+                  target="_blank"
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <Shield className="w-5 h-5 text-primary-600" />
+                    <div>
+                      <p className="font-medium text-gray-900">Politique de confidentialité</p>
+                      <p className="text-sm text-gray-500">Comment nous protégeons vos données</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </a>
+
+                <a
+                  href="/legal/terms"
+                  target="_blank"
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <FileText className="w-5 h-5 text-primary-600" />
+                    <div>
+                      <p className="font-medium text-gray-900">Conditions Générales d'Utilisation (CGU)</p>
+                      <p className="text-sm text-gray-500">Règles d'utilisation de la plateforme</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </a>
+
+                <a
+                  href="/legal/cgv"
+                  target="_blank"
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="w-5 h-5 text-primary-600" />
+                    <div>
+                      <p className="font-medium text-gray-900">Conditions Générales de Vente (CGV)</p>
+                      <p className="text-sm text-gray-500">Conditions commerciales et tarifaires</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </a>
+
+                <a
+                  href="/legal/cookies"
+                  target="_blank"
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <Globe className="w-5 h-5 text-primary-600" />
+                    <div>
+                      <p className="font-medium text-gray-900">Politique des cookies</p>
+                      <p className="text-sm text-gray-500">Gestion des cookies et traceurs</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </a>
+
+                <a
+                  href="/legal/mentions"
+                  target="_blank"
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <Building2 className="w-5 h-5 text-primary-600" />
+                    <div>
+                      <p className="font-medium text-gray-900">Mentions légales</p>
+                      <p className="text-sm text-gray-500">Informations sur l'éditeur du site</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </a>
               </div>
             </Card>
           )}
