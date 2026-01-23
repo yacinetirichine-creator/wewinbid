@@ -60,14 +60,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
     }
 
-    const prompt = `Tu es un traducteur UI professionnel.
-Traduis chaque "source" vers la langue cible en respectant le ton SaaS B2B.
-Si locale = ar-MA, utilise la darija marocaine naturelle.
-Réponds en JSON strict: {"key":"translation"}.
+    const model = process.env.OPENAI_I18N_MODEL || 'gpt-4o-mini';
 
-Locale cible: ${locale}
+    const systemPrompt =
+      'You are a professional UI translator for a B2B SaaS. ' +
+      'Translate source strings to the target locale with natural tone, concise phrasing, and consistent terminology. ' +
+      'CRITICAL RULES: ' +
+      '1) Preserve placeholders exactly (e.g. {count}, {days}, {name}). ' +
+      '2) If the source uses ICU MessageFormat (plural/select), keep it valid and preserve variables. ' +
+      '3) Preserve punctuation, numbers, currencies, and URLs. ' +
+      '4) Do not translate the keys; output JSON mapping key -> translated string. ' +
+      '5) For locale ar-MA, use natural Moroccan darija.';
 
-Entrées: ${JSON.stringify(entries)}`;
+    const userPrompt = JSON.stringify({
+      locale,
+      entries,
+      output: 'Return JSON: {"key":"translation"}',
+    });
 
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -76,10 +85,10 @@ Entrées: ${JSON.stringify(entries)}`;
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model,
         messages: [
-          { role: 'system', content: 'You translate UI strings into the target locale.' },
-          { role: 'user', content: prompt },
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
         ],
         temperature: 0.2,
         response_format: { type: 'json_object' },

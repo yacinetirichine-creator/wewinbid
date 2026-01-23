@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   TrendingUp,
@@ -122,19 +123,25 @@ export function DonutChart({
   const total = data.reduce((sum, d) => sum + d.value, 0);
 
   const segments = useMemo(() => {
-    let offset = 0;
-    return data.map((item, idx) => {
-      const percentage = total > 0 ? (item.value / total) * 100 : 0;
-      const segment = {
-        ...item,
-        percentage,
-        color: item.color || DEFAULT_COLORS[idx % DEFAULT_COLORS.length],
-        offset,
-        dashArray: `${percentage} ${100 - percentage}`,
-      };
-      offset += percentage;
-      return segment;
-    });
+    return data.reduce<
+      { segments: Array<ChartDataPoint & { percentage: number; color: string; offset: number; dashArray: string }>; offset: number }
+    >(
+      (acc, item, idx) => {
+        const percentage = total > 0 ? (item.value / total) * 100 : 0;
+        const segment = {
+          ...item,
+          percentage,
+          color: item.color || DEFAULT_COLORS[idx % DEFAULT_COLORS.length],
+          offset: acc.offset,
+          dashArray: `${percentage} ${100 - percentage}`,
+        };
+        return {
+          segments: [...acc.segments, segment],
+          offset: acc.offset + percentage,
+        };
+      },
+      { segments: [], offset: 0 }
+    ).segments;
   }, [data, total]);
 
   return (
@@ -485,10 +492,13 @@ export function LeaderboardWidget({
                 {item.rank}
               </div>
               {item.avatar ? (
-                <img
+                <Image
                   src={item.avatar}
                   alt={item.name}
+                  width={32}
+                  height={32}
                   className="w-8 h-8 rounded-full object-cover"
+                  unoptimized
                 />
               ) : (
                 <div className="w-8 h-8 rounded-full bg-surface-200 flex items-center justify-center">

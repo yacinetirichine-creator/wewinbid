@@ -5,6 +5,8 @@
  */
 
 import React from 'react';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 interface PricingToggleProps {
   interval: 'monthly' | 'yearly';
@@ -12,6 +14,14 @@ interface PricingToggleProps {
 }
 
 export function PricingToggle({ interval, onChange }: PricingToggleProps) {
+  const { locale } = useLocale();
+  const entries = {
+    'pricing.toggle.monthly': 'Mensuel',
+    'pricing.toggle.yearly': 'Annuel',
+    'pricing.toggle.discount': '-17%',
+  } as const;
+  const { t } = useUiTranslations(locale, entries);
+
   return (
     <div className="flex items-center justify-center gap-4">
       <span
@@ -20,7 +30,7 @@ export function PricingToggle({ interval, onChange }: PricingToggleProps) {
         }`}
         onClick={() => onChange('monthly')}
       >
-        Mensuel
+        {t('pricing.toggle.monthly')}
       </span>
 
       <button
@@ -49,9 +59,9 @@ export function PricingToggle({ interval, onChange }: PricingToggleProps) {
         }`}
         onClick={() => onChange('yearly')}
       >
-        Annuel
+        {t('pricing.toggle.yearly')}
         <span className="ml-2 inline-block rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">
-          -17%
+          {t('pricing.toggle.discount')}
         </span>
       </span>
     </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   BarChart3,
@@ -547,10 +548,13 @@ export function AnalyticsReport({ organizationId, className }: AnalyticsReportPr
                         <td className="py-4">
                           <div className="flex items-center gap-3">
                             {member.avatar ? (
-                              <img
+                              <Image
                                 src={member.avatar}
                                 alt={member.member}
+                                width={32}
+                                height={32}
                                 className="w-8 h-8 rounded-full"
+                                unoptimized
                               />
                             ) : (
                               <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">

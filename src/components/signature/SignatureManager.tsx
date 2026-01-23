@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -14,7 +14,6 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  AlertTriangle,
   Users,
   Mail,
   Eye,
@@ -23,6 +22,7 @@ import {
   Trash2,
   FileText,
   Calendar,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface Signer {
@@ -57,7 +57,7 @@ export function SignatureManager({ tenderId, onRequestCreated }: SignatureManage
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<SignatureRequest | null>(null);
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -73,11 +73,11 @@ export function SignatureManager({ tenderId, onRequestCreated }: SignatureManage
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenderId]);
 
   useEffect(() => {
     fetchRequests();
-  }, [tenderId]);
+  }, [fetchRequests]);
 
   const getStatusConfig = (status: SignatureRequest['status']) => {
     const configs = {

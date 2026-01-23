@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 // Types
@@ -53,7 +53,7 @@ export function useAutoSave(
   const [loading, setLoading] = useState(true);
   
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   // Charger le brouillon existant
   useEffect(() => {
@@ -117,7 +117,7 @@ export function useAutoSave(
     }
 
     loadDraft();
-  }, [tenderId]);
+  }, [tenderId, supabase]);
 
   // Sauvegarder le brouillon
   const saveDraft = useCallback(async (updatedDraft: Partial<TenderDraft>) => {
@@ -176,7 +176,7 @@ export function useAutoSave(
       // Réinitialiser après 3s
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
-  }, [draft, enabled, onSave, onError]);
+  }, [draft, enabled, onSave, onError, supabase]);
 
   // Sauvegarde avec debounce
   const debouncedSave = useCallback((updates: Partial<TenderDraft>) => {

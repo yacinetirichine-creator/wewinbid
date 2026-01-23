@@ -22,6 +22,8 @@ import {
   Store,
   Command,
 } from 'lucide-react';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 interface SearchResult {
   id: string;
@@ -33,115 +35,121 @@ interface SearchResult {
   category: string;
 }
 
-// Pages et actions rapides disponibles
-const quickActions: SearchResult[] = [
+type QuickActionConfig = Omit<SearchResult, 'title' | 'description' | 'category'> & {
+  titleKey: string;
+  descriptionKey?: string;
+  categoryKey: string;
+};
+
+// Pages et actions rapides disponibles (clés i18n)
+const quickActionConfigs: QuickActionConfig[] = [
   {
     id: 'dashboard',
     type: 'page',
-    title: 'Tableau de bord',
-    description: 'Vue d\'ensemble de votre activité',
+    titleKey: 'globalSearch.quick.dashboard.title',
+    descriptionKey: 'globalSearch.quick.dashboard.description',
     href: '/dashboard',
     icon: BarChart3,
-    category: 'Navigation',
+    categoryKey: 'globalSearch.category.navigation',
   },
   {
     id: 'tenders',
     type: 'page',
-    title: 'Appels d\'offres',
-    description: 'Gérer vos appels d\'offres',
+    titleKey: 'globalSearch.quick.tenders.title',
+    descriptionKey: 'globalSearch.quick.tenders.description',
     href: '/tenders',
     icon: FileText,
-    category: 'Navigation',
+    categoryKey: 'globalSearch.category.navigation',
   },
   {
     id: 'new-tender',
     type: 'action',
-    title: 'Nouvel appel d\'offre',
-    description: 'Créer un nouvel AO',
+    titleKey: 'globalSearch.quick.newTender.title',
+    descriptionKey: 'globalSearch.quick.newTender.description',
     href: '/tenders/new',
     icon: FileText,
-    category: 'Actions rapides',
+    categoryKey: 'globalSearch.category.quickActions',
   },
   {
     id: 'marketplace',
     type: 'page',
-    title: 'Marketplace',
-    description: 'Trouver des partenaires',
+    titleKey: 'globalSearch.quick.marketplace.title',
+    descriptionKey: 'globalSearch.quick.marketplace.description',
     href: '/marketplace',
     icon: Store,
-    category: 'Navigation',
+    categoryKey: 'globalSearch.category.navigation',
   },
   {
     id: 'calendar',
     type: 'page',
-    title: 'Calendrier',
-    description: 'Échéances et planning',
+    titleKey: 'globalSearch.quick.calendar.title',
+    descriptionKey: 'globalSearch.quick.calendar.description',
     href: '/calendar',
     icon: Calendar,
-    category: 'Navigation',
+    categoryKey: 'globalSearch.category.navigation',
   },
   {
     id: 'documents',
     type: 'page',
-    title: 'Documents',
-    description: 'Bibliothèque de documents',
+    titleKey: 'globalSearch.quick.documents.title',
+    descriptionKey: 'globalSearch.quick.documents.description',
     href: '/documents',
     icon: FolderOpen,
-    category: 'Navigation',
+    categoryKey: 'globalSearch.category.navigation',
   },
   {
     id: 'studio',
     type: 'page',
-    title: 'Studio IA',
-    description: 'Génération de documents IA',
+    titleKey: 'globalSearch.quick.studio.title',
+    descriptionKey: 'globalSearch.quick.studio.description',
     href: '/studio',
     icon: Sparkles,
-    category: 'Navigation',
+    categoryKey: 'globalSearch.category.navigation',
   },
   {
     id: 'chat',
     type: 'page',
-    title: 'Assistant IA',
-    description: 'Chat avec l\'IA',
+    titleKey: 'globalSearch.quick.chat.title',
+    descriptionKey: 'globalSearch.quick.chat.description',
     href: '/chat',
     icon: MessageSquare,
-    category: 'Navigation',
+    categoryKey: 'globalSearch.category.navigation',
   },
   {
     id: 'alerts',
     type: 'page',
-    title: 'Alertes',
-    description: 'Configurer les alertes',
+    titleKey: 'globalSearch.quick.alerts.title',
+    descriptionKey: 'globalSearch.quick.alerts.description',
     href: '/alerts',
     icon: Bell,
-    category: 'Navigation',
+    categoryKey: 'globalSearch.category.navigation',
   },
   {
     id: 'analytics',
     type: 'page',
-    title: 'Analytics',
-    description: 'Statistiques et rapports',
+    titleKey: 'globalSearch.quick.analytics.title',
+    descriptionKey: 'globalSearch.quick.analytics.description',
     href: '/analytics',
     icon: BarChart3,
-    category: 'Navigation',
+    categoryKey: 'globalSearch.category.navigation',
   },
   {
     id: 'teams',
     type: 'page',
-    title: 'Équipes',
-    description: 'Gérer vos équipes',
+    titleKey: 'globalSearch.quick.teams.title',
+    descriptionKey: 'globalSearch.quick.teams.description',
     href: '/teams',
     icon: Users,
-    category: 'Navigation',
+    categoryKey: 'globalSearch.category.navigation',
   },
   {
     id: 'settings',
     type: 'page',
-    title: 'Paramètres',
-    description: 'Configuration du compte',
+    titleKey: 'globalSearch.quick.settings.title',
+    descriptionKey: 'globalSearch.quick.settings.description',
     href: '/settings',
     icon: Settings,
-    category: 'Navigation',
+    categoryKey: 'globalSearch.category.navigation',
   },
 ];
 
@@ -152,10 +160,65 @@ interface GlobalSearchProps {
 
 export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
   const router = useRouter();
+  const { locale } = useLocale();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  const entries = useMemo(
+    () => ({
+      'globalSearch.category.navigation': 'Navigation',
+      'globalSearch.category.quickActions': 'Actions rapides',
+
+      'globalSearch.quick.dashboard.title': 'Tableau de bord',
+      'globalSearch.quick.dashboard.description': "Vue d'ensemble de votre activité",
+      'globalSearch.quick.tenders.title': "Appels d'offres",
+      'globalSearch.quick.tenders.description': "Gérer vos appels d'offres",
+      'globalSearch.quick.newTender.title': "Nouvel appel d'offre",
+      'globalSearch.quick.newTender.description': 'Créer un nouvel AO',
+      'globalSearch.quick.marketplace.title': 'Marketplace',
+      'globalSearch.quick.marketplace.description': 'Trouver des partenaires',
+      'globalSearch.quick.calendar.title': 'Calendrier',
+      'globalSearch.quick.calendar.description': 'Échéances et planning',
+      'globalSearch.quick.documents.title': 'Documents',
+      'globalSearch.quick.documents.description': 'Bibliothèque de documents',
+      'globalSearch.quick.studio.title': 'Studio IA',
+      'globalSearch.quick.studio.description': 'Génération de documents IA',
+      'globalSearch.quick.chat.title': 'Assistant IA',
+      'globalSearch.quick.chat.description': "Chat avec l'IA",
+      'globalSearch.quick.alerts.title': 'Alertes',
+      'globalSearch.quick.alerts.description': 'Configurer les alertes',
+      'globalSearch.quick.analytics.title': 'Analytics',
+      'globalSearch.quick.analytics.description': 'Statistiques et rapports',
+      'globalSearch.quick.teams.title': 'Équipes',
+      'globalSearch.quick.teams.description': 'Gérer vos équipes',
+      'globalSearch.quick.settings.title': 'Paramètres',
+      'globalSearch.quick.settings.description': 'Configuration du compte',
+
+      'globalSearch.input.placeholder': "Rechercher une page, un appel d'offre, une action...",
+      'globalSearch.empty.title': 'Aucun résultat pour "{query}"',
+      'globalSearch.empty.subtitle': "Essayez avec d'autres mots-clés",
+      'globalSearch.footer.navigate': 'naviguer',
+      'globalSearch.footer.select': 'sélectionner',
+      'globalSearch.footer.open': 'K pour ouvrir',
+    }),
+    []
+  );
+
+  const { t } = useUiTranslations(locale, entries);
+
+  const quickActions: SearchResult[] = useMemo(() => {
+    return quickActionConfigs.map(cfg => ({
+      id: cfg.id,
+      type: cfg.type,
+      href: cfg.href,
+      icon: cfg.icon,
+      title: t(cfg.titleKey as keyof typeof entries),
+      description: cfg.descriptionKey ? t(cfg.descriptionKey as keyof typeof entries) : undefined,
+      category: t(cfg.categoryKey as keyof typeof entries),
+    }));
+  }, [t]);
 
   // Filtrer les résultats
   const results = useMemo(() => {
@@ -168,7 +231,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
       const searchText = `${action.title} ${action.description} ${action.category}`.toLowerCase();
       return searchTerms.every(term => searchText.includes(term));
     });
-  }, [query]);
+  }, [query, quickActions]);
 
   // Grouper les résultats par catégorie
   const groupedResults = useMemo(() => {
@@ -199,6 +262,16 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
     }
   }, [isOpen]);
 
+  const handleSelect = useCallback((result: SearchResult) => {
+    // Sauvegarder dans les recherches récentes
+    const newRecent = [result.title, ...recentSearches.filter(s => s !== result.title)].slice(0, 5);
+    setRecentSearches(newRecent);
+    localStorage.setItem('recentSearches', JSON.stringify(newRecent));
+    
+    router.push(result.href);
+    onClose();
+  }, [router, onClose, recentSearches]);
+
   // Gestion du clavier
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -228,7 +301,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, results, selectedIndex, onClose]);
+  }, [isOpen, results, selectedIndex, onClose, handleSelect]);
 
   // Raccourci clavier global (Cmd/Ctrl + K)
   useEffect(() => {
@@ -244,16 +317,6 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, [isOpen, onClose]);
-
-  const handleSelect = useCallback((result: SearchResult) => {
-    // Sauvegarder dans les recherches récentes
-    const newRecent = [result.title, ...recentSearches.filter(s => s !== result.title)].slice(0, 5);
-    setRecentSearches(newRecent);
-    localStorage.setItem('recentSearches', JSON.stringify(newRecent));
-    
-    router.push(result.href);
-    onClose();
-  }, [router, onClose, recentSearches]);
 
   if (!isOpen) return null;
 
@@ -285,7 +348,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                 setQuery(e.target.value);
                 setSelectedIndex(0);
               }}
-              placeholder="Rechercher une page, un appel d'offre, une action..."
+              placeholder={t('globalSearch.input.placeholder')}
               className="flex-1 text-lg outline-none placeholder:text-surface-400"
             />
             <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs text-surface-400 bg-surface-100 rounded border border-surface-200">
@@ -298,9 +361,9 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             {results.length === 0 ? (
               <div className="p-8 text-center">
                 <Search className="w-12 h-12 text-surface-300 mx-auto mb-3" />
-                <p className="text-surface-500">Aucun résultat pour "{query}"</p>
+                  <p className="text-surface-500">{t('globalSearch.empty.title', { query })}</p>
                 <p className="text-sm text-surface-400 mt-1">
-                  Essayez avec d'autres mots-clés
+                    {t('globalSearch.empty.subtitle')}
                 </p>
               </div>
             ) : (
@@ -360,16 +423,16 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1">
                 <kbd className="px-1.5 py-0.5 bg-white rounded border">↑↓</kbd>
-                naviguer
+                {t('globalSearch.footer.navigate')}
               </span>
               <span className="flex items-center gap-1">
                 <kbd className="px-1.5 py-0.5 bg-white rounded border">↵</kbd>
-                sélectionner
+                {t('globalSearch.footer.select')}
               </span>
             </div>
             <span className="flex items-center gap-1">
               <Command className="w-3 h-3" />
-              <span>K pour ouvrir</span>
+              <span>{t('globalSearch.footer.open')}</span>
             </span>
           </div>
         </motion.div>

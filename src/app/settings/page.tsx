@@ -65,7 +65,7 @@ interface BillingInfo {
   billing_email: string;
   next_billing_date?: string;
   payment_method?: string;
-  invoices: { id: string; date: string; amount: number; status: string }[];
+  invoices: { id: string; date: string; amount: number; status: string; url?: string; pdf?: string }[];
 }
 
 type TabType = 'profile' | 'company' | 'notifications' | 'security' | 'billing' | 'matching' | 'preferences' | 'legal';
@@ -134,15 +134,11 @@ export default function SettingsPage() {
   });
 
   const [billing, setBilling] = useState<BillingInfo>({
-    plan: 'PRO',
-    billing_email: 'facturation@jarvis-sas.fr',
-    next_billing_date: '2025-02-15',
-    payment_method: '**** **** **** 4242',
-    invoices: [
-      { id: 'INV-2025-001', date: '2025-01-15', amount: 49, status: 'paid' },
-      { id: 'INV-2024-012', date: '2024-12-15', amount: 49, status: 'paid' },
-      { id: 'INV-2024-011', date: '2024-11-15', amount: 49, status: 'paid' },
-    ],
+    plan: 'FREE',
+    billing_email: '',
+    next_billing_date: undefined,
+    payment_method: undefined,
+    invoices: [],
   });
 
   const [passwordForm, setPasswordForm] = useState({
@@ -185,6 +181,7 @@ export default function SettingsPage() {
       'settings.message.passwordChanged': 'Mot de passe modifié avec succès',
       'settings.message.profileSaved': 'Profil mis à jour avec succès',
       'settings.message.companySaved': 'Informations entreprise mises à jour',
+      'settings.message.companyNotFound': 'Entreprise non trouvée',
       'settings.message.matchingSaved': 'Préférences de matching enregistrées',
       'settings.message.matchingError': "Erreur lors de l'enregistrement",
       'settings.message.networkError': 'Erreur réseau',
@@ -287,6 +284,8 @@ export default function SettingsPage() {
       'settings.billing.edit': 'Modifier',
       'settings.billing.email': 'Email de facturation',
       'settings.billing.invoices': 'Historique des factures',
+      'settings.billing.invoicesEmpty': 'Aucune facture disponible pour le moment.',
+      'settings.billing.download': 'Télécharger la facture',
       'settings.billing.status.paid': 'Payée',
       'settings.billing.status.pending': 'En attente',
       'settings.preferences.title': "Préférences d'affichage",
@@ -297,15 +296,42 @@ export default function SettingsPage() {
       'settings.preferences.export.title': 'Export de données',
       'settings.preferences.export.hint': 'Téléchargez une copie de toutes vos données personnelles au format JSON.',
       'settings.preferences.export.button': 'Exporter mes données',
+      'settings.preferences.currency.eur': 'Euro (€)',
+      'settings.preferences.currency.usd': 'Dollar US ($)',
+      'settings.preferences.currency.gbp': 'Livre Sterling (£)',
       'settings.plan.free': 'Gratuit',
       'settings.plan.pro': 'Pro',
       'settings.plan.business': 'Business',
       'settings.plan.enterprise': 'Enterprise',
+
+      'settings.security.rgpd.title': 'Mes données personnelles (RGPD)',
+      'settings.security.rgpd.hint': "Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, de portabilité et de suppression de vos données personnelles.",
+      'settings.security.rgpd.manage': 'Gérer mes données RGPD',
+      'settings.security.rgpd.privacyPolicy': 'Politique de confidentialité',
+
+      'settings.legal.privacy.title': 'Politique de confidentialité',
+      'settings.legal.privacy.hint': 'Comment nous protégeons vos données',
+      'settings.legal.terms.title': "Conditions Générales d'Utilisation (CGU)",
+      'settings.legal.terms.hint': "Règles d'utilisation de la plateforme",
+      'settings.legal.cgv.title': 'Conditions Générales de Vente (CGV)',
+      'settings.legal.cgv.hint': 'Conditions commerciales et tarifaires',
+      'settings.legal.cookies.title': 'Politique des cookies',
+      'settings.legal.cookies.hint': 'Gestion des cookies et traceurs',
+      'settings.legal.mentions.title': 'Mentions légales',
+      'settings.legal.mentions.hint': "Informations sur l'éditeur du site",
     }),
     []
   );
 
   const { t } = useUiTranslations(locale, entries);
+
+  const dateFormatter = useMemo(() => {
+    try {
+      return new Intl.DateTimeFormat(locale);
+    } catch {
+      return new Intl.DateTimeFormat('fr-FR');
+    }
+  }, [locale]);
 
   const formatTemplate = (template: string, values: Record<string, string | number>) => {
     return Object.entries(values).reduce((acc, [key, value]) => {
@@ -313,8 +339,18 @@ export default function SettingsPage() {
     }, template);
   };
 
+  const normalizePlan = (value: any): BillingInfo['plan'] => {
+    const v = String(value || '').toUpperCase();
+    if (v === 'PRO' || v === 'BUSINESS' || v === 'ENTERPRISE' || v === 'FREE') return v as BillingInfo['plan'];
+    if (v === 'TRIAL' || v === 'TRIALING') return 'FREE';
+    if (v === 'MONTHLY' || v === 'YEARLY') return 'FREE';
+    return 'FREE';
+  };
+
   useEffect(() => {
-    async function loadUserData() {
+    let cancelled = false;
+
+    const loadUserData = async () => {
       try {
         // Import dynamique pour éviter les problèmes SSR
         const { createClient } = await import('@/lib/supabase/client');
@@ -324,7 +360,7 @@ export default function SettingsPage() {
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (userError || !user) {
           console.error('Utilisateur non connecté:', userError);
-          setLoading(false);
+          if (!cancelled) setLoading(false);
           return;
         }
 
@@ -335,7 +371,7 @@ export default function SettingsPage() {
           .eq('id', user.id)
           .single();
 
-        if (profileData) {
+        if (profileData && !cancelled) {
           setProfile({
             id: profileData.id,
             email: profileData.email || user.email || '',
@@ -361,7 +397,7 @@ export default function SettingsPage() {
             .eq('id', memberData.company_id)
             .single();
 
-          if (companyData) {
+          if (companyData && !cancelled) {
             setCompany({
               id: companyData.id,
               name: companyData.name || '',
@@ -377,16 +413,47 @@ export default function SettingsPage() {
               description: companyData.description || '',
               sectors: Array.isArray(companyData.sectors) ? companyData.sectors : [],
             });
+
+            // Facturation: l'email de facture est à renseigner par le client.
+            // On utilise `companies.email` (champ existant) comme email de facturation.
+            setBilling((prev) => ({
+              ...prev,
+              billing_email: companyData.email || '',
+              plan: normalizePlan(companyData.subscription_plan) || (prev.plan ?? 'FREE'),
+              next_billing_date: companyData.subscription_period_end || prev.next_billing_date,
+            }));
           }
+        }
+
+        // Charger les factures depuis Stripe (si Stripe configuré + client lié)
+        try {
+          const res = await fetch('/api/stripe/invoices', { method: 'GET' });
+          if (res.ok) {
+            const data = await res.json();
+            if (!cancelled) {
+              setBilling((prev) => ({
+                ...prev,
+                invoices: Array.isArray(data?.invoices) ? data.invoices : prev.invoices,
+                payment_method: data?.payment_method || prev.payment_method,
+                next_billing_date: data?.next_billing_date || prev.next_billing_date,
+                plan: normalizePlan(data?.plan) || prev.plan,
+              }));
+            }
+          }
+        } catch (err) {
+          console.warn('Impossible de charger les factures Stripe:', err);
         }
       } catch (err) {
         console.error('Erreur chargement données:', err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    }
+    };
 
     loadUserData();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const showMessage = (type: 'success' | 'error', text: string) => {
@@ -428,7 +495,7 @@ export default function SettingsPage() {
       const supabase = createClient();
       
       if (!company.id) {
-        showMessage('error', 'Entreprise non trouvée');
+        showMessage('error', t('settings.message.companyNotFound'));
         return;
       }
 
@@ -453,6 +520,47 @@ export default function SettingsPage() {
       showMessage('success', t('settings.message.companySaved'));
     } catch (err) {
       console.error('Erreur sauvegarde entreprise:', err);
+      showMessage('error', t('settings.message.networkError'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openStripePortal = async () => {
+    try {
+      const res = await fetch('/api/stripe/customer-portal', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok && data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+      showMessage('error', data?.error || t('settings.message.networkError'));
+    } catch (err) {
+      console.error('Erreur portal Stripe:', err);
+      showMessage('error', t('settings.message.networkError'));
+    }
+  };
+
+  const handleSaveBillingEmail = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/stripe/billing-email', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ billing_email: billing.billing_email }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showMessage('error', data?.error || t('settings.message.networkError'));
+        return;
+      }
+
+      // Garder l'UI cohérente
+      setCompany((prev) => ({ ...prev, email: billing.billing_email }));
+      showMessage('success', t('settings.message.companySaved'));
+    } catch (err) {
+      console.error('Erreur sauvegarde email facturation:', err);
       showMessage('error', t('settings.message.networkError'));
     } finally {
       setSaving(false);
@@ -1259,20 +1367,20 @@ export default function SettingsPage() {
                 <div className="flex items-start gap-4">
                   <Shield className="w-6 h-6 text-primary-600 flex-shrink-0" />
                   <div className="flex-1">
-                    <h2 className="text-lg font-semibold text-primary-900 mb-2">Mes Données Personnelles (RGPD)</h2>
+                    <h2 className="text-lg font-semibold text-primary-900 mb-2">{t('settings.security.rgpd.title')}</h2>
                     <p className="text-primary-700 mb-4">
-                      Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, de portabilité et de suppression de vos données personnelles.
+                      {t('settings.security.rgpd.hint')}
                     </p>
                     <div className="flex gap-3">
                       <a href="/data-privacy">
                         <Button variant="primary">
                           <Shield className="w-4 h-4 mr-2" />
-                          Gérer mes données RGPD
+                          {t('settings.security.rgpd.manage')}
                         </Button>
                       </a>
                       <a href="/legal/privacy" target="_blank">
                         <Button variant="secondary">
-                          Politique de confidentialité
+                          {t('settings.security.rgpd.privacyPolicy')}
                         </Button>
                       </a>
                     </div>
@@ -1322,14 +1430,14 @@ export default function SettingsPage() {
                 {billing.next_billing_date && (
                   <p className="text-sm text-gray-500 mb-6">
                     {formatTemplate(t('settings.billing.nextBilling'), {
-                      date: new Date(billing.next_billing_date).toLocaleDateString('fr-FR'),
+                      date: dateFormatter.format(new Date(billing.next_billing_date)),
                     })}
                   </p>
                 )}
 
                 <div className="flex gap-3">
-                  <Button>{t('settings.billing.changePlan')}</Button>
-                  <Button variant="secondary">{t('settings.billing.cancel')}</Button>
+                  <Button onClick={openStripePortal}>{t('settings.billing.changePlan')}</Button>
+                  <Button variant="secondary" onClick={openStripePortal}>{t('settings.billing.cancel')}</Button>
                 </div>
               </Card>
 
@@ -1340,11 +1448,17 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-3">
                     <CreditCard className="w-6 h-6 text-gray-500" />
                     <div>
-                      <p className="font-medium text-gray-900">{t('settings.billing.card')}</p>
-                      <p className="text-sm text-gray-500">{t('settings.billing.cardExpires')}</p>
+                      <p className="font-medium text-gray-900">
+                        {billing.payment_method || t('settings.billing.card')}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {billing.payment_method ? '' : t('settings.billing.cardExpires')}
+                      </p>
                     </div>
                   </div>
-                  <Button variant="secondary" className="text-sm">{t('settings.billing.edit')}</Button>
+                  <Button variant="secondary" className="text-sm" onClick={openStripePortal}>
+                    {t('settings.billing.edit')}
+                  </Button>
                 </div>
 
                 <div>
@@ -1356,6 +1470,12 @@ export default function SettingsPage() {
                     value={billing.billing_email}
                     onChange={(e) => setBilling({ ...billing, billing_email: e.target.value })}
                   />
+
+                  <div className="mt-3 flex justify-end">
+                    <Button onClick={handleSaveBillingEmail} disabled={saving}>
+                      {saving ? t('settings.actions.saving') : t('settings.actions.save')}
+                    </Button>
+                  </div>
                 </div>
               </Card>
 
@@ -1363,7 +1483,11 @@ export default function SettingsPage() {
                 <h2 className="text-lg font-semibold text-gray-900 mb-6">{t('settings.billing.invoices')}</h2>
                 
                 <div className="space-y-3">
-                  {billing.invoices.map((invoice) => (
+                  {billing.invoices.length === 0 ? (
+                    <div className="text-sm text-gray-500">
+                      {t('settings.billing.invoicesEmpty')}
+                    </div>
+                  ) : billing.invoices.map((invoice) => (
                     <div key={invoice.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                       <div>
                         <p className="font-medium text-gray-900">{invoice.id}</p>
@@ -1378,9 +1502,17 @@ export default function SettingsPage() {
                             ? t('settings.billing.status.paid')
                             : t('settings.billing.status.pending')}
                         </Badge>
-                        <button className="text-blue-600 hover:text-blue-700">
-                          <Download className="w-5 h-5" />
-                        </button>
+                        {(invoice.url || invoice.pdf) ? (
+                          <a
+                            className="text-blue-600 hover:text-blue-700"
+                            href={invoice.url || invoice.pdf}
+                            target="_blank"
+                            rel="noreferrer"
+                            title={t('settings.billing.download')}
+                          >
+                            <Download className="w-5 h-5" />
+                          </a>
+                        ) : null}
                       </div>
                     </div>
                   ))}
@@ -1435,9 +1567,9 @@ export default function SettingsPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.preferences.currency')}</label>
                   <select className="px-3 py-2 border rounded-lg">
-                    <option value="EUR">Euro (€)</option>
-                    <option value="USD">US Dollar ($)</option>
-                    <option value="GBP">British Pound (£)</option>
+                    <option value="EUR">{t('settings.preferences.currency.eur')}</option>
+                    <option value="USD">{t('settings.preferences.currency.usd')}</option>
+                    <option value="GBP">{t('settings.preferences.currency.gbp')}</option>
                   </select>
                 </div>
 
@@ -1477,8 +1609,8 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-3">
                     <Shield className="w-5 h-5 text-primary-600" />
                     <div>
-                      <p className="font-medium text-gray-900">Politique de confidentialité</p>
-                      <p className="text-sm text-gray-500">Comment nous protégeons vos données</p>
+                      <p className="font-medium text-gray-900">{t('settings.legal.privacy.title')}</p>
+                      <p className="text-sm text-gray-500">{t('settings.legal.privacy.hint')}</p>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />
@@ -1492,8 +1624,8 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-3">
                     <FileText className="w-5 h-5 text-primary-600" />
                     <div>
-                      <p className="font-medium text-gray-900">Conditions Générales d'Utilisation (CGU)</p>
-                      <p className="text-sm text-gray-500">Règles d'utilisation de la plateforme</p>
+                      <p className="font-medium text-gray-900">{t('settings.legal.terms.title')}</p>
+                      <p className="text-sm text-gray-500">{t('settings.legal.terms.hint')}</p>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />
@@ -1507,8 +1639,8 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-3">
                     <CreditCard className="w-5 h-5 text-primary-600" />
                     <div>
-                      <p className="font-medium text-gray-900">Conditions Générales de Vente (CGV)</p>
-                      <p className="text-sm text-gray-500">Conditions commerciales et tarifaires</p>
+                      <p className="font-medium text-gray-900">{t('settings.legal.cgv.title')}</p>
+                      <p className="text-sm text-gray-500">{t('settings.legal.cgv.hint')}</p>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />
@@ -1522,8 +1654,8 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-3">
                     <Globe className="w-5 h-5 text-primary-600" />
                     <div>
-                      <p className="font-medium text-gray-900">Politique des cookies</p>
-                      <p className="text-sm text-gray-500">Gestion des cookies et traceurs</p>
+                      <p className="font-medium text-gray-900">{t('settings.legal.cookies.title')}</p>
+                      <p className="text-sm text-gray-500">{t('settings.legal.cookies.hint')}</p>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />
@@ -1537,8 +1669,8 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-3">
                     <Building2 className="w-5 h-5 text-primary-600" />
                     <div>
-                      <p className="font-medium text-gray-900">Mentions légales</p>
-                      <p className="text-sm text-gray-500">Informations sur l'éditeur du site</p>
+                      <p className="font-medium text-gray-900">{t('settings.legal.mentions.title')}</p>
+                      <p className="text-sm text-gray-500">{t('settings.legal.mentions.hint')}</p>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />

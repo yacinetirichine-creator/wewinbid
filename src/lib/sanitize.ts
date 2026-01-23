@@ -96,7 +96,13 @@ export function sanitizeText(input: string): string {
   let clean = DOMPurify.sanitize(input, { ALLOWED_TAGS: [] });
   
   // Supprimer les caractères de contrôle (sauf newlines et tabs)
-  clean = clean.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  clean = Array.from(clean)
+    .filter((ch) => {
+      const code = ch.charCodeAt(0);
+      if (code === 9 || code === 10 || code === 13) return true; // tab, LF, CR
+      return code >= 32 && code !== 127;
+    })
+    .join('');
   
   // Normaliser les espaces multiples
   clean = clean.replace(/\s+/g, ' ').trim();

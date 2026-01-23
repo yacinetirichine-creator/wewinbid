@@ -638,7 +638,7 @@ export default function LandingPage() {
               >
                 {t('landing.pricing.yearly')}
                 <span className="ml-2 text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">
-                  -17%
+                  {t('landing.pricing.discount')}
                 </span>
               </button>
             </div>
@@ -654,36 +654,36 @@ export default function LandingPage() {
               className="relative rounded-2xl border border-slate-200 bg-white p-8 hover:border-slate-300 transition-all shadow-sm hover:shadow-lg"
             >
               <div className="mb-6">
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Gratuit</h3>
-                <p className="text-sm text-slate-500">Pour découvrir WeWinBid</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">{t('landing.pricing.free.name')}</h3>
+                <p className="text-sm text-slate-500">{t('landing.pricing.free.description')}</p>
               </div>
               <div className="mb-8">
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-bold text-slate-900 tracking-tight">0€</span>
-                  <span className="text-slate-500 font-medium">/ mois</span>
+                  <span className="text-slate-500 font-medium">{t('landing.pricing.perMonth')}</span>
                 </div>
               </div>
               <Link href="/auth/register">
                 <Button variant="outline" className="w-full mb-8 border-slate-200 hover:bg-slate-50 hover:text-slate-900" size="lg">
-                  Commencer gratuitement
+                  {t('landing.pricing.free.cta')}
                 </Button>
               </Link>
               <ul className="space-y-4">
                 <li className="flex items-start gap-3 text-sm">
                   <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                  <span className="text-slate-600">2 réponses AO / mois</span>
+                  <span className="text-slate-600">{t('landing.pricing.free.feature.1')}</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm">
                   <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                  <span className="text-slate-600">1 collaborateur</span>
+                  <span className="text-slate-600">{t('landing.pricing.free.feature.2')}</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm">
                   <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                  <span className="text-slate-600">100 MB de stockage</span>
+                  <span className="text-slate-600">{t('landing.pricing.free.feature.3')}</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm">
                   <CheckCircle className="w-5 h-5 text-slate-300 flex-shrink-0" />
-                  <span className="text-slate-400">Support email</span>
+                  <span className="text-slate-400">{t('landing.pricing.free.feature.4')}</span>
                 </li>
               </ul>
             </motion.div>
@@ -703,49 +703,49 @@ export default function LandingPage() {
               </div>
               <div className="mb-6">
                 <h3 className="text-xl font-bold text-slate-900 mb-2">Pro</h3>
-                <p className="text-sm text-slate-500">Pour les TPE/PME actives</p>
+                <p className="text-sm text-slate-500">{t('landing.pricing.pro.description')}</p>
               </div>
               <div className="mb-8">
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-bold text-slate-900 tracking-tight">
                     {billingPeriod === 'monthly' ? '49€' : '41€'}
                   </span>
-                  <span className="text-slate-500 font-medium">/ mois</span>
+                  <span className="text-slate-500 font-medium">{t('landing.pricing.perMonth')}</span>
                 </div>
                 {billingPeriod === 'yearly' && (
-                  <p className="text-xs text-emerald-600 font-medium mt-2 bg-emerald-50 inline-block px-2 py-1 rounded-md">490€ / an (2 mois offerts)</p>
+                  <p className="text-xs text-emerald-600 font-medium mt-2 bg-emerald-50 inline-block px-2 py-1 rounded-md">{t('landing.pricing.pro.yearlyNote')}</p>
                 )}
               </div>
               <Link href="/auth/register?plan=pro">
                 <Button className="w-full mb-8 bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-500/20" size="lg">
-                  Essayer gratuitement
+                  {t('landing.pricing.pro.cta')}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
               <ul className="space-y-4">
                 <li className="flex items-start gap-3 text-sm">
                   <CheckCircle className="w-5 h-5 text-primary-600 flex-shrink-0" />
-                  <span className="text-slate-700 font-medium">20 réponses AO / mois</span>
+                  <span className="text-slate-700 font-medium">{t('landing.pricing.pro.feature.1')}</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm">
                   <CheckCircle className="w-5 h-5 text-primary-600 flex-shrink-0" />
-                  <span className="text-slate-700 font-medium">5 collaborateurs</span>
+                  <span className="text-slate-700 font-medium">{t('landing.pricing.pro.feature.2')}</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm">
                   <CheckCircle className="w-5 h-5 text-primary-600 flex-shrink-0" />
-                  <span className="text-slate-700 font-medium">5 GB de stockage</span>
+                  <span className="text-slate-700 font-medium">{t('landing.pricing.pro.feature.3')}</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm">
                   <CheckCircle className="w-5 h-5 text-primary-600 flex-shrink-0" />
-                  <span className="text-slate-700">Score IA + Analyse gagnants</span>
+                  <span className="text-slate-700">{t('landing.pricing.pro.feature.4')}</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm">
                   <CheckCircle className="w-5 h-5 text-primary-600 flex-shrink-0" />
-                  <span className="text-slate-700">Marketplace partenaires</span>
+                  <span className="text-slate-700">{t('landing.pricing.pro.feature.5')}</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm">
                   <CheckCircle className="w-5 h-5 text-primary-600 flex-shrink-0" />
-                  <span className="text-slate-700">Support prioritaire</span>
+                  <span className="text-slate-700">{t('landing.pricing.pro.feature.6')}</span>
                 </li>
               </ul>
             </motion.div>
@@ -759,54 +759,54 @@ export default function LandingPage() {
               className="relative rounded-2xl border border-slate-200 bg-white p-8 hover:border-slate-300 transition-all shadow-sm hover:shadow-lg"
             >
               <div className="mb-6">
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Business</h3>
-                <p className="text-sm text-slate-500">Pour les équipes commerciales</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">{t('landing.pricing.business.name')}</h3>
+                <p className="text-sm text-slate-500">{t('landing.pricing.business.description')}</p>
               </div>
               <div className="mb-8">
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-bold text-slate-900 tracking-tight">
                     {billingPeriod === 'monthly' ? '149€' : '124€'}
                   </span>
-                  <span className="text-slate-500 font-medium">/ mois</span>
+                  <span className="text-slate-500 font-medium">{t('landing.pricing.perMonth')}</span>
                 </div>
                 {billingPeriod === 'yearly' && (
-                  <p className="text-xs text-emerald-600 font-medium mt-2 bg-emerald-50 inline-block px-2 py-1 rounded-md">1490€ / an (2 mois offerts)</p>
+                  <p className="text-xs text-emerald-600 font-medium mt-2 bg-emerald-50 inline-block px-2 py-1 rounded-md">{t('landing.pricing.business.yearlyNote')}</p>
                 )}
               </div>
               <Link href="/auth/register?plan=business">
                 <Button className="w-full mb-8 bg-slate-900 hover:bg-slate-800 text-white" size="lg">
-                  Essayer gratuitement
+                  {t('landing.pricing.business.cta')}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
               <ul className="space-y-4">
                 <li className="flex items-start gap-3 text-sm">
                   <CheckCircle className="w-5 h-5 text-slate-900 flex-shrink-0" />
-                  <span className="text-slate-700 font-semibold">Réponses illimitées</span>
+                  <span className="text-slate-700 font-semibold">{t('landing.pricing.business.feature.1')}</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm">
                   <CheckCircle className="w-5 h-5 text-slate-900 flex-shrink-0" />
-                  <span className="text-slate-700 font-semibold">20 collaborateurs</span>
+                  <span className="text-slate-700 font-semibold">{t('landing.pricing.business.feature.2')}</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm">
                   <CheckCircle className="w-5 h-5 text-slate-900 flex-shrink-0" />
-                  <span className="text-slate-700 font-semibold">50 GB de stockage</span>
+                  <span className="text-slate-700 font-semibold">{t('landing.pricing.business.feature.3')}</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm">
                   <CheckCircle className="w-5 h-5 text-slate-700 flex-shrink-0" />
-                  <span className="text-slate-600">Tout Pro +</span>
+                  <span className="text-slate-600">{t('landing.pricing.business.feature.4')}</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm">
                   <CheckCircle className="w-5 h-5 text-slate-700 flex-shrink-0" />
-                  <span className="text-slate-600">Co-rédaction temps réel</span>
+                  <span className="text-slate-600">{t('landing.pricing.business.feature.5')}</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm">
                   <CheckCircle className="w-5 h-5 text-slate-700 flex-shrink-0" />
-                  <span className="text-surface-700">Studio créatif + API</span>
+                  <span className="text-surface-700">{t('landing.pricing.business.feature.6')}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-surface-700">Support dédié</span>
+                  <span className="text-surface-700">{t('landing.pricing.business.feature.7')}</span>
                 </li>
               </ul>
             </motion.div>
@@ -820,48 +820,48 @@ export default function LandingPage() {
               className="relative rounded-3xl border-2 border-surface-900 bg-gradient-to-br from-surface-900 to-surface-800 p-8 text-white"
             >
               <div className="mb-6">
-                <h3 className="text-2xl font-bold mb-2">Enterprise</h3>
-                <p className="text-surface-300">Solution sur mesure</p>
+                <h3 className="text-2xl font-bold mb-2">{t('landing.pricing.enterprise.name')}</h3>
+                <p className="text-surface-300">{t('landing.pricing.enterprise.description')}</p>
               </div>
               <div className="mb-8">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold">Sur devis</span>
+                  <span className="text-4xl font-bold">{t('landing.pricing.enterprise.price')}</span>
                 </div>
-                <p className="text-sm text-surface-400 mt-2">Volumes illimités et personnalisés</p>
+                <p className="text-sm text-surface-400 mt-2">{t('landing.pricing.enterprise.subtitle')}</p>
               </div>
               <a href="https://calendly.com/commercial-wewinbid/30min" target="_blank" rel="noopener noreferrer">
                 <Button variant="outline" className="w-full mb-8 bg-white text-surface-900 hover:bg-surface-100 border-white" size="lg">
-                  Prendre RDV (30min)
+                  {t('landing.pricing.enterprise.cta')}
                 </Button>
               </a>
               <ul className="space-y-4">
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-success-400 flex-shrink-0 mt-0.5" />
-                  <span className="font-medium">Réponses AO illimitées</span>
+                  <span className="font-medium">{t('landing.pricing.enterprise.feature.1')}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-success-400 flex-shrink-0 mt-0.5" />
-                  <span className="font-medium">Utilisateurs illimités</span>
+                  <span className="font-medium">{t('landing.pricing.enterprise.feature.2')}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-success-400 flex-shrink-0 mt-0.5" />
-                  <span className="font-medium">Stockage illimité</span>
+                  <span className="font-medium">{t('landing.pricing.enterprise.feature.3')}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-success-400 flex-shrink-0 mt-0.5" />
-                  <span>API dédiée + Intégrations</span>
+                  <span>{t('landing.pricing.enterprise.feature.4')}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-success-400 flex-shrink-0 mt-0.5" />
-                  <span>Account Manager dédié</span>
+                  <span>{t('landing.pricing.enterprise.feature.5')}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-success-400 flex-shrink-0 mt-0.5" />
-                  <span>Formation équipe incluse</span>
+                  <span>{t('landing.pricing.enterprise.feature.6')}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-success-400 flex-shrink-0 mt-0.5" />
-                  <span>SLA personnalisé</span>
+                  <span>{t('landing.pricing.enterprise.feature.7')}</span>
                 </li>
               </ul>
             </motion.div>
@@ -954,25 +954,25 @@ export default function LandingPage() {
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-50 text-primary-600 text-sm font-medium mb-4">
                 <Globe className="w-4 h-4" />
-                Support Multilingue
+                {t('landing.languages.badge')}
               </div>
               <h3 className="text-3xl font-bold text-surface-900 mb-4">
-                Disponible dans 7+ langues
+                {t('landing.languages.title')}
               </h3>
               <p className="text-surface-600 max-w-xl mx-auto">
-                Répondez aux appels d'offres internationaux dans la langue de votre choix. Notre IA s'adapte automatiquement.
+                {t('landing.languages.subtitle')}
               </p>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
               {[
-                { flag: '🇫🇷', name: 'Français', code: 'FR' },
-                { flag: '🇬🇧', name: 'English', code: 'EN' },
-                { flag: '🇪🇸', name: 'Español', code: 'ES' },
-                { flag: '🇩🇪', name: 'Deutsch', code: 'DE' },
-                { flag: '🇮🇹', name: 'Italiano', code: 'IT' },
-                { flag: '🇵🇹', name: 'Português', code: 'PT' },
-                { flag: '🇸🇦', name: 'العربية', code: 'AR' },
+                { flag: '🇫🇷', name: t('landing.languages.lang.fr'), code: 'FR' },
+                { flag: '🇬🇧', name: t('landing.languages.lang.en'), code: 'EN' },
+                { flag: '🇪🇸', name: t('landing.languages.lang.es'), code: 'ES' },
+                { flag: '🇩🇪', name: t('landing.languages.lang.de'), code: 'DE' },
+                { flag: '🇮🇹', name: t('landing.languages.lang.it'), code: 'IT' },
+                { flag: '🇵🇹', name: t('landing.languages.lang.pt'), code: 'PT' },
+                { flag: '🇸🇦', name: t('landing.languages.lang.ar'), code: 'AR' },
               ].map((lang, index) => (
                 <motion.div
                   key={lang.code}
@@ -991,15 +991,15 @@ export default function LandingPage() {
             <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-surface-500 text-sm">
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-success-500" />
-                <span>Génération de documents multilingue</span>
+                <span>{t('landing.languages.point.multilingualDocs')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-success-500" />
-                <span>Interface traduite</span>
+                <span>{t('landing.languages.point.translatedUi')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-success-500" />
-                <span>Support client multilingue</span>
+                <span>{t('landing.languages.point.multilingualSupport')}</span>
               </div>
             </div>
           </motion.div>
@@ -1011,13 +1011,24 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="mt-16 text-center"
           >
-            <h3 className="text-xl font-bold text-slate-800 mb-8">15+ secteurs d'activité couverts</h3>
+            <h3 className="text-xl font-bold text-slate-800 mb-8">{t('landing.sectors.title')}</h3>
             <div className="flex flex-wrap justify-center gap-2">
               {[
-                'Sécurité privée', 'Sécurité électronique', 'BTP', 'Logistique', 
-                'IT & Software', 'Maintenance', 'Conseil', 'Nettoyage', 
-                'Restauration', 'Transport', 'Énergie', 'Santé', 
-                'Éducation', 'Télécoms', 'Environnement'
+                t('landing.sectors.list.securityPrivate'),
+                t('landing.sectors.list.securityElectronic'),
+                t('landing.sectors.list.construction'),
+                t('landing.sectors.list.logistics'),
+                t('landing.sectors.list.itSoftware'),
+                t('landing.sectors.list.maintenance'),
+                t('landing.sectors.list.consulting'),
+                t('landing.sectors.list.cleaning'),
+                t('landing.sectors.list.catering'),
+                t('landing.sectors.list.transport'),
+                t('landing.sectors.list.energy'),
+                t('landing.sectors.list.health'),
+                t('landing.sectors.list.education'),
+                t('landing.sectors.list.telecoms'),
+                t('landing.sectors.list.environment'),
               ].map((sector) => (
                 <span
                   key={sector}

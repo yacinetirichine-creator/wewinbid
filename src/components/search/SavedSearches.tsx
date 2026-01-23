@@ -3,7 +3,10 @@
 import { useState, useEffect } from 'react';
 import { Star, Trash2, Play, Bell, BellOff } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr, enUS } from 'date-fns/locale';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
+import { trackEvent } from '@/lib/analytics';
 
 interface SavedSearch {
   id: string;
@@ -23,8 +26,37 @@ interface SavedSearchesProps {
 }
 
 export default function SavedSearches({ onExecuteSearch }: SavedSearchesProps) {
+  const { locale } = useLocale();
+  const entries = {
+    'search.saved.empty.title': 'Aucune recherche sauvegardée',
+    'search.saved.empty.hint': 'Utilisez le bouton "Sauvegarder" après une recherche',
+    'search.saved.meta.filters': '{count} filtres',
+    'search.saved.meta.uses': '{count} utilisations',
+    'search.saved.meta.used': 'Utilisé {relative}',
+    'search.saved.actions.run': 'Exécuter la recherche',
+    'search.saved.actions.addFavorite': 'Ajouter aux favoris',
+    'search.saved.actions.removeFavorite': 'Retirer des favoris',
+    'search.saved.actions.enableNotifications': 'Activer les notifications',
+    'search.saved.actions.disableNotifications': 'Désactiver les notifications',
+    'search.saved.actions.delete': 'Supprimer',
+    'search.saved.confirmDelete': 'Supprimer cette recherche sauvegardée ?'
+  } as const;
+  const { t } = useUiTranslations(locale, entries);
+
   const [searches, setSearches] = useState<SavedSearch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [executingId, setExecutingId] = useState<string | null>(null);
+  const [pendingFavoriteId, setPendingFavoriteId] = useState<string | null>(null);
+  const [pendingNotifyId, setPendingNotifyId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const formatTemplate = (template: string, values: Record<string, string | number>) => {
+    return Object.entries(values).reduce((acc, [key, value]) => {
+      return acc.replace(new RegExp(`\\{${key}\\}`, 'g'), String(value));
+    }, template);
+  };
+
+  const dateLocale = locale === 'en' ? enUS : fr;
 
   useEffect(() => {
     fetchSavedSearches();
@@ -44,6 +76,8 @@ export default function SavedSearches({ onExecuteSearch }: SavedSearchesProps) {
 
   const toggleFavorite = async (id: string, currentValue: boolean) => {
     try {
+      setPendingFavoriteId(id);
+      trackEvent('search_saved_favorite_toggled', { to: !currentValue });
       await fetch(`/api/search/saved/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -52,11 +86,15 @@ export default function SavedSearches({ onExecuteSearch }: SavedSearchesProps) {
       fetchSavedSearches();
     } catch (error) {
       console.error('Error toggling favorite:', error);
+    } finally {
+      setPendingFavoriteId(null);
     }
   };
 
   const toggleNotifications = async (id: string, currentValue: boolean) => {
     try {
+      setPendingNotifyId(id);
+      trackEvent('search_saved_notifications_toggled', { to: !currentValue });
       await fetch(`/api/search/saved/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -65,19 +103,25 @@ export default function SavedSearches({ onExecuteSearch }: SavedSearchesProps) {
       fetchSavedSearches();
     } catch (error) {
       console.error('Error toggling notifications:', error);
+    } finally {
+      setPendingNotifyId(null);
     }
   };
 
   const deleteSearch = async (id: string) => {
-    if (!confirm('Supprimer cette recherche sauvegardée ?')) return;
+    if (!confirm(t('search.saved.confirmDelete'))) return;
 
     try {
+      setPendingDeleteId(id);
+      trackEvent('search_saved_deleted');
       await fetch(`/api/search/saved/${id}`, {
         method: 'DELETE'
       });
       fetchSavedSearches();
     } catch (error) {
       console.error('Error deleting search:', error);
+    } finally {
+      setPendingDeleteId(null);
     }
   };
 
@@ -92,9 +136,9 @@ export default function SavedSearches({ onExecuteSearch }: SavedSearchesProps) {
   if (searches.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Aucune recherche sauvegardée</p>
+        <p className="text-gray-500">{t('search.saved.empty.title')}</p>
         <p className="text-sm text-gray-400 mt-1">
-          Utilisez le bouton "Sauvegarder" après une recherche
+          {t('search.saved.empty.hint')}
         </p>
       </div>
     );
@@ -125,12 +169,23 @@ export default function SavedSearches({ onExecuteSearch }: SavedSearchesProps) {
                   <span className="truncate">"{search.query_text}"</span>
                 )}
                 {Object.keys(search.filters).length > 0 && (
-                  <span>{Object.keys(search.filters).length} filtres</span>
+                  <span>
+                    {formatTemplate(t('search.saved.meta.filters'), {
+                      count: Object.keys(search.filters).length,
+                    })}
+                  </span>
                 )}
-                <span>{search.use_count} utilisations</span>
+                <span>
+                  {formatTemplate(t('search.saved.meta.uses'), { count: search.use_count })}
+                </span>
                 {search.last_used_at && (
                   <span>
-                    Utilisé {formatDistanceToNow(new Date(search.last_used_at), { addSuffix: true, locale: fr })}
+                    {formatTemplate(t('search.saved.meta.used'), {
+                      relative: formatDistanceToNow(new Date(search.last_used_at), {
+                        addSuffix: true,
+                        locale: dateLocale,
+                      }),
+                    })}
                   </span>
                 )}
               </div>
@@ -138,35 +193,64 @@ export default function SavedSearches({ onExecuteSearch }: SavedSearchesProps) {
 
             <div className="flex items-center gap-1 flex-shrink-0">
               <button
-                onClick={() => onExecuteSearch(search)}
-                className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                title="Exécuter la recherche"
+                type="button"
+                onClick={async () => {
+                  if (executingId) return;
+                  setExecutingId(search.id);
+                  try {
+                    trackEvent('search_saved_executed', { has_query: Boolean(search.query_text) });
+                    onExecuteSearch(search);
+                  } finally {
+                    setExecutingId(null);
+                  }
+                }}
+                disabled={Boolean(executingId) || pendingDeleteId === search.id}
+                className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title={t('search.saved.actions.run')}
               >
-                <Play className="w-4 h-4" />
+                {executingId === search.id ? (
+                  <span className="block w-4 h-4 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin" />
+                ) : (
+                  <Play className="w-4 h-4" />
+                )}
               </button>
 
               <button
                 onClick={() => toggleFavorite(search.id, search.is_favorite)}
+                type="button"
+                disabled={pendingFavoriteId === search.id || pendingDeleteId === search.id}
                 className={`p-2 rounded-lg transition-colors ${
                   search.is_favorite
                     ? 'text-amber-500 hover:bg-amber-50'
                     : 'text-gray-400 hover:bg-gray-100'
-                }`}
-                title={search.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                title={search.is_favorite ? t('search.saved.actions.removeFavorite') : t('search.saved.actions.addFavorite')}
               >
-                <Star className={`w-4 h-4 ${search.is_favorite ? 'fill-amber-500' : ''}`} />
+                {pendingFavoriteId === search.id ? (
+                  <span className="block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                ) : (
+                  <Star className={`w-4 h-4 ${search.is_favorite ? 'fill-amber-500' : ''}`} />
+                )}
               </button>
 
               <button
                 onClick={() => toggleNotifications(search.id, search.notify_new_results)}
+                type="button"
+                disabled={pendingNotifyId === search.id || pendingDeleteId === search.id}
                 className={`p-2 rounded-lg transition-colors ${
                   search.notify_new_results
                     ? 'text-green-600 hover:bg-green-50'
                     : 'text-gray-400 hover:bg-gray-100'
-                }`}
-                title={search.notify_new_results ? 'Désactiver les notifications' : 'Activer les notifications'}
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                title={
+                  search.notify_new_results
+                    ? t('search.saved.actions.disableNotifications')
+                    : t('search.saved.actions.enableNotifications')
+                }
               >
-                {search.notify_new_results ? (
+                {pendingNotifyId === search.id ? (
+                  <span className="block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                ) : search.notify_new_results ? (
                   <Bell className="w-4 h-4" />
                 ) : (
                   <BellOff className="w-4 h-4" />
@@ -175,10 +259,16 @@ export default function SavedSearches({ onExecuteSearch }: SavedSearchesProps) {
 
               <button
                 onClick={() => deleteSearch(search.id)}
-                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                title="Supprimer"
+                type="button"
+                disabled={pendingDeleteId === search.id}
+                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title={t('search.saved.actions.delete')}
               >
-                <Trash2 className="w-4 h-4" />
+                {pendingDeleteId === search.id ? (
+                  <span className="block w-4 h-4 rounded-full border-2 border-red-600 border-t-transparent animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
               </button>
             </div>
           </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -22,6 +22,8 @@ import { TenderAIAnalysis, TenderAnalysisResult } from '@/components/tenders/Ten
 import { TenderResponseWizard } from '@/components/tenders/TenderResponseWizard';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 // États du workflow
 type WorkflowStep = 'upload' | 'analyzing' | 'analysis' | 'responding';
@@ -148,6 +150,30 @@ Le marché est divisé en 3 lots géographiques correspondant aux différents ar
 };
 
 export default function TenderAnalyzePage() {
+  const { locale } = useLocale();
+  const entries = useMemo(
+    () => ({
+      'tendersAnalyze.back': "Retour aux appels d'offres",
+      'tendersAnalyze.title': "Analyser un appel d'offres",
+      'tendersAnalyze.subtitle': "Uploadez les documents du DCE et notre IA analysera l'appel d'offres pour vous",
+
+      'tendersAnalyze.steps.upload': 'Upload',
+      'tendersAnalyze.steps.analysis': 'Analyse',
+      'tendersAnalyze.steps.responding': 'Réponse',
+
+      'tendersAnalyze.upload.title': "Documents de l'appel d'offres",
+      'tendersAnalyze.upload.subtitle': 'Importez le DCE complet (AAPC, RC, CCAP, CCTP, BPU, etc.) pour une analyse optimale',
+
+      'tendersAnalyze.analyzing.title': 'Analyse en cours...',
+      'tendersAnalyze.analyzing.subtitle': 'Notre IA analyse vos documents pour extraire les informations clés',
+      'tendersAnalyze.analyzing.progressLabel': 'Progression',
+      'tendersAnalyze.analyzing.estimatedTime': 'Temps estimé: ~{seconds} secondes',
+      'tendersAnalyze.analyzing.documents': 'Documents analysés',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
+
   const router = useRouter();
   const [workflowStep, setWorkflowStep] = useState<WorkflowStep>('upload');
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
@@ -301,23 +327,23 @@ export default function TenderAnalyzePage() {
             className="inline-flex items-center text-sm text-surface-500 hover:text-surface-700 mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour aux appels d'offres
+            {t('tendersAnalyze.back')}
           </Link>
           
           <h1 className="text-2xl font-bold text-surface-900">
-            Analyser un appel d'offres
+            {t('tendersAnalyze.title')}
           </h1>
           <p className="text-surface-500 mt-1">
-            Uploadez les documents du DCE et notre IA analysera l'appel d'offres pour vous
+            {t('tendersAnalyze.subtitle')}
           </p>
         </div>
 
         {/* Indicateur d'étape */}
         <div className="flex items-center gap-4 mb-8">
           {[
-            { id: 'upload', label: 'Upload', icon: FileText },
-            { id: 'analysis', label: 'Analyse', icon: Sparkles },
-            { id: 'responding', label: 'Réponse', icon: CheckCircle2 },
+            { id: 'upload', label: t('tendersAnalyze.steps.upload'), icon: FileText },
+            { id: 'analysis', label: t('tendersAnalyze.steps.analysis'), icon: Sparkles },
+            { id: 'responding', label: t('tendersAnalyze.steps.responding'), icon: CheckCircle2 },
           ].map((step, idx) => {
             const isActive = workflowStep === step.id || 
               (workflowStep === 'analyzing' && step.id === 'analysis');
@@ -371,10 +397,10 @@ export default function TenderAnalyzePage() {
                     <FileText className="w-8 h-8 text-primary-600" />
                   </div>
                   <h2 className="text-xl font-bold text-surface-900">
-                    Documents de l'appel d'offres
+                    {t('tendersAnalyze.upload.title')}
                   </h2>
                   <p className="text-surface-500 mt-2 max-w-md mx-auto">
-                    Importez le DCE complet (AAPC, RC, CCAP, CCTP, BPU, etc.) pour une analyse optimale
+                    {t('tendersAnalyze.upload.subtitle')}
                   </p>
                 </div>
 
@@ -412,15 +438,15 @@ export default function TenderAnalyzePage() {
                 </motion.div>
 
                 <h2 className="text-xl font-bold text-surface-900 mb-2">
-                  Analyse en cours...
+                  {t('tendersAnalyze.analyzing.title')}
                 </h2>
                 <p className="text-surface-500 mb-8">
-                  Notre IA analyse vos documents pour extraire les informations clés
+                  {t('tendersAnalyze.analyzing.subtitle')}
                 </p>
 
                 <div className="max-w-md mx-auto mb-6">
                   <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-surface-600">Progression</span>
+                    <span className="text-surface-600">{t('tendersAnalyze.analyzing.progressLabel')}</span>
                     <span className="font-semibold text-primary-600">{analysisProgress}%</span>
                   </div>
                   <div className="h-3 bg-surface-200 rounded-full overflow-hidden">
@@ -435,12 +461,12 @@ export default function TenderAnalyzePage() {
 
                 <div className="flex items-center justify-center gap-2 text-sm text-surface-500">
                   <Clock className="w-4 h-4" />
-                  <span>Temps estimé: ~30 secondes</span>
+                  <span>{t('tendersAnalyze.analyzing.estimatedTime', { seconds: '30' })}</span>
                 </div>
 
                 {/* Documents en cours d'analyse */}
                 <div className="mt-8 pt-8 border-t border-surface-200">
-                  <p className="text-sm text-surface-400 mb-4">Documents analysés</p>
+                  <p className="text-sm text-surface-400 mb-4">{t('tendersAnalyze.analyzing.documents')}</p>
                   <div className="flex flex-wrap items-center justify-center gap-2">
                     {uploadedFiles.map((file, idx) => (
                       <motion.div

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import toast from 'react-hot-toast';
 import { AppLayout } from '@/components/layout/Sidebar';
 import { PageHeader } from '@/components/layout/Sidebar';
 import SearchBar from '@/components/search/SearchBar';
@@ -9,6 +10,10 @@ import FilterPanel, { SearchFilters } from '@/components/search/FilterPanel';
 import SearchResults from '@/components/search/SearchResults';
 import SavedSearches from '@/components/search/SavedSearches';
 import { Search, Save, History, Bookmark } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
+import { trackEvent } from '@/lib/analytics';
 
 interface SearchResult {
   tender_id: string;
@@ -36,6 +41,35 @@ interface SavedSearch {
 function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { locale } = useLocale();
+
+  const entries = {
+    'search.page.title': 'Recherche Avancée',
+    'search.page.description': "Trouvez les appels d'offres qui correspondent à vos critères",
+    'search.tabs.search': 'Recherche',
+    'search.tabs.saved': 'Recherches sauvegardées',
+    'search.tabs.history': 'Historique',
+    'search.search.placeholder': 'Rechercher par mots-clés, organisation, secteur...',
+    'search.history.title': 'Historique de recherche',
+    'search.history.soon': 'Cette fonctionnalité sera bientôt disponible',
+    'search.save.modalTitle': 'Sauvegarder la recherche',
+    'search.save.nameLabel': 'Nom de la recherche *',
+    'search.save.namePlaceholder': 'Ex: Projets IT en France',
+    'search.save.descriptionLabel': 'Description (optionnelle)',
+    'search.save.descriptionPlaceholder': 'Ajoutez une description...',
+    'search.save.summary.query': 'Requête :',
+    'search.save.summary.none': 'Aucune',
+    'search.save.summary.filters': 'Filtres :',
+    'search.save.summary.filtersActive': '{count} actifs',
+    'search.save.summary.filtersNone': 'Aucun',
+    'search.save.cancel': 'Annuler',
+    'search.save.save': 'Sauvegarder',
+    'search.save.error.missingName': 'Veuillez donner un nom à votre recherche',
+    'search.save.success': 'Recherche sauvegardée avec succès !',
+    'search.save.error.generic': 'Erreur lors de la sauvegarde',
+  } as const;
+
+  const { t } = useUiTranslations(locale, entries);
   
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [filters, setFilters] = useState<SearchFilters>({});
@@ -47,12 +81,26 @@ function SearchContent() {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveName, setSaveName] = useState('');
   const [saveDescription, setSaveDescription] = useState('');
+  const [isSavingSearch, setIsSavingSearch] = useState(false);
+
+  const formatTemplate = (template: string, values: Record<string, string | number>) => {
+    return Object.entries(values).reduce((acc, [key, value]) => {
+      return acc.replace(new RegExp(`\\{${key}\\}`, 'g'), String(value));
+    }, template);
+  };
 
   const performSearch = useCallback(async (searchQuery: string, searchFilters: SearchFilters, page: number = 1) => {
     setIsLoading(true);
     setQuery(searchQuery);
     setFilters(searchFilters);
     setCurrentPage(page);
+
+    trackEvent('search_performed', {
+      page,
+      has_query: Boolean(searchQuery),
+      query_length: searchQuery?.length || 0,
+      filters_count: Object.keys(searchFilters || {}).length,
+    });
 
     try {
       // Build query params
@@ -107,6 +155,7 @@ function SearchContent() {
   };
 
   const handleExecuteSavedSearch = async (savedSearch: SavedSearch) => {
+    trackEvent('search_saved_executed', { has_query: Boolean(savedSearch.query_text) });
     // Fetch the saved search to update usage stats
     await fetch(`/api/search/saved/${savedSearch.id}`);
     
@@ -116,12 +165,10 @@ function SearchContent() {
   };
 
   const handleSaveSearch = async () => {
-    if (!saveName.trim()) {
-      alert('Veuillez donner un nom à votre recherche');
-      return;
-    }
+    if (!saveName.trim()) return toast.error(t('search.save.error.missingName'));
 
     try {
+      setIsSavingSearch(true);
       const response = await fetch('/api/search/saved', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -138,31 +185,45 @@ function SearchContent() {
         setShowSaveModal(false);
         setSaveName('');
         setSaveDescription('');
-        alert('Recherche sauvegardée avec succès !');
+        toast.success(t('search.save.success'));
+        trackEvent('search_saved_created', {
+          has_query: Boolean(query),
+          query_length: query?.length || 0,
+          filters_count: Object.keys(filters || {}).length,
+        });
         setActiveTab('saved');
       } else {
         const data = await response.json();
-        alert(data.error || 'Erreur lors de la sauvegarde');
+        toast.error(data.error || t('search.save.error.generic'));
       }
     } catch (error) {
       console.error('Error saving search:', error);
-      alert('Erreur lors de la sauvegarde');
+      toast.error(t('search.save.error.generic'));
+    } finally {
+      setIsSavingSearch(false);
     }
   };
 
   return (
     <AppLayout>
       <PageHeader
-        title="Recherche Avancée"
-        description="Trouvez les appels d'offres qui correspondent à vos critères"
+        title={t('search.page.title')}
+        description={t('search.page.description')}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tabs */}
         <div className="mb-6 border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
+          <nav className="-mb-px flex space-x-8" role="tablist" aria-label={t('search.page.title')}>
             <button
-              onClick={() => setActiveTab('search')}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'search'}
+              aria-controls="search-tab-panel"
+              onClick={() => {
+                setActiveTab('search');
+                trackEvent('search_tab_clicked', { tab: 'search' });
+              }}
               className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'search'
                   ? 'border-indigo-500 text-indigo-600'
@@ -171,12 +232,19 @@ function SearchContent() {
             >
               <div className="flex items-center gap-2">
                 <Search className="w-4 h-4" />
-                Recherche
+                {t('search.tabs.search')}
               </div>
             </button>
 
             <button
-              onClick={() => setActiveTab('saved')}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'saved'}
+              aria-controls="saved-tab-panel"
+              onClick={() => {
+                setActiveTab('saved');
+                trackEvent('search_tab_clicked', { tab: 'saved' });
+              }}
               className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'saved'
                   ? 'border-indigo-500 text-indigo-600'
@@ -185,12 +253,19 @@ function SearchContent() {
             >
               <div className="flex items-center gap-2">
                 <Bookmark className="w-4 h-4" />
-                Recherches sauvegardées
+                {t('search.tabs.saved')}
               </div>
             </button>
 
             <button
-              onClick={() => setActiveTab('history')}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'history'}
+              aria-controls="history-tab-panel"
+              onClick={() => {
+                setActiveTab('history');
+                trackEvent('search_tab_clicked', { tab: 'history' });
+              }}
               className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'history'
                   ? 'border-indigo-500 text-indigo-600'
@@ -199,7 +274,7 @@ function SearchContent() {
             >
               <div className="flex items-center gap-2">
                 <History className="w-4 h-4" />
-                Historique
+                {t('search.tabs.history')}
               </div>
             </button>
           </nav>
@@ -207,7 +282,7 @@ function SearchContent() {
 
         {/* Search Tab */}
         {activeTab === 'search' && (
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div id="search-tab-panel" role="tabpanel" className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Filters Sidebar */}
             <div className="lg:col-span-1">
               <FilterPanel
@@ -222,7 +297,7 @@ function SearchContent() {
               <SearchBar
                 onSearch={handleSearch}
                 initialValue={query}
-                placeholder="Rechercher par mots-clés, organisation, secteur..."
+                placeholder={t('search.search.placeholder')}
               />
 
               {/* Results */}
@@ -231,7 +306,10 @@ function SearchContent() {
                 isLoading={isLoading}
                 query={query}
                 totalResults={totalResults}
-                onSaveSearch={() => setShowSaveModal(true)}
+                onSaveSearch={() => {
+                  setShowSaveModal(true);
+                  trackEvent('search_save_modal_opened', { has_query: Boolean(query) });
+                }}
               />
             </div>
           </div>
@@ -239,20 +317,20 @@ function SearchContent() {
 
         {/* Saved Searches Tab */}
         {activeTab === 'saved' && (
-          <div className="max-w-4xl mx-auto">
+          <div id="saved-tab-panel" role="tabpanel" className="max-w-4xl mx-auto">
             <SavedSearches onExecuteSearch={handleExecuteSavedSearch} />
           </div>
         )}
 
         {/* History Tab */}
         {activeTab === 'history' && (
-          <div className="max-w-4xl mx-auto bg-white rounded-lg border border-gray-200 p-8 text-center">
+          <div id="history-tab-panel" role="tabpanel" className="max-w-4xl mx-auto bg-white rounded-lg border border-gray-200 p-8 text-center">
             <History className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Historique de recherche
+              {t('search.history.title')}
             </h3>
             <p className="text-gray-600">
-              Cette fonctionnalité sera bientôt disponible
+              {t('search.history.soon')}
             </p>
           </div>
         )}
@@ -264,11 +342,12 @@ function SearchContent() {
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
-                Sauvegarder la recherche
+                {t('search.save.modalTitle')}
               </h3>
               <button
                 onClick={() => setShowSaveModal(false)}
                 className="text-gray-400 hover:text-gray-600"
+                aria-label="Close"
               >
                 ✕
               </button>
@@ -277,13 +356,13 @@ function SearchContent() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nom de la recherche *
+                  {t('search.save.nameLabel')}
                 </label>
                 <input
                   type="text"
                   value={saveName}
                   onChange={(e) => setSaveName(e.target.value)}
-                  placeholder="Ex: Projets IT en France"
+                  placeholder={t('search.save.namePlaceholder')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                   autoFocus
                 />
@@ -291,12 +370,12 @@ function SearchContent() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description (optionnelle)
+                  {t('search.save.descriptionLabel')}
                 </label>
                 <textarea
                   value={saveDescription}
                   onChange={(e) => setSaveDescription(e.target.value)}
-                  placeholder="Ajoutez une description..."
+                  placeholder={t('search.save.descriptionPlaceholder')}
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                 />
@@ -304,32 +383,38 @@ function SearchContent() {
 
               <div className="bg-gray-50 rounded-lg p-3">
                 <p className="text-sm text-gray-600">
-                  <span className="font-medium">Requête :</span>{' '}
-                  {query || <span className="italic">Aucune</span>}
+                  <span className="font-medium">{t('search.save.summary.query')}</span>{' '}
+                  {query || <span className="italic">{t('search.save.summary.none')}</span>}
                 </p>
                 <p className="text-sm text-gray-600 mt-1">
-                  <span className="font-medium">Filtres :</span>{' '}
+                  <span className="font-medium">{t('search.save.summary.filters')}</span>{' '}
                   {Object.keys(filters).length > 0
-                    ? `${Object.keys(filters).length} actifs`
-                    : 'Aucun'}
+                    ? formatTemplate(t('search.save.summary.filtersActive'), {
+                        count: Object.keys(filters).length,
+                      })
+                    : t('search.save.summary.filtersNone')}
                 </p>
               </div>
             </div>
 
             <div className="flex gap-3 mt-6">
-              <button
+              <Button
+                type="button"
+                variant="secondary"
+                fullWidth
                 onClick={() => setShowSaveModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                Annuler
-              </button>
-              <button
+                {t('search.save.cancel')}
+              </Button>
+              <Button
+                type="button"
+                fullWidth
+                isLoading={isSavingSearch}
+                leftIcon={<Save className="w-4 h-4" />}
                 onClick={handleSaveSearch}
-                className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
               >
-                <Save className="w-4 h-4" />
-                Sauvegarder
-              </button>
+                {t('search.save.save')}
+              </Button>
             </div>
           </div>
         </div>

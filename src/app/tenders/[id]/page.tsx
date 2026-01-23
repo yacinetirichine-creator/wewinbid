@@ -136,7 +136,7 @@ export default function TenderDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [getSupabase, tenderId]);
+  }, [getSupabase, router, tenderId]);
 
   const fetchDocuments = useCallback(async () => {
     try {

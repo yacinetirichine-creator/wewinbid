@@ -16,30 +16,6 @@ import { GlobalSearch } from './GlobalSearch';
 import { useLocale } from '@/hooks/useLocale';
 import { useUiTranslations } from '@/hooks/useUiTranslations';
 
-// Mapping des chemins vers les noms affichables
-const pathNames: Record<string, string> = {
-  dashboard: 'Tableau de bord',
-  tenders: 'Appels d\'offres',
-  marketplace: 'Marketplace',
-  analytics: 'Analytics',
-  calendar: 'Calendrier',
-  chat: 'Assistant IA',
-  studio: 'Studio IA',
-  alerts: 'Alertes',
-  documents: 'Documents',
-  settings: 'Paramètres',
-  help: 'Aide',
-  search: 'Recherche',
-  library: 'Bibliothèque',
-  teams: 'Équipes',
-  notifications: 'Notifications',
-  pricing: 'Tarifs',
-  onboarding: 'Configuration',
-  'documents-generator': 'Générateur',
-  'dashboard-admin': 'Administration',
-  'dashboard-client': 'Espace Client',
-};
-
 interface NewTopBarProps {
   showSearch?: boolean;
   title?: string;
@@ -68,6 +44,27 @@ export function NewTopBar({ showSearch = true, title }: NewTopBarProps) {
       'topbar.search.placeholder': "Rechercher un appel d'offres, partenaire...",
       'topbar.search.shortcut': '⌘K',
       'topbar.settings.label': 'Paramètres',
+
+      'topbar.breadcrumb.dashboard': 'Tableau de bord',
+      'topbar.breadcrumb.tenders': "Appels d'offres",
+      'topbar.breadcrumb.marketplace': 'Marketplace',
+      'topbar.breadcrumb.analytics': 'Analytics',
+      'topbar.breadcrumb.calendar': 'Calendrier',
+      'topbar.breadcrumb.chat': 'Assistant IA',
+      'topbar.breadcrumb.studio': 'Studio IA',
+      'topbar.breadcrumb.alerts': 'Alertes',
+      'topbar.breadcrumb.documents': 'Documents',
+      'topbar.breadcrumb.settings': 'Paramètres',
+      'topbar.breadcrumb.help': 'Aide',
+      'topbar.breadcrumb.search': 'Recherche',
+      'topbar.breadcrumb.library': 'Bibliothèque',
+      'topbar.breadcrumb.teams': 'Équipes',
+      'topbar.breadcrumb.notifications': 'Notifications',
+      'topbar.breadcrumb.pricing': 'Tarifs',
+      'topbar.breadcrumb.onboarding': 'Configuration',
+      'topbar.breadcrumb.documents-generator': 'Générateur',
+      'topbar.breadcrumb.dashboard-admin': 'Administration',
+      'topbar.breadcrumb.dashboard-client': 'Espace Client',
     }),
     []
   );
@@ -79,10 +76,12 @@ export function NewTopBar({ showSearch = true, title }: NewTopBarProps) {
     const paths = pathname.split('/').filter(Boolean);
     return paths.map((path, index) => {
       const href = '/' + paths.slice(0, index + 1).join('/');
-      const name = pathNames[path] || path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ');
+      const translated = t(`topbar.breadcrumb.${path}` as keyof typeof entries);
+      const fallback = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ');
+      const name = translated || fallback;
       return { name, href, isLast: index === paths.length - 1 };
     });
-  }, [pathname]);
+  }, [pathname, t]);
 
   return (
     <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-surface-200">

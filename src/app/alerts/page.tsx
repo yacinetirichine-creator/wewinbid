@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { 
   Card, 
   CardContent,
@@ -72,124 +72,30 @@ interface AlertMatch {
   created_at: string;
 }
 
-// Données de démonstration
-const DEMO_ALERTS: Alert[] = [
-  {
-    id: '1',
-    name: 'Vidéosurveillance Île-de-France',
-    keywords: ['vidéosurveillance', 'caméras', 'sécurité électronique'],
-    sectors: ['Sécurité électronique'],
-    regions: ['Île-de-France'],
-    min_value: 10000,
-    max_value: 500000,
-    tender_type: 'public',
-    notification_email: true,
-    notification_push: true,
-    frequency: 'realtime',
-    active: true,
-    matches_count: 23,
-    last_match: '2024-01-15T09:30:00Z',
-    created_at: '2023-09-01T10:00:00Z',
-  },
-  {
-    id: '2',
-    name: 'Gardiennage National',
-    keywords: ['gardiennage', 'surveillance', 'sécurité privée', 'agents'],
-    sectors: ['Sécurité privée'],
-    regions: ['Île-de-France', 'Auvergne-Rhône-Alpes', 'Provence-Alpes-Côte d\'Azur'],
-    min_value: 50000,
-    tender_type: 'all',
-    notification_email: true,
-    notification_push: false,
-    frequency: 'daily',
-    active: true,
-    matches_count: 56,
-    last_match: '2024-01-14T16:45:00Z',
-    created_at: '2023-06-15T08:00:00Z',
-  },
-  {
-    id: '3',
-    name: 'Contrôle d\'accès',
-    keywords: ['contrôle d\'accès', 'badge', 'biométrie', 'interphonie'],
-    sectors: ['Sécurité électronique'],
-    regions: [],
-    tender_type: 'public',
-    notification_email: true,
-    notification_push: true,
-    frequency: 'weekly',
-    active: false,
-    matches_count: 12,
-    created_at: '2023-11-20T14:30:00Z',
-  },
+type LabeledOption = { value: string; labelKey: string };
+
+const REGION_OPTIONS: LabeledOption[] = [
+  { value: 'idf', labelKey: 'alerts.regions.idf' },
+  { value: 'ara', labelKey: 'alerts.regions.ara' },
+  { value: 'naq', labelKey: 'alerts.regions.naq' },
+  { value: 'occ', labelKey: 'alerts.regions.occ' },
+  { value: 'paca', labelKey: 'alerts.regions.paca' },
+  { value: 'pdl', labelKey: 'alerts.regions.pdl' },
+  { value: 'ges', labelKey: 'alerts.regions.ges' },
+  { value: 'hdf', labelKey: 'alerts.regions.hdf' },
+  { value: 'bre', labelKey: 'alerts.regions.bre' },
+  { value: 'nor', labelKey: 'alerts.regions.nor' },
 ];
 
-const DEMO_MATCHES: AlertMatch[] = [
-  {
-    id: '1',
-    alert_id: '1',
-    tender_title: 'Mise en place d\'un système de vidéosurveillance - Lycée Jean Moulin',
-    tender_reference: 'MAPA-2024-0156',
-    buyer: 'Région Île-de-France',
-    estimated_value: 85000,
-    deadline: '2024-02-15T12:00:00Z',
-    source_url: 'https://boamp.fr/...',
-    match_score: 95,
-    matched_keywords: ['vidéosurveillance', 'caméras'],
-    seen: false,
-    created_at: '2024-01-15T09:30:00Z',
-  },
-  {
-    id: '2',
-    alert_id: '1',
-    tender_title: 'Rénovation système vidéoprotection - Commune de Créteil',
-    tender_reference: 'AO-2024-089',
-    buyer: 'Ville de Créteil',
-    estimated_value: 120000,
-    deadline: '2024-02-20T16:00:00Z',
-    source_url: 'https://marches.maximilien.fr/...',
-    match_score: 88,
-    matched_keywords: ['vidéosurveillance'],
-    seen: true,
-    created_at: '2024-01-14T11:20:00Z',
-  },
-  {
-    id: '3',
-    alert_id: '2',
-    tender_title: 'Prestation de gardiennage - Sites administratifs',
-    tender_reference: 'DCE-2024-0234',
-    buyer: 'Préfecture du Rhône',
-    estimated_value: 450000,
-    deadline: '2024-03-01T12:00:00Z',
-    source_url: 'https://boamp.fr/...',
-    match_score: 92,
-    matched_keywords: ['gardiennage', 'surveillance'],
-    seen: false,
-    created_at: '2024-01-14T16:45:00Z',
-  },
-];
-
-const REGIONS = [
-  'Île-de-France',
-  'Auvergne-Rhône-Alpes',
-  'Nouvelle-Aquitaine',
-  'Occitanie',
-  'Provence-Alpes-Côte d\'Azur',
-  'Pays de la Loire',
-  'Grand Est',
-  'Hauts-de-France',
-  'Bretagne',
-  'Normandie',
-];
-
-const SECTORS = [
-  'Sécurité électronique',
-  'Sécurité privée',
-  'BTP',
-  'Informatique',
-  'Propreté',
-  'Formation',
-  'Maintenance',
-  'Transport',
+const SECTOR_OPTIONS: LabeledOption[] = [
+  { value: 'security_electronic', labelKey: 'alerts.sectors.security_electronic' },
+  { value: 'security_private', labelKey: 'alerts.sectors.security_private' },
+  { value: 'construction', labelKey: 'alerts.sectors.construction' },
+  { value: 'it', labelKey: 'alerts.sectors.it' },
+  { value: 'cleaning', labelKey: 'alerts.sectors.cleaning' },
+  { value: 'training', labelKey: 'alerts.sectors.training' },
+  { value: 'maintenance', labelKey: 'alerts.sectors.maintenance' },
+  { value: 'transport', labelKey: 'alerts.sectors.transport' },
 ];
 
 // Composant carte alerte
@@ -200,6 +106,9 @@ function AlertCard({
   onDelete,
   onViewMatches,
   t,
+  regionLabelByValue,
+  formatCurrency,
+  formatDate,
 }: { 
   alert: Alert;
   onEdit: () => void;
@@ -207,7 +116,40 @@ function AlertCard({
   onDelete: () => void;
   onViewMatches: () => void;
   t: (key: string) => string;
+  regionLabelByValue: Record<string, string>;
+  formatCurrency: (amount: number) => string;
+  formatDate: (date: Date) => string;
 }) {
+  const budgetText = (() => {
+    const min = typeof alert.min_value === 'number' ? alert.min_value : null;
+    const max = typeof alert.max_value === 'number' ? alert.max_value : null;
+
+    if (min != null && max != null) {
+      return t('alerts.budget.range')
+        .replace('{min}', formatCurrency(min))
+        .replace('{max}', formatCurrency(max));
+    }
+
+    if (min != null) {
+      return t('alerts.budget.minOnly').replace('{min}', formatCurrency(min));
+    }
+
+    if (max != null) {
+      return t('alerts.budget.maxOnly').replace('{max}', formatCurrency(max));
+    }
+
+    return null;
+  })();
+
+  const regionsText = (() => {
+    if (!alert.regions.length) return null;
+    const labels = alert.regions.map((r) => regionLabelByValue[r] ?? r);
+    return {
+      preview: labels.slice(0, 2).join(', '),
+      extra: labels.length > 2 ? ` +${labels.length - 2}` : '',
+    };
+  })();
+
   return (
     <Card className={`border-gray-200 ${!alert.active ? 'opacity-60' : ''}`}>
       <CardContent className="p-5">
@@ -255,29 +197,27 @@ function AlertCard({
         </div>
 
         {/* Régions */}
-        {alert.regions.length > 0 && (
+        {regionsText && (
           <div className="mb-3">
             <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
               <MapPin className="w-4 h-4" />
               <span>{t('alerts.card.regions')}</span>
             </div>
             <p className="text-sm text-gray-700">
-              {alert.regions.slice(0, 2).join(', ')}
-              {alert.regions.length > 2 && ` +${alert.regions.length - 2}`}
+              {regionsText.preview}
+              {regionsText.extra}
             </p>
           </div>
         )}
 
         {/* Budget */}
-        {(alert.min_value || alert.max_value) && (
+        {budgetText && (
           <div className="mb-3">
             <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
               <Euro className="w-4 h-4" />
               <span>{t('alerts.card.budget')}</span>
             </div>
-            <p className="text-sm text-gray-700">
-              {alert.min_value?.toLocaleString('fr-FR')} € - {alert.max_value?.toLocaleString('fr-FR') || '∞'} €
-            </p>
+            <p className="text-sm text-gray-700">{budgetText}</p>
           </div>
         )}
 
@@ -306,7 +246,7 @@ function AlertCard({
         {/* Dernière correspondance */}
         {alert.last_match && (
           <p className="text-xs text-gray-500 mb-4">
-            {t('alerts.card.lastMatch').replace('{date}', new Date(alert.last_match).toLocaleDateString('fr-FR'))}
+            {t('alerts.card.lastMatch').replace('{date}', formatDate(new Date(alert.last_match)))}
           </p>
         )}
 
@@ -334,6 +274,14 @@ function AlertCard({
 // Composant correspondance
 function MatchCard({ match, onMarkSeen, t }: { match: AlertMatch; onMarkSeen: () => void; t: (key: string) => string }) {
   const daysLeft = Math.ceil((new Date(match.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  const { locale } = useLocale();
+  const formatCurrency = useMemo(() => {
+    try {
+      return new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' });
+    } catch {
+      return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
+    }
+  }, [locale]);
   
   return (
     <Card className={`border-gray-200 ${!match.seen ? 'border-l-4 border-l-primary-500' : ''}`}>
@@ -370,7 +318,7 @@ function MatchCard({ match, onMarkSeen, t }: { match: AlertMatch; onMarkSeen: ()
             {match.estimated_value && (
               <span className="text-gray-600">
                 <Euro className="w-4 h-4 inline mr-1" />
-                {match.estimated_value.toLocaleString('fr-FR')} €
+                {formatCurrency.format(match.estimated_value)}
               </span>
             )}
             <span className={`${daysLeft <= 7 ? 'text-red-600' : 'text-gray-600'}`}>
@@ -401,11 +349,15 @@ function AlertModal({
   onClose,
   onSave,
   t,
+  sectorOptions,
+  regionOptions,
 }: {
   alert?: Alert;
   onClose: () => void;
   onSave: (data: Partial<Alert>) => void;
   t: (key: string) => string;
+  sectorOptions: Array<{ value: string; label: string }>;
+  regionOptions: Array<{ value: string; label: string }>;
 }) {
   const [formData, setFormData] = useState({
     name: alert?.name || '',
@@ -472,24 +424,27 @@ function AlertModal({
               {t('alerts.modal.sectorsLabel')}
             </label>
             <div className="flex flex-wrap gap-2">
-              {SECTORS.map((sector) => (
+              {sectorOptions.map((sector) => (
                 <button
-                  key={sector}
+                  key={sector.value}
                   type="button"
                   className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-                    formData.sectors.includes(sector)
+                    formData.sectors.includes(sector.value)
                       ? 'bg-primary-100 border-primary-300 text-primary-700'
                       : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
                   }`}
                   onClick={() => {
-                    if (formData.sectors.includes(sector)) {
-                      setFormData({ ...formData, sectors: formData.sectors.filter(s => s !== sector) });
+                    if (formData.sectors.includes(sector.value)) {
+                      setFormData({
+                        ...formData,
+                        sectors: formData.sectors.filter((s) => s !== sector.value),
+                      });
                     } else {
-                      setFormData({ ...formData, sectors: [...formData.sectors, sector] });
+                      setFormData({ ...formData, sectors: [...formData.sectors, sector.value] });
                     }
                   }}
                 >
-                  {sector}
+                  {sector.label}
                 </button>
               ))}
             </div>
@@ -500,24 +455,27 @@ function AlertModal({
               {t('alerts.modal.regionsLabel')}
             </label>
             <div className="flex flex-wrap gap-2">
-              {REGIONS.map((region) => (
+              {regionOptions.map((region) => (
                 <button
-                  key={region}
+                  key={region.value}
                   type="button"
                   className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-                    formData.regions.includes(region)
+                    formData.regions.includes(region.value)
                       ? 'bg-primary-100 border-primary-300 text-primary-700'
                       : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
                   }`}
                   onClick={() => {
-                    if (formData.regions.includes(region)) {
-                      setFormData({ ...formData, regions: formData.regions.filter(r => r !== region) });
+                    if (formData.regions.includes(region.value)) {
+                      setFormData({
+                        ...formData,
+                        regions: formData.regions.filter((r) => r !== region.value),
+                      });
                     } else {
-                      setFormData({ ...formData, regions: [...formData.regions, region] });
+                      setFormData({ ...formData, regions: [...formData.regions, region.value] });
                     }
                   }}
                 >
-                  {region}
+                  {region.label}
                 </button>
               ))}
             </div>
@@ -650,6 +608,10 @@ export default function AlertsPage() {
       'alerts.card.push': 'Push',
       'alerts.card.lastMatch': 'Dernière correspondance : {date}',
       'alerts.card.view': 'Voir ({count})',
+      'alerts.infinity': '∞',
+      'alerts.budget.range': '{min} - {max}',
+      'alerts.budget.minOnly': 'À partir de {min}',
+      'alerts.budget.maxOnly': "Jusqu'à {max}",
       'alerts.frequency.realtime': 'Temps réel',
       'alerts.frequency.daily': 'Quotidien',
       'alerts.frequency.weekly': 'Hebdo',
@@ -678,16 +640,209 @@ export default function AlertsPage() {
       'alerts.modal.cancel': 'Annuler',
       'alerts.modal.save': 'Enregistrer',
       'alerts.modal.create': "Créer l'alerte",
+
+      // Régions
+      'alerts.regions.idf': 'Île-de-France',
+      'alerts.regions.ara': 'Auvergne-Rhône-Alpes',
+      'alerts.regions.naq': 'Nouvelle-Aquitaine',
+      'alerts.regions.occ': 'Occitanie',
+      'alerts.regions.paca': "Provence-Alpes-Côte d'Azur",
+      'alerts.regions.pdl': 'Pays de la Loire',
+      'alerts.regions.ges': 'Grand Est',
+      'alerts.regions.hdf': 'Hauts-de-France',
+      'alerts.regions.bre': 'Bretagne',
+      'alerts.regions.nor': 'Normandie',
+
+      // Secteurs
+      'alerts.sectors.security_electronic': 'Sécurité électronique',
+      'alerts.sectors.security_private': 'Sécurité privée',
+      'alerts.sectors.construction': 'BTP',
+      'alerts.sectors.it': 'Informatique',
+      'alerts.sectors.cleaning': 'Propreté',
+      'alerts.sectors.training': 'Formation',
+      'alerts.sectors.maintenance': 'Maintenance',
+      'alerts.sectors.transport': 'Transport',
+
+      // Démo (noms/keywords/titres)
+      'alerts.demo.alert1.name': 'Vidéosurveillance Île-de-France',
+      'alerts.demo.alert1.kw1': 'vidéosurveillance',
+      'alerts.demo.alert1.kw2': 'caméras',
+      'alerts.demo.alert1.kw3': 'sécurité électronique',
+
+      'alerts.demo.alert2.name': 'Gardiennage national',
+      'alerts.demo.alert2.kw1': 'gardiennage',
+      'alerts.demo.alert2.kw2': 'surveillance',
+      'alerts.demo.alert2.kw3': 'sécurité privée',
+      'alerts.demo.alert2.kw4': 'agents',
+
+      'alerts.demo.alert3.name': "Contrôle d'accès",
+      'alerts.demo.alert3.kw1': "contrôle d'accès",
+      'alerts.demo.alert3.kw2': 'badge',
+      'alerts.demo.alert3.kw3': 'biométrie',
+      'alerts.demo.alert3.kw4': 'interphonie',
+
+      'alerts.demo.match1.title': "Mise en place d'un système de vidéosurveillance - Lycée Jean Moulin",
+      'alerts.demo.match1.buyer': 'Région Île-de-France',
+      'alerts.demo.match2.title': 'Rénovation système vidéoprotection - Commune de Créteil',
+      'alerts.demo.match2.buyer': 'Ville de Créteil',
+      'alerts.demo.match3.title': 'Prestation de gardiennage - Sites administratifs',
+      'alerts.demo.match3.buyer': 'Préfecture du Rhône',
     }),
     []
   );
   const { t } = useUiTranslations(locale, entries);
-  const [alerts, setAlerts] = useState<Alert[]>(DEMO_ALERTS);
-  const [matches, setMatches] = useState<AlertMatch[]>(DEMO_MATCHES);
+
+  const regionOptions = useMemo(
+    () => REGION_OPTIONS.map((r) => ({ value: r.value, label: t(r.labelKey) })),
+    [t]
+  );
+  const sectorOptions = useMemo(
+    () => SECTOR_OPTIONS.map((s) => ({ value: s.value, label: t(s.labelKey) })),
+    [t]
+  );
+  const regionLabelByValue = useMemo(
+    () => Object.fromEntries(regionOptions.map((r) => [r.value, r.label])) as Record<string, string>,
+    [regionOptions]
+  );
+
+  const dateFormatter = useMemo(() => {
+    try {
+      return new Intl.DateTimeFormat(locale);
+    } catch {
+      return new Intl.DateTimeFormat('fr-FR');
+    }
+  }, [locale]);
+
+  const currencyFormatter = useMemo(() => {
+    try {
+      return new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' });
+    } catch {
+      return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
+    }
+  }, [locale]);
+
+  const demoAlerts = useMemo<Alert[]>(
+    () => [
+      {
+        id: '1',
+        name: t('alerts.demo.alert1.name'),
+        keywords: [t('alerts.demo.alert1.kw1'), t('alerts.demo.alert1.kw2'), t('alerts.demo.alert1.kw3')],
+        sectors: ['security_electronic'],
+        regions: ['idf'],
+        min_value: 10000,
+        max_value: 500000,
+        tender_type: 'public',
+        notification_email: true,
+        notification_push: true,
+        frequency: 'realtime',
+        active: true,
+        matches_count: 23,
+        last_match: '2024-01-15T09:30:00Z',
+        created_at: '2023-09-01T10:00:00Z',
+      },
+      {
+        id: '2',
+        name: t('alerts.demo.alert2.name'),
+        keywords: [
+          t('alerts.demo.alert2.kw1'),
+          t('alerts.demo.alert2.kw2'),
+          t('alerts.demo.alert2.kw3'),
+          t('alerts.demo.alert2.kw4'),
+        ],
+        sectors: ['security_private'],
+        regions: ['idf', 'ara', 'paca'],
+        min_value: 50000,
+        tender_type: 'all',
+        notification_email: true,
+        notification_push: false,
+        frequency: 'daily',
+        active: true,
+        matches_count: 56,
+        last_match: '2024-01-14T16:45:00Z',
+        created_at: '2023-06-15T08:00:00Z',
+      },
+      {
+        id: '3',
+        name: t('alerts.demo.alert3.name'),
+        keywords: [
+          t('alerts.demo.alert3.kw1'),
+          t('alerts.demo.alert3.kw2'),
+          t('alerts.demo.alert3.kw3'),
+          t('alerts.demo.alert3.kw4'),
+        ],
+        sectors: ['security_electronic'],
+        regions: [],
+        tender_type: 'public',
+        notification_email: true,
+        notification_push: true,
+        frequency: 'weekly',
+        active: false,
+        matches_count: 12,
+        created_at: '2023-11-20T14:30:00Z',
+      },
+    ],
+    [t]
+  );
+
+  const demoMatches = useMemo<AlertMatch[]>(
+    () => [
+      {
+        id: '1',
+        alert_id: '1',
+        tender_title: t('alerts.demo.match1.title'),
+        tender_reference: 'MAPA-2024-0156',
+        buyer: t('alerts.demo.match1.buyer'),
+        estimated_value: 85000,
+        deadline: '2024-02-15T12:00:00Z',
+        source_url: 'https://boamp.fr/...',
+        match_score: 95,
+        matched_keywords: [t('alerts.demo.alert1.kw1'), t('alerts.demo.alert1.kw2')],
+        seen: false,
+        created_at: '2024-01-15T09:30:00Z',
+      },
+      {
+        id: '2',
+        alert_id: '1',
+        tender_title: t('alerts.demo.match2.title'),
+        tender_reference: 'AO-2024-089',
+        buyer: t('alerts.demo.match2.buyer'),
+        estimated_value: 120000,
+        deadline: '2024-02-20T16:00:00Z',
+        source_url: 'https://marches.maximilien.fr/...',
+        match_score: 88,
+        matched_keywords: [t('alerts.demo.alert1.kw1')],
+        seen: true,
+        created_at: '2024-01-14T11:20:00Z',
+      },
+      {
+        id: '3',
+        alert_id: '2',
+        tender_title: t('alerts.demo.match3.title'),
+        tender_reference: 'DCE-2024-0234',
+        buyer: t('alerts.demo.match3.buyer'),
+        estimated_value: 450000,
+        deadline: '2024-03-01T12:00:00Z',
+        source_url: 'https://boamp.fr/...',
+        match_score: 92,
+        matched_keywords: [t('alerts.demo.alert2.kw1'), t('alerts.demo.alert2.kw2')],
+        seen: false,
+        created_at: '2024-01-14T16:45:00Z',
+      },
+    ],
+    [t]
+  );
+
+  const [alerts, setAlerts] = useState<Alert[]>(demoAlerts);
+  const [matches, setMatches] = useState<AlertMatch[]>(demoMatches);
   const [showModal, setShowModal] = useState(false);
   const [editingAlert, setEditingAlert] = useState<Alert | null>(null);
   const [selectedAlert, setSelectedAlert] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'alerts' | 'matches'>('alerts');
+
+  useEffect(() => {
+    setAlerts(demoAlerts);
+    setMatches(demoMatches);
+  }, [demoAlerts, demoMatches]);
 
   const unseenMatchesCount = matches.filter(m => !m.seen).length;
 
@@ -849,6 +1004,9 @@ export default function AlertsPage() {
                   onDelete={() => setAlerts(alerts.filter(a => a.id !== alert.id))}
                   onViewMatches={() => { setSelectedAlert(alert.id); setActiveTab('matches'); }}
                   t={t}
+                  regionLabelByValue={regionLabelByValue}
+                  formatCurrency={(amount) => currencyFormatter.format(amount)}
+                  formatDate={(d) => dateFormatter.format(d)}
                 />
               ))}
             </div>
@@ -906,6 +1064,8 @@ export default function AlertsPage() {
           onClose={() => { setShowModal(false); setEditingAlert(null); }}
           onSave={handleSaveAlert}
           t={t}
+          sectorOptions={sectorOptions}
+          regionOptions={regionOptions}
         />
       )}
     </AppLayout>

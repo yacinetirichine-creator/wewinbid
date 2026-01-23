@@ -172,29 +172,29 @@ const DEMO_PARTNERS: Partner[] = [
   },
 ];
 
-const SECTORS = [
-  'Tous les secteurs',
-  'Sécurité électronique',
-  'Sécurité privée',
-  'BTP',
-  'Informatique',
-  'Propreté',
-  'Formation',
-  'Maintenance',
-  'Transport',
-  'Restauration',
+const SECTOR_OPTIONS = [
+  { value: 'Tous les secteurs', labelKey: 'marketplace.sectors.all' },
+  { value: 'Sécurité électronique', labelKey: 'marketplace.sectors.electronicSecurity' },
+  { value: 'Sécurité privée', labelKey: 'marketplace.sectors.privateSecurity' },
+  { value: 'BTP', labelKey: 'marketplace.sectors.construction' },
+  { value: 'Informatique', labelKey: 'marketplace.sectors.it' },
+  { value: 'Propreté', labelKey: 'marketplace.sectors.cleaning' },
+  { value: 'Formation', labelKey: 'marketplace.sectors.training' },
+  { value: 'Maintenance', labelKey: 'marketplace.sectors.maintenance' },
+  { value: 'Transport', labelKey: 'marketplace.sectors.transport' },
+  { value: 'Restauration', labelKey: 'marketplace.sectors.food' },
 ];
 
-const REGIONS = [
-  'Toutes les régions',
-  'Île-de-France',
-  'Auvergne-Rhône-Alpes',
-  'Nouvelle-Aquitaine',
-  'Occitanie',
-  'Provence-Alpes-Côte d\'Azur',
-  'Pays de la Loire',
-  'Grand Est',
-  'Hauts-de-France',
+const REGION_OPTIONS = [
+  { value: 'Toutes les régions', labelKey: 'marketplace.regions.all' },
+  { value: 'Île-de-France', labelKey: 'marketplace.regions.idf' },
+  { value: 'Auvergne-Rhône-Alpes', labelKey: 'marketplace.regions.ara' },
+  { value: 'Nouvelle-Aquitaine', labelKey: 'marketplace.regions.naq' },
+  { value: 'Occitanie', labelKey: 'marketplace.regions.occ' },
+  { value: "Provence-Alpes-Côte d'Azur", labelKey: 'marketplace.regions.paca' },
+  { value: 'Pays de la Loire', labelKey: 'marketplace.regions.pdl' },
+  { value: 'Grand Est', labelKey: 'marketplace.regions.ge' },
+  { value: 'Hauts-de-France', labelKey: 'marketplace.regions.hdf' },
 ];
 
 // Composant carte partenaire
@@ -426,6 +426,27 @@ export default function MarketplacePage() {
       'marketplace.contact.send': 'Envoyer',
       'marketplace.filters.allSectors': 'Tous les secteurs',
       'marketplace.filters.allRegions': 'Toutes les régions',
+
+      'marketplace.sectors.all': 'Tous les secteurs',
+      'marketplace.sectors.electronicSecurity': 'Sécurité électronique',
+      'marketplace.sectors.privateSecurity': 'Sécurité privée',
+      'marketplace.sectors.construction': 'BTP',
+      'marketplace.sectors.it': 'Informatique',
+      'marketplace.sectors.cleaning': 'Propreté',
+      'marketplace.sectors.training': 'Formation',
+      'marketplace.sectors.maintenance': 'Maintenance',
+      'marketplace.sectors.transport': 'Transport',
+      'marketplace.sectors.food': 'Restauration',
+
+      'marketplace.regions.all': 'Toutes les régions',
+      'marketplace.regions.idf': 'Île-de-France',
+      'marketplace.regions.ara': 'Auvergne-Rhône-Alpes',
+      'marketplace.regions.naq': 'Nouvelle-Aquitaine',
+      'marketplace.regions.occ': 'Occitanie',
+      'marketplace.regions.paca': "Provence-Alpes-Côte d'Azur",
+      'marketplace.regions.pdl': 'Pays de la Loire',
+      'marketplace.regions.ge': 'Grand Est',
+      'marketplace.regions.hdf': 'Hauts-de-France',
     }),
     []
   );
@@ -555,9 +576,9 @@ export default function MarketplacePage() {
                 value={selectedSector}
                 onChange={(e) => setSelectedSector(e.target.value)}
               >
-                {SECTORS.map((sector) => (
-                  <option key={sector} value={sector}>
-                    {sector === 'Tous les secteurs' ? t('marketplace.filters.allSectors') : sector}
+                {SECTOR_OPTIONS.map((sector) => (
+                  <option key={sector.value} value={sector.value}>
+                    {t(sector.labelKey)}
                   </option>
                 ))}
               </select>
@@ -566,9 +587,9 @@ export default function MarketplacePage() {
                 value={selectedRegion}
                 onChange={(e) => setSelectedRegion(e.target.value)}
               >
-                {REGIONS.map((region) => (
-                  <option key={region} value={region}>
-                    {region === 'Toutes les régions' ? t('marketplace.filters.allRegions') : region}
+                {REGION_OPTIONS.map((region) => (
+                  <option key={region.value} value={region.value}>
+                    {t(region.labelKey)}
                   </option>
                 ))}
               </select>

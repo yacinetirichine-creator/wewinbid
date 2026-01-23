@@ -54,7 +54,7 @@ interface NavItem {
   href: string;
   icon: React.ElementType;
   badge?: number;
-  description?: string;
+  descriptionKey?: string;
 }
 
 interface NavCategory {
@@ -77,13 +77,13 @@ const navigationConfig: NavCategory[] = [
         labelKey: 'nav.dashboard', 
         href: '/dashboard', 
         icon: LayoutDashboard,
-        description: 'Vue d\'ensemble de votre activité'
+        descriptionKey: 'nav.desc.dashboard'
       },
       { 
         labelKey: 'nav.analytics', 
         href: '/analytics', 
         icon: BarChart3,
-        description: 'Statistiques et performances'
+        descriptionKey: 'nav.desc.analytics'
       },
     ],
   },
@@ -98,32 +98,32 @@ const navigationConfig: NavCategory[] = [
         href: '/tenders', 
         icon: FileText, 
         badge: 3,
-        description: 'Gérer vos appels d\'offres'
+        descriptionKey: 'nav.desc.tenders'
       },
       { 
         labelKey: 'nav.analyzeAO', 
         href: '/tenders/analyze', 
         icon: Zap,
-        description: 'Analyser un DCE avec l\'IA'
+        descriptionKey: 'nav.desc.analyzeAO'
       },
       { 
         labelKey: 'nav.search', 
         href: '/search', 
         icon: Search,
-        description: 'Rechercher de nouveaux AO'
+        descriptionKey: 'nav.desc.search'
       },
       { 
         labelKey: 'nav.alerts', 
         href: '/alerts', 
         icon: Bell, 
         badge: 5,
-        description: 'Alertes et notifications AO'
+        descriptionKey: 'nav.desc.alerts'
       },
       { 
         labelKey: 'nav.calendar', 
         href: '/calendar', 
         icon: Calendar,
-        description: 'Échéances et planning'
+        descriptionKey: 'nav.desc.calendar'
       },
     ],
   },
@@ -137,25 +137,25 @@ const navigationConfig: NavCategory[] = [
         labelKey: 'nav.studio', 
         href: '/studio', 
         icon: Sparkles,
-        description: 'Génération de documents IA'
+        descriptionKey: 'nav.desc.studio'
       },
       { 
         labelKey: 'nav.documents', 
         href: '/documents', 
         icon: FolderOpen,
-        description: 'Bibliothèque de documents'
+        descriptionKey: 'nav.desc.documents'
       },
       { 
         labelKey: 'nav.library', 
         href: '/library', 
         icon: Library,
-        description: 'Réponses types et modèles'
+        descriptionKey: 'nav.desc.library'
       },
       { 
         labelKey: 'nav.aiChat', 
         href: '/chat', 
         icon: MessageSquare,
-        description: 'Assistant IA'
+        descriptionKey: 'nav.desc.aiChat'
       },
     ],
   },
@@ -169,13 +169,13 @@ const navigationConfig: NavCategory[] = [
         labelKey: 'nav.marketplace', 
         href: '/marketplace', 
         icon: Store,
-        description: 'Trouver des partenaires'
+        descriptionKey: 'nav.desc.marketplace'
       },
       { 
         labelKey: 'nav.teams', 
         href: '/teams', 
         icon: Users,
-        description: 'Gérer vos équipes'
+        descriptionKey: 'nav.desc.teams'
       },
     ],
   },
@@ -242,6 +242,20 @@ export function NewSidebar({ user, company }: NewSidebarProps) {
       'nav.category.network': 'Réseau',
       'nav.logout': 'Déconnexion',
       'nav.upgrade': 'Passer en Pro',
+
+      'nav.desc.dashboard': "Vue d'ensemble de votre activité",
+      'nav.desc.analytics': 'Statistiques et performances',
+      'nav.desc.tenders': "Gérer vos appels d'offres",
+      'nav.desc.analyzeAO': "Analyser un DCE avec l'IA",
+      'nav.desc.search': 'Rechercher de nouveaux AO',
+      'nav.desc.alerts': 'Alertes et notifications AO',
+      'nav.desc.calendar': 'Échéances et planning',
+      'nav.desc.studio': 'Génération de documents IA',
+      'nav.desc.documents': 'Bibliothèque de documents',
+      'nav.desc.library': 'Réponses types et modèles',
+      'nav.desc.aiChat': 'Assistant IA',
+      'nav.desc.marketplace': 'Trouver des partenaires',
+      'nav.desc.teams': 'Gérer vos équipes',
     }),
     []
   );
@@ -310,8 +324,10 @@ export function NewSidebar({ user, company }: NewSidebarProps) {
         {collapsed && showTooltip && (
           <div className="absolute left-full ml-3 px-3 py-2 bg-surface-900 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-lg">
             {t(item.labelKey)}
-            {item.description && (
-              <p className="text-xs text-surface-400 mt-1">{item.description}</p>
+            {item.descriptionKey && (
+              <p className="text-xs text-surface-400 mt-1">
+                {t(item.descriptionKey)}
+              </p>
             )}
           </div>
         )}

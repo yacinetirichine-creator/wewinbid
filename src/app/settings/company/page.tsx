@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2,
@@ -30,6 +30,8 @@ import { Button, Card, Input, Textarea, Badge, Progress, Select } from '@/compon
 import { NewAppLayout, PageHeader } from '@/components/layout/NewAppLayout';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 // Types
 interface CompanyProfile {
@@ -72,14 +74,14 @@ interface Reference {
 }
 
 const LEGAL_FORMS = [
-  { value: 'SAS', label: 'SAS - Société par Actions Simplifiée' },
-  { value: 'SARL', label: 'SARL - Société à Responsabilité Limitée' },
-  { value: 'SA', label: 'SA - Société Anonyme' },
-  { value: 'EURL', label: 'EURL - Entreprise Unipersonnelle à Responsabilité Limitée' },
-  { value: 'EI', label: 'EI - Entreprise Individuelle' },
-  { value: 'SASU', label: 'SASU - Société par Actions Simplifiée Unipersonnelle' },
-  { value: 'SNC', label: 'SNC - Société en Nom Collectif' },
-  { value: 'OTHER', label: 'Autre' },
+  { value: 'SAS', labelKey: 'companyProfile.legalForms.sas' },
+  { value: 'SARL', labelKey: 'companyProfile.legalForms.sarl' },
+  { value: 'SA', labelKey: 'companyProfile.legalForms.sa' },
+  { value: 'EURL', labelKey: 'companyProfile.legalForms.eurl' },
+  { value: 'EI', labelKey: 'companyProfile.legalForms.ei' },
+  { value: 'SASU', labelKey: 'companyProfile.legalForms.sasu' },
+  { value: 'SNC', labelKey: 'companyProfile.legalForms.snc' },
+  { value: 'OTHER', labelKey: 'companyProfile.legalForms.other' },
 ];
 
 const SECTORS = [
@@ -144,20 +146,26 @@ function TagInput({
 }: {
   label: string;
   values: string[];
-  options: string[];
+  options: Array<string | { value: string; label: string }>;
   onChange: (values: string[]) => void;
   placeholder?: string;
 }) {
   const [inputValue, setInputValue] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const filteredOptions = options.filter(
-    opt => !values.includes(opt) && opt.toLowerCase().includes(inputValue.toLowerCase())
+  const normalizedOptions = options.map((opt) =>
+    typeof opt === 'string' ? { value: opt, label: opt } : opt
   );
 
-  const addTag = (tag: string) => {
-    if (!values.includes(tag)) {
-      onChange([...values, tag]);
+  const filteredOptions = normalizedOptions.filter(
+    (opt) =>
+      !values.includes(opt.value) &&
+      opt.label.toLowerCase().includes(inputValue.toLowerCase())
+  );
+
+  const addTag = (tagValue: string) => {
+    if (!values.includes(tagValue)) {
+      onChange([...values, tagValue]);
     }
     setInputValue('');
     setShowSuggestions(false);
@@ -204,12 +212,12 @@ function TagInput({
           <div className="absolute z-10 w-full mt-1 bg-white border border-surface-200 rounded-lg shadow-lg max-h-48 overflow-auto">
             {filteredOptions.map(opt => (
               <button
-                key={opt}
+                key={opt.value}
                 type="button"
-                onClick={() => addTag(opt)}
+                onClick={() => addTag(opt.value)}
                 className="w-full px-4 py-2 text-left hover:bg-surface-50 text-sm"
               >
-                {opt}
+                {opt.label}
               </button>
             ))}
           </div>
@@ -224,17 +232,19 @@ function ReferenceCard({
   reference,
   onUpdate,
   onDelete,
+  t,
 }: {
   reference: Reference;
   onUpdate: (ref: Reference) => void;
   onDelete: () => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   return (
     <Card className="p-4">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-2">
           <Briefcase className="w-5 h-5 text-primary-500" />
-          <h4 className="font-semibold text-surface-900">Référence</h4>
+          <h4 className="font-semibold text-surface-900">{t('companyProfile.references.cardTitle')}</h4>
         </div>
         <button
           type="button"
@@ -247,52 +257,52 @@ function ReferenceCard({
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
-          label="Nom du client"
+          label={t('companyProfile.references.clientName.label')}
           value={reference.client_name}
           onChange={(e) => onUpdate({ ...reference, client_name: e.target.value })}
-          placeholder="Mairie de Paris"
+          placeholder={t('companyProfile.references.clientName.placeholder')}
         />
         <Input
-          label="Intitulé du projet"
+          label={t('companyProfile.references.projectTitle.label')}
           value={reference.project_title}
           onChange={(e) => onUpdate({ ...reference, project_title: e.target.value })}
-          placeholder="Maintenance espaces verts"
+          placeholder={t('companyProfile.references.projectTitle.placeholder')}
         />
         <Input
-          label="Année"
+          label={t('companyProfile.references.year.label')}
           type="number"
           value={reference.year || ''}
           onChange={(e) => onUpdate({ ...reference, year: parseInt(e.target.value) })}
-          placeholder="2024"
+          placeholder={t('companyProfile.references.year.placeholder')}
         />
         <Input
-          label="Montant (€)"
+          label={t('companyProfile.references.amount.label')}
           type="number"
           value={reference.value || ''}
           onChange={(e) => onUpdate({ ...reference, value: parseInt(e.target.value) })}
-          placeholder="150000"
+          placeholder={t('companyProfile.references.amount.placeholder')}
         />
         <div className="md:col-span-2">
           <Textarea
-            label="Description"
+            label={t('companyProfile.references.description.label')}
             value={reference.description}
             onChange={(e) => onUpdate({ ...reference, description: e.target.value })}
-            placeholder="Décrivez brièvement la mission réalisée..."
+            placeholder={t('companyProfile.references.description.placeholder')}
             rows={2}
           />
         </div>
         <Input
-          label="Contact référent"
+          label={t('companyProfile.references.contactName.label')}
           value={reference.contact_name || ''}
           onChange={(e) => onUpdate({ ...reference, contact_name: e.target.value })}
-          placeholder="M. Dupont"
+          placeholder={t('companyProfile.references.contactName.placeholder')}
         />
         <Input
-          label="Email du contact"
+          label={t('companyProfile.references.contactEmail.label')}
           type="email"
           value={reference.contact_email || ''}
           onChange={(e) => onUpdate({ ...reference, contact_email: e.target.value })}
-          placeholder="contact@exemple.fr"
+          placeholder={t('companyProfile.references.contactEmail.placeholder')}
         />
       </div>
     </Card>
@@ -300,6 +310,153 @@ function ReferenceCard({
 }
 
 export default function CompanyProfilePage() {
+  const { locale } = useLocale();
+  const entries = useMemo(
+    () => ({
+      'companyProfile.title': 'Profil entreprise',
+      'companyProfile.subtitle': 'Configurez votre profil pour améliorer la compatibilité avec les AO',
+      'companyProfile.saved': 'Sauvegardé',
+      'companyProfile.save': 'Sauvegarder',
+      'companyProfile.saving': 'Sauvegarde...',
+      'companyProfile.progress.label': 'Profil complété à',
+      'companyProfile.progress.help': 'Complétez votre profil pour améliorer le score de compatibilité avec les AO',
+
+      'companyProfile.tabs.general': 'Informations générales',
+      'companyProfile.tabs.qualifications': 'Qualifications',
+      'companyProfile.tabs.documents': 'Documents administratifs',
+      'companyProfile.tabs.library': 'Bibliothèque IA',
+      'companyProfile.tabs.references': 'Références',
+      'companyProfile.tabs.preferences': 'Préférences',
+
+      'companyProfile.general.title': "Informations de l'entreprise",
+      'companyProfile.general.companyName.label': 'Raison sociale',
+      'companyProfile.general.companyName.placeholder': 'Ma Société SAS',
+      'companyProfile.general.siret.label': 'SIRET',
+      'companyProfile.general.siret.placeholder': '123 456 789 00012',
+      'companyProfile.general.legalForm.label': 'Forme juridique',
+      'companyProfile.general.website.label': 'Site web',
+      'companyProfile.general.website.placeholder': 'https://www.exemple.fr',
+      'companyProfile.general.address.label': 'Adresse',
+      'companyProfile.general.address.placeholder': '123 rue de la Paix',
+      'companyProfile.general.postalCode.label': 'Code postal',
+      'companyProfile.general.postalCode.placeholder': '75001',
+      'companyProfile.general.city.label': 'Ville',
+      'companyProfile.general.city.placeholder': 'Paris',
+      'companyProfile.general.contactEmail.label': 'Email de contact',
+      'companyProfile.general.contactEmail.placeholder': 'contact@exemple.fr',
+      'companyProfile.general.phone.label': 'Téléphone',
+      'companyProfile.general.phone.placeholder': '01 23 45 67 89',
+      'companyProfile.general.annualRevenue.label': "Chiffre d'affaires annuel (€)",
+      'companyProfile.general.annualRevenue.placeholder': '1000000',
+      'companyProfile.general.employees.label': 'Nombre de salariés',
+      'companyProfile.general.employees.placeholder': '50',
+      'companyProfile.general.yearsExp.label': "Années d'expérience",
+      'companyProfile.general.yearsExp.placeholder': '10',
+
+      'companyProfile.qualifications.title': 'Qualifications et compétences',
+      'companyProfile.qualifications.sectors.label': "Secteurs d'activité",
+      'companyProfile.qualifications.sectors.placeholder': 'Ajouter un secteur...',
+      'companyProfile.qualifications.certifications.label': 'Certifications',
+      'companyProfile.qualifications.certifications.placeholder': 'Ajouter une certification...',
+      'companyProfile.qualifications.qualifications.label': 'Qualifications métier',
+      'companyProfile.qualifications.qualifications.placeholder': 'Ajouter une qualification...',
+
+      'companyProfile.documents.title': 'Documents administratifs',
+      'companyProfile.documents.kbis.title': 'Extrait KBIS',
+      'companyProfile.documents.kbis.subtitle': 'Moins de 3 mois',
+      'companyProfile.documents.kbis.validUntil': 'Date de validité',
+      'companyProfile.documents.kbis.upload': 'Uploader le KBIS',
+      'companyProfile.documents.rc.title': 'Assurance RC Pro',
+      'companyProfile.documents.rc.subtitle': 'Attestation en cours',
+      'companyProfile.documents.rc.upload': "Uploader l'attestation",
+      'companyProfile.documents.decennale.title': 'Assurance décennale',
+      'companyProfile.documents.decennale.subtitle': 'Si applicable',
+      'companyProfile.documents.decennale.upload': "Uploader l'attestation",
+      'companyProfile.documents.tax.title': 'Attestation fiscale',
+      'companyProfile.documents.tax.subtitle': 'À jour des impôts',
+      'companyProfile.documents.tax.upload': "Uploader l'attestation",
+
+      'companyProfile.references.title': 'Références clients ({count})',
+      'companyProfile.references.add': 'Ajouter une référence',
+      'companyProfile.references.empty.title': 'Aucune référence',
+      'companyProfile.references.empty.subtitle': 'Ajoutez vos références clients pour renforcer votre candidature',
+      'companyProfile.references.empty.cta': 'Ajouter ma première référence',
+      'companyProfile.references.cardTitle': 'Référence',
+      'companyProfile.references.clientName.label': 'Nom du client',
+      'companyProfile.references.clientName.placeholder': 'Mairie de Paris',
+      'companyProfile.references.projectTitle.label': 'Intitulé du projet',
+      'companyProfile.references.projectTitle.placeholder': 'Maintenance espaces verts',
+      'companyProfile.references.year.label': 'Année',
+      'companyProfile.references.year.placeholder': '2024',
+      'companyProfile.references.amount.label': 'Montant (€)',
+      'companyProfile.references.amount.placeholder': '150000',
+      'companyProfile.references.description.label': 'Description',
+      'companyProfile.references.description.placeholder': 'Décrivez brièvement la mission réalisée...',
+      'companyProfile.references.contactName.label': 'Contact référent',
+      'companyProfile.references.contactName.placeholder': 'M. Dupont',
+      'companyProfile.references.contactEmail.label': 'Email du contact',
+      'companyProfile.references.contactEmail.placeholder': 'contact@exemple.fr',
+
+      'companyProfile.preferences.title': 'Préférences de recherche',
+      'companyProfile.preferences.regions.label': 'Régions préférées',
+      'companyProfile.preferences.regions.placeholder': 'Ajouter une région...',
+      'companyProfile.preferences.min.label': 'Montant minimum des marchés (€)',
+      'companyProfile.preferences.min.placeholder': '10000',
+      'companyProfile.preferences.max.label': 'Montant maximum des marchés (€)',
+      'companyProfile.preferences.max.placeholder': '500000',
+      'companyProfile.preferences.tip.title': 'Astuce',
+      'companyProfile.preferences.tip.body':
+        "Plus votre profil est complet, plus le score de compatibilité sera précis. Les informations sont utilisées pour l'analyse IA et la génération automatique de documents.",
+
+      'companyProfile.library.models.title': 'Modèles de réponses aux AO',
+      'companyProfile.library.models.subtitle':
+        "Uploadez vos anciennes réponses aux appels d'offres réussies. L'IA les analysera pour s'en inspirer lors de la génération de nouvelles réponses.",
+      'companyProfile.library.models.memory': 'Mémoire technique',
+      'companyProfile.library.models.memory.meta': 'PDF, DOCX - Max 50 Mo',
+      'companyProfile.library.models.bpu': 'BPU / DPGF gagnants',
+      'companyProfile.library.models.bpu.meta': 'XLS, PDF - Max 20 Mo',
+      'companyProfile.library.models.commitments': "Actes d'engagement",
+      'companyProfile.library.models.commitments.meta': 'PDF - Max 10 Mo',
+      'companyProfile.library.models.other': 'Autres documents modèles',
+      'companyProfile.library.models.other.meta': 'Tous formats - Max 50 Mo',
+      'companyProfile.library.upload': 'Uploader',
+
+      'companyProfile.library.companyDocs.title': "Documents entreprise pour l'IA",
+      'companyProfile.library.companyDocs.subtitle':
+        "Ces documents seront analysés par l'IA pour mieux comprendre votre entreprise et personnaliser les réponses.",
+      'companyProfile.library.companyDocs.brochure': 'Plaquette commerciale',
+      'companyProfile.library.companyDocs.brochure.meta': 'PDF - Max 20 Mo',
+      'companyProfile.library.companyDocs.org': 'Organigramme',
+      'companyProfile.library.companyDocs.org.meta': 'PDF, PNG, JPG',
+      'companyProfile.library.companyDocs.cv': 'CV dirigeants/équipe',
+      'companyProfile.library.companyDocs.cv.meta': 'PDF, DOCX',
+      'companyProfile.library.companyDocs.qse': 'Politique QSE',
+      'companyProfile.library.companyDocs.qse.meta': 'PDF',
+      'companyProfile.library.companyDocs.rse': 'Plan RSE',
+      'companyProfile.library.companyDocs.rse.meta': 'PDF',
+      'companyProfile.library.companyDocs.method': 'Méthodologie type',
+      'companyProfile.library.companyDocs.method.meta': 'PDF, DOCX',
+
+      'companyProfile.confidentiality.title': 'Confidentialité garantie',
+      'companyProfile.confidentiality.body':
+        "Vos documents sont stockés de manière sécurisée et ne sont jamais partagés. L'IA les utilise uniquement pour personnaliser vos réponses aux AO.",
+
+      'companyProfile.errors.notAuthenticated': 'Non authentifié',
+      'companyProfile.errors.saveFailed': 'Erreur lors de la sauvegarde',
+
+      'companyProfile.legalForms.sas': 'SAS - Société par Actions Simplifiée',
+      'companyProfile.legalForms.sarl': 'SARL - Société à Responsabilité Limitée',
+      'companyProfile.legalForms.sa': 'SA - Société Anonyme',
+      'companyProfile.legalForms.eurl': 'EURL - Entreprise Unipersonnelle à Responsabilité Limitée',
+      'companyProfile.legalForms.ei': 'EI - Entreprise Individuelle',
+      'companyProfile.legalForms.sasu': 'SASU - Société par Actions Simplifiée Unipersonnelle',
+      'companyProfile.legalForms.snc': 'SNC - Société en Nom Collectif',
+      'companyProfile.legalForms.other': 'Autre',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
+
   const [profile, setProfile] = useState<CompanyProfile>({
     company_name: '',
     siret: '',
@@ -394,7 +551,7 @@ export default function CompanyProfilePage() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) throw new Error('Non authentifié');
+      if (!user) throw new Error(t('companyProfile.errors.notAuthenticated'));
 
       const { error } = await (supabase
         .from('company_profiles') as any)
@@ -412,7 +569,7 @@ export default function CompanyProfilePage() {
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
       console.error('Erreur sauvegarde:', err);
-      setError(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde');
+      setError(err instanceof Error ? err.message : t('companyProfile.errors.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -480,19 +637,19 @@ export default function CompanyProfilePage() {
   }
 
   const tabs = [
-    { id: 'general', label: 'Informations générales', icon: Building2 },
-    { id: 'qualifications', label: 'Qualifications', icon: Award },
-    { id: 'documents', label: 'Documents administratifs', icon: FileText },
-    { id: 'library', label: 'Bibliothèque IA', icon: Briefcase },
-    { id: 'references', label: 'Références', icon: Target },
-    { id: 'preferences', label: 'Préférences', icon: TrendingUp },
+    { id: 'general', label: t('companyProfile.tabs.general'), icon: Building2 },
+    { id: 'qualifications', label: t('companyProfile.tabs.qualifications'), icon: Award },
+    { id: 'documents', label: t('companyProfile.tabs.documents'), icon: FileText },
+    { id: 'library', label: t('companyProfile.tabs.library'), icon: Briefcase },
+    { id: 'references', label: t('companyProfile.tabs.references'), icon: Target },
+    { id: 'preferences', label: t('companyProfile.tabs.preferences'), icon: TrendingUp },
   ];
 
   return (
     <NewAppLayout>
       <PageHeader
-        title="Profil entreprise"
-        description="Configurez votre profil pour améliorer la compatibilité avec les AO"
+        title={t('companyProfile.title')}
+        description={t('companyProfile.subtitle')}
         actions={
           <div className="flex items-center gap-3">
             {saved && (
@@ -502,7 +659,7 @@ export default function CompanyProfilePage() {
                 className="flex items-center gap-2 text-green-600"
               >
                 <CheckCircle2 className="w-5 h-5" />
-                <span>Sauvegardé</span>
+                <span>{t('companyProfile.saved')}</span>
               </motion.div>
             )}
             <Button
@@ -513,12 +670,12 @@ export default function CompanyProfilePage() {
               {saving ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Sauvegarde...
+                  {t('companyProfile.saving')}
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  Sauvegarder
+                  {t('companyProfile.save')}
                 </>
               )}
             </Button>
@@ -529,7 +686,7 @@ export default function CompanyProfilePage() {
       {/* Barre de progression */}
       <Card className="p-4 mb-6">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-surface-700">Profil complété à</span>
+          <span className="text-sm font-medium text-surface-700">{t('companyProfile.progress.label')}</span>
           <span className={cn(
             'text-lg font-bold',
             completion >= 80 ? 'text-green-600' : completion >= 50 ? 'text-yellow-600' : 'text-orange-600'
@@ -540,7 +697,7 @@ export default function CompanyProfilePage() {
         <Progress value={completion} className="h-2" />
         {completion < 80 && (
           <p className="text-sm text-surface-500 mt-2">
-            Complétez votre profil pour améliorer le score de compatibilité avec les AO
+            {t('companyProfile.progress.help')}
           </p>
         )}
       </Card>
@@ -584,105 +741,105 @@ export default function CompanyProfilePage() {
             <Card className="p-6">
               <h3 className="text-lg font-semibold text-surface-900 mb-6 flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-primary-500" />
-                Informations de l'entreprise
+                {t('companyProfile.general.title')}
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
-                  label="Raison sociale"
+                  label={t('companyProfile.general.companyName.label')}
                   value={profile.company_name}
                   onChange={(e) => setProfile({ ...profile, company_name: e.target.value })}
-                  placeholder="Ma Société SAS"
+                  placeholder={t('companyProfile.general.companyName.placeholder')}
                   leftIcon={<Building2 className="w-4 h-4" />}
                 />
                 
                 <Input
-                  label="SIRET"
+                  label={t('companyProfile.general.siret.label')}
                   value={profile.siret}
                   onChange={(e) => setProfile({ ...profile, siret: e.target.value })}
-                  placeholder="123 456 789 00012"
+                  placeholder={t('companyProfile.general.siret.placeholder')}
                 />
                 
                 <Select
-                  label="Forme juridique"
+                  label={t('companyProfile.general.legalForm.label')}
                   value={profile.legal_form}
                   onChange={(e) => setProfile({ ...profile, legal_form: e.target.value })}
-                  options={LEGAL_FORMS}
+                  options={LEGAL_FORMS.map((f) => ({ value: f.value, label: t(f.labelKey) }))}
                 />
                 
                 <Input
-                  label="Site web"
+                  label={t('companyProfile.general.website.label')}
                   value={profile.website}
                   onChange={(e) => setProfile({ ...profile, website: e.target.value })}
-                  placeholder="https://www.exemple.fr"
+                  placeholder={t('companyProfile.general.website.placeholder')}
                   leftIcon={<Globe className="w-4 h-4" />}
                 />
                 
                 <div className="md:col-span-2">
                   <Input
-                    label="Adresse"
+                    label={t('companyProfile.general.address.label')}
                     value={profile.address}
                     onChange={(e) => setProfile({ ...profile, address: e.target.value })}
-                    placeholder="123 rue de la Paix"
+                    placeholder={t('companyProfile.general.address.placeholder')}
                     leftIcon={<MapPin className="w-4 h-4" />}
                   />
                 </div>
                 
                 <Input
-                  label="Code postal"
+                  label={t('companyProfile.general.postalCode.label')}
                   value={profile.postal_code}
                   onChange={(e) => setProfile({ ...profile, postal_code: e.target.value })}
-                  placeholder="75001"
+                  placeholder={t('companyProfile.general.postalCode.placeholder')}
                 />
                 
                 <Input
-                  label="Ville"
+                  label={t('companyProfile.general.city.label')}
                   value={profile.city}
                   onChange={(e) => setProfile({ ...profile, city: e.target.value })}
-                  placeholder="Paris"
+                  placeholder={t('companyProfile.general.city.placeholder')}
                 />
                 
                 <Input
-                  label="Email de contact"
+                  label={t('companyProfile.general.contactEmail.label')}
                   type="email"
                   value={profile.contact_email}
                   onChange={(e) => setProfile({ ...profile, contact_email: e.target.value })}
-                  placeholder="contact@exemple.fr"
+                  placeholder={t('companyProfile.general.contactEmail.placeholder')}
                   leftIcon={<Mail className="w-4 h-4" />}
                 />
                 
                 <Input
-                  label="Téléphone"
+                  label={t('companyProfile.general.phone.label')}
                   value={profile.contact_phone}
                   onChange={(e) => setProfile({ ...profile, contact_phone: e.target.value })}
-                  placeholder="01 23 45 67 89"
+                  placeholder={t('companyProfile.general.phone.placeholder')}
                   leftIcon={<Phone className="w-4 h-4" />}
                 />
                 
                 <Input
-                  label="Chiffre d'affaires annuel (€)"
+                  label={t('companyProfile.general.annualRevenue.label')}
                   type="number"
                   value={profile.annual_revenue || ''}
                   onChange={(e) => setProfile({ ...profile, annual_revenue: parseFloat(e.target.value) || null })}
-                  placeholder="1000000"
+                  placeholder={t('companyProfile.general.annualRevenue.placeholder')}
                   leftIcon={<Euro className="w-4 h-4" />}
                 />
                 
                 <Input
-                  label="Nombre de salariés"
+                  label={t('companyProfile.general.employees.label')}
                   type="number"
                   value={profile.employee_count || ''}
                   onChange={(e) => setProfile({ ...profile, employee_count: parseInt(e.target.value) || null })}
-                  placeholder="50"
+                  placeholder={t('companyProfile.general.employees.placeholder')}
                   leftIcon={<Users className="w-4 h-4" />}
                 />
                 
                 <Input
-                  label="Années d'expérience"
+                  label={t('companyProfile.general.yearsExp.label')}
                   type="number"
                   value={profile.years_experience || ''}
                   onChange={(e) => setProfile({ ...profile, years_experience: parseInt(e.target.value) || null })}
-                  placeholder="10"
+                  placeholder={t('companyProfile.general.yearsExp.placeholder')}
                   leftIcon={<Calendar className="w-4 h-4" />}
                 />
               </div>
@@ -693,40 +850,40 @@ export default function CompanyProfilePage() {
             <Card className="p-6">
               <h3 className="text-lg font-semibold text-surface-900 mb-6 flex items-center gap-2">
                 <Award className="w-5 h-5 text-primary-500" />
-                Qualifications et compétences
+                {t('companyProfile.qualifications.title')}
               </h3>
               
               <div className="space-y-6">
                 <TagInput
-                  label="Secteurs d'activité"
+                  label={t('companyProfile.qualifications.sectors.label')}
                   values={profile.sectors}
-                  options={SECTORS}
+                  options={SECTORS.map((v) => ({ value: v, label: v }))}
                   onChange={(sectors) => setProfile({ ...profile, sectors })}
-                  placeholder="Ajouter un secteur..."
+                  placeholder={t('companyProfile.qualifications.sectors.placeholder')}
                 />
                 
                 <TagInput
-                  label="Certifications"
+                  label={t('companyProfile.qualifications.certifications.label')}
                   values={profile.certifications}
-                  options={CERTIFICATIONS}
+                  options={CERTIFICATIONS.map((v) => ({ value: v, label: v }))}
                   onChange={(certifications) => setProfile({ ...profile, certifications })}
-                  placeholder="Ajouter une certification..."
+                  placeholder={t('companyProfile.qualifications.certifications.placeholder')}
                 />
                 
                 <TagInput
-                  label="Qualifications métier"
+                  label={t('companyProfile.qualifications.qualifications.label')}
                   values={profile.qualifications}
                   options={[
-                    'Maître d\'œuvre',
-                    'Bureau d\'études',
-                    'Entreprise générale',
-                    'Artisan',
-                    'PME',
-                    'ETI',
-                    'Grand compte',
+                    { value: "Maître d'œuvre", label: "Maître d'œuvre" },
+                    { value: "Bureau d'études", label: "Bureau d'études" },
+                    { value: 'Entreprise générale', label: 'Entreprise générale' },
+                    { value: 'Artisan', label: 'Artisan' },
+                    { value: 'PME', label: 'PME' },
+                    { value: 'ETI', label: 'ETI' },
+                    { value: 'Grand compte', label: 'Grand compte' },
                   ]}
                   onChange={(qualifications) => setProfile({ ...profile, qualifications })}
-                  placeholder="Ajouter une qualification..."
+                  placeholder={t('companyProfile.qualifications.qualifications.placeholder')}
                 />
               </div>
             </Card>
@@ -736,7 +893,7 @@ export default function CompanyProfilePage() {
             <Card className="p-6">
               <h3 className="text-lg font-semibold text-surface-900 mb-6 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-primary-500" />
-                Documents administratifs
+                {t('companyProfile.documents.title')}
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -746,19 +903,19 @@ export default function CompanyProfilePage() {
                       <FileText className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="font-medium text-surface-900">Extrait KBIS</p>
-                      <p className="text-sm text-surface-500">Moins de 3 mois</p>
+                      <p className="font-medium text-surface-900">{t('companyProfile.documents.kbis.title')}</p>
+                      <p className="text-sm text-surface-500">{t('companyProfile.documents.kbis.subtitle')}</p>
                     </div>
                   </div>
                   <Input
-                    label="Date de validité"
+                    label={t('companyProfile.documents.kbis.validUntil')}
                     type="date"
                     value={profile.kbis_valid_until}
                     onChange={(e) => setProfile({ ...profile, kbis_valid_until: e.target.value })}
                   />
                   <Button variant="outline" size="sm" className="mt-3 w-full">
                     <Upload className="w-4 h-4 mr-2" />
-                    Uploader le KBIS
+                    {t('companyProfile.documents.kbis.upload')}
                   </Button>
                 </div>
                 
@@ -768,13 +925,13 @@ export default function CompanyProfilePage() {
                       <Shield className="w-5 h-5 text-green-600" />
                     </div>
                     <div>
-                      <p className="font-medium text-surface-900">Assurance RC Pro</p>
-                      <p className="text-sm text-surface-500">Attestation en cours</p>
+                      <p className="font-medium text-surface-900">{t('companyProfile.documents.rc.title')}</p>
+                      <p className="text-sm text-surface-500">{t('companyProfile.documents.rc.subtitle')}</p>
                     </div>
                   </div>
                   <Button variant="outline" size="sm" className="mt-3 w-full">
                     <Upload className="w-4 h-4 mr-2" />
-                    Uploader l'attestation
+                    {t('companyProfile.documents.rc.upload')}
                   </Button>
                 </div>
                 
@@ -784,13 +941,13 @@ export default function CompanyProfilePage() {
                       <Shield className="w-5 h-5 text-purple-600" />
                     </div>
                     <div>
-                      <p className="font-medium text-surface-900">Assurance décennale</p>
-                      <p className="text-sm text-surface-500">Si applicable</p>
+                      <p className="font-medium text-surface-900">{t('companyProfile.documents.decennale.title')}</p>
+                      <p className="text-sm text-surface-500">{t('companyProfile.documents.decennale.subtitle')}</p>
                     </div>
                   </div>
                   <Button variant="outline" size="sm" className="mt-3 w-full">
                     <Upload className="w-4 h-4 mr-2" />
-                    Uploader l'attestation
+                    {t('companyProfile.documents.decennale.upload')}
                   </Button>
                 </div>
                 
@@ -800,13 +957,13 @@ export default function CompanyProfilePage() {
                       <Euro className="w-5 h-5 text-orange-600" />
                     </div>
                     <div>
-                      <p className="font-medium text-surface-900">Attestation fiscale</p>
-                      <p className="text-sm text-surface-500">À jour des impôts</p>
+                      <p className="font-medium text-surface-900">{t('companyProfile.documents.tax.title')}</p>
+                      <p className="text-sm text-surface-500">{t('companyProfile.documents.tax.subtitle')}</p>
                     </div>
                   </div>
                   <Button variant="outline" size="sm" className="mt-3 w-full">
                     <Upload className="w-4 h-4 mr-2" />
-                    Uploader l'attestation
+                    {t('companyProfile.documents.tax.upload')}
                   </Button>
                 </div>
               </div>
@@ -818,24 +975,24 @@ export default function CompanyProfilePage() {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-surface-900 flex items-center gap-2">
                   <Briefcase className="w-5 h-5 text-primary-500" />
-                  Références clients ({profile.company_references.length})
+                  {t('companyProfile.references.title', { count: profile.company_references.length })}
                 </h3>
                 <Button variant="primary" size="sm" onClick={addReference}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Ajouter une référence
+                  {t('companyProfile.references.add')}
                 </Button>
               </div>
               
               {profile.company_references.length === 0 ? (
                 <Card className="p-8 text-center">
                   <Briefcase className="w-12 h-12 text-surface-300 mx-auto mb-4" />
-                  <h4 className="font-medium text-surface-900 mb-2">Aucune référence</h4>
+                  <h4 className="font-medium text-surface-900 mb-2">{t('companyProfile.references.empty.title')}</h4>
                   <p className="text-sm text-surface-500 mb-4">
-                    Ajoutez vos références clients pour renforcer votre candidature
+                    {t('companyProfile.references.empty.subtitle')}
                   </p>
                   <Button variant="primary" size="sm" onClick={addReference}>
                     <Plus className="w-4 h-4 mr-2" />
-                    Ajouter ma première référence
+                    {t('companyProfile.references.empty.cta')}
                   </Button>
                 </Card>
               ) : (
@@ -846,6 +1003,7 @@ export default function CompanyProfilePage() {
                       reference={ref}
                       onUpdate={(updated) => updateReference(index, updated)}
                       onDelete={() => deleteReference(index)}
+                      t={t}
                     />
                   ))}
                 </div>
@@ -857,34 +1015,34 @@ export default function CompanyProfilePage() {
             <Card className="p-6">
               <h3 className="text-lg font-semibold text-surface-900 mb-6 flex items-center gap-2">
                 <Target className="w-5 h-5 text-primary-500" />
-                Préférences de recherche
+                {t('companyProfile.preferences.title')}
               </h3>
               
               <div className="space-y-6">
                 <TagInput
-                  label="Régions préférées"
+                  label={t('companyProfile.preferences.regions.label')}
                   values={profile.preferred_regions}
-                  options={REGIONS}
+                  options={REGIONS.map((v) => ({ value: v, label: v }))}
                   onChange={(preferred_regions) => setProfile({ ...profile, preferred_regions })}
-                  placeholder="Ajouter une région..."
+                  placeholder={t('companyProfile.preferences.regions.placeholder')}
                 />
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Input
-                    label="Montant minimum des marchés (€)"
+                    label={t('companyProfile.preferences.min.label')}
                     type="number"
                     value={profile.min_contract_value || ''}
                     onChange={(e) => setProfile({ ...profile, min_contract_value: parseFloat(e.target.value) || null })}
-                    placeholder="10000"
+                    placeholder={t('companyProfile.preferences.min.placeholder')}
                     leftIcon={<Euro className="w-4 h-4" />}
                   />
                   
                   <Input
-                    label="Montant maximum des marchés (€)"
+                    label={t('companyProfile.preferences.max.label')}
                     type="number"
                     value={profile.max_contract_value || ''}
                     onChange={(e) => setProfile({ ...profile, max_contract_value: parseFloat(e.target.value) || null })}
-                    placeholder="500000"
+                    placeholder={t('companyProfile.preferences.max.placeholder')}
                     leftIcon={<Euro className="w-4 h-4" />}
                   />
                 </div>
@@ -892,11 +1050,10 @@ export default function CompanyProfilePage() {
                 <div className="p-4 bg-primary-50 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <TrendingUp className="w-5 h-5 text-primary-600" />
-                    <p className="font-medium text-primary-900">Astuce</p>
+                    <p className="font-medium text-primary-900">{t('companyProfile.preferences.tip.title')}</p>
                   </div>
                   <p className="text-sm text-primary-700">
-                    Plus votre profil est complet, plus le score de compatibilité sera précis.
-                    Les informations sont utilisées pour l'analyse IA et la génération automatique de documents.
+                    {t('companyProfile.preferences.tip.body')}
                   </p>
                 </div>
               </div>
@@ -909,50 +1066,50 @@ export default function CompanyProfilePage() {
               <Card className="p-6">
                 <h3 className="text-lg font-semibold text-surface-900 mb-2 flex items-center gap-2">
                   <FileText className="w-5 h-5 text-primary-500" />
-                  Modèles de réponses aux AO
+                  {t('companyProfile.library.models.title')}
                 </h3>
                 <p className="text-sm text-surface-500 mb-6">
-                  Uploadez vos anciennes réponses aux appels d'offres réussies. L'IA les analysera pour s'en inspirer lors de la génération de nouvelles réponses.
+                  {t('companyProfile.library.models.subtitle')}
                 </p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
                     <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
-                    <p className="font-medium text-surface-700">Mémoire technique</p>
-                    <p className="text-xs text-surface-500 mt-1">PDF, DOCX - Max 50 Mo</p>
+                    <p className="font-medium text-surface-700">{t('companyProfile.library.models.memory')}</p>
+                    <p className="text-xs text-surface-500 mt-1">{t('companyProfile.library.models.memory.meta')}</p>
                     <Button variant="outline" size="sm" className="mt-3">
                       <Plus className="w-4 h-4 mr-1" />
-                      Uploader
+                      {t('companyProfile.library.upload')}
                     </Button>
                   </div>
                   
                   <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
                     <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
-                    <p className="font-medium text-surface-700">BPU / DPGF gagnants</p>
-                    <p className="text-xs text-surface-500 mt-1">XLS, PDF - Max 20 Mo</p>
+                    <p className="font-medium text-surface-700">{t('companyProfile.library.models.bpu')}</p>
+                    <p className="text-xs text-surface-500 mt-1">{t('companyProfile.library.models.bpu.meta')}</p>
                     <Button variant="outline" size="sm" className="mt-3">
                       <Plus className="w-4 h-4 mr-1" />
-                      Uploader
+                      {t('companyProfile.library.upload')}
                     </Button>
                   </div>
                   
                   <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
                     <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
-                    <p className="font-medium text-surface-700">Actes d'engagement</p>
-                    <p className="text-xs text-surface-500 mt-1">PDF - Max 10 Mo</p>
+                    <p className="font-medium text-surface-700">{t('companyProfile.library.models.commitments')}</p>
+                    <p className="text-xs text-surface-500 mt-1">{t('companyProfile.library.models.commitments.meta')}</p>
                     <Button variant="outline" size="sm" className="mt-3">
                       <Plus className="w-4 h-4 mr-1" />
-                      Uploader
+                      {t('companyProfile.library.upload')}
                     </Button>
                   </div>
                   
                   <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
                     <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
-                    <p className="font-medium text-surface-700">Autres documents modèles</p>
-                    <p className="text-xs text-surface-500 mt-1">Tous formats - Max 50 Mo</p>
+                    <p className="font-medium text-surface-700">{t('companyProfile.library.models.other')}</p>
+                    <p className="text-xs text-surface-500 mt-1">{t('companyProfile.library.models.other.meta')}</p>
                     <Button variant="outline" size="sm" className="mt-3">
                       <Plus className="w-4 h-4 mr-1" />
-                      Uploader
+                      {t('companyProfile.library.upload')}
                     </Button>
                   </div>
                 </div>
@@ -962,70 +1119,70 @@ export default function CompanyProfilePage() {
               <Card className="p-6">
                 <h3 className="text-lg font-semibold text-surface-900 mb-2 flex items-center gap-2">
                   <Building2 className="w-5 h-5 text-primary-500" />
-                  Documents entreprise pour l'IA
+                  {t('companyProfile.library.companyDocs.title')}
                 </h3>
                 <p className="text-sm text-surface-500 mb-6">
-                  Ces documents seront analysés par l'IA pour mieux comprendre votre entreprise et personnaliser les réponses.
+                  {t('companyProfile.library.companyDocs.subtitle')}
                 </p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
                     <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
-                    <p className="font-medium text-surface-700">Plaquette commerciale</p>
-                    <p className="text-xs text-surface-500 mt-1">PDF - Max 20 Mo</p>
+                    <p className="font-medium text-surface-700">{t('companyProfile.library.companyDocs.brochure')}</p>
+                    <p className="text-xs text-surface-500 mt-1">{t('companyProfile.library.companyDocs.brochure.meta')}</p>
                     <Button variant="outline" size="sm" className="mt-3">
                       <Plus className="w-4 h-4 mr-1" />
-                      Uploader
+                      {t('companyProfile.library.upload')}
                     </Button>
                   </div>
                   
                   <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
                     <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
-                    <p className="font-medium text-surface-700">Organigramme</p>
-                    <p className="text-xs text-surface-500 mt-1">PDF, PNG, JPG</p>
+                    <p className="font-medium text-surface-700">{t('companyProfile.library.companyDocs.org')}</p>
+                    <p className="text-xs text-surface-500 mt-1">{t('companyProfile.library.companyDocs.org.meta')}</p>
                     <Button variant="outline" size="sm" className="mt-3">
                       <Plus className="w-4 h-4 mr-1" />
-                      Uploader
+                      {t('companyProfile.library.upload')}
                     </Button>
                   </div>
                   
                   <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
                     <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
-                    <p className="font-medium text-surface-700">CV dirigeants/équipe</p>
-                    <p className="text-xs text-surface-500 mt-1">PDF, DOCX</p>
+                    <p className="font-medium text-surface-700">{t('companyProfile.library.companyDocs.cv')}</p>
+                    <p className="text-xs text-surface-500 mt-1">{t('companyProfile.library.companyDocs.cv.meta')}</p>
                     <Button variant="outline" size="sm" className="mt-3">
                       <Plus className="w-4 h-4 mr-1" />
-                      Uploader
+                      {t('companyProfile.library.upload')}
                     </Button>
                   </div>
                   
                   <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
                     <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
-                    <p className="font-medium text-surface-700">Politique QSE</p>
-                    <p className="text-xs text-surface-500 mt-1">PDF</p>
+                    <p className="font-medium text-surface-700">{t('companyProfile.library.companyDocs.qse')}</p>
+                    <p className="text-xs text-surface-500 mt-1">{t('companyProfile.library.companyDocs.qse.meta')}</p>
                     <Button variant="outline" size="sm" className="mt-3">
                       <Plus className="w-4 h-4 mr-1" />
-                      Uploader
+                      {t('companyProfile.library.upload')}
                     </Button>
                   </div>
                   
                   <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
                     <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
-                    <p className="font-medium text-surface-700">Plan RSE</p>
-                    <p className="text-xs text-surface-500 mt-1">PDF</p>
+                    <p className="font-medium text-surface-700">{t('companyProfile.library.companyDocs.rse')}</p>
+                    <p className="text-xs text-surface-500 mt-1">{t('companyProfile.library.companyDocs.rse.meta')}</p>
                     <Button variant="outline" size="sm" className="mt-3">
                       <Plus className="w-4 h-4 mr-1" />
-                      Uploader
+                      {t('companyProfile.library.upload')}
                     </Button>
                   </div>
                   
                   <div className="p-4 border-2 border-dashed border-surface-300 rounded-lg hover:border-primary-400 transition-colors cursor-pointer text-center">
                     <Upload className="w-8 h-8 text-surface-400 mx-auto mb-2" />
-                    <p className="font-medium text-surface-700">Méthodologie type</p>
-                    <p className="text-xs text-surface-500 mt-1">PDF, DOCX</p>
+                    <p className="font-medium text-surface-700">{t('companyProfile.library.companyDocs.method')}</p>
+                    <p className="text-xs text-surface-500 mt-1">{t('companyProfile.library.companyDocs.method.meta')}</p>
                     <Button variant="outline" size="sm" className="mt-3">
                       <Plus className="w-4 h-4 mr-1" />
-                      Uploader
+                      {t('companyProfile.library.upload')}
                     </Button>
                   </div>
                 </div>
@@ -1036,10 +1193,9 @@ export default function CompanyProfilePage() {
                 <div className="flex items-start gap-3">
                   <Shield className="w-5 h-5 text-blue-600 mt-0.5" />
                   <div>
-                    <p className="font-medium text-blue-900">Confidentialité garantie</p>
+                    <p className="font-medium text-blue-900">{t('companyProfile.confidentiality.title')}</p>
                     <p className="text-sm text-blue-700 mt-1">
-                      Vos documents sont stockés de manière sécurisée et ne sont jamais partagés. 
-                      L'IA les utilise uniquement pour personnaliser vos réponses aux AO.
+                      {t('companyProfile.confidentiality.body')}
                     </p>
                   </div>
                 </div>

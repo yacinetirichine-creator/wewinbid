@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -121,14 +121,7 @@ export function ApprovalWorkflowManager({
   const [newComment, setNewComment] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchRequests();
-    if (requestId) {
-      fetchRequestDetail(requestId);
-    }
-  }, [requestId]);
-
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -146,9 +139,9 @@ export function ApprovalWorkflowManager({
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
 
-  const fetchRequestDetail = async (id: string) => {
+  const fetchRequestDetail = useCallback(async (id: string) => {
     setDetailLoading(true);
     try {
       const response = await fetch(`/api/approvals/${id}`);
@@ -163,7 +156,14 @@ export function ApprovalWorkflowManager({
     } finally {
       setDetailLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchRequests();
+    if (requestId) {
+      fetchRequestDetail(requestId);
+    }
+  }, [fetchRequestDetail, fetchRequests, requestId]);
 
   const handleDecision = async () => {
     if (!selectedRequest) return;

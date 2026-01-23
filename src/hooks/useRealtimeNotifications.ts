@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
@@ -47,7 +47,7 @@ export function useRealtimeNotifications() {
   const [connected, setConnected] = useState(false);
   
   const channelRef = useRef<RealtimeChannel | null>(null);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   // Charger les notifications existantes
   useEffect(() => {
@@ -82,7 +82,7 @@ export function useRealtimeNotifications() {
     }
 
     loadNotifications();
-  }, []);
+  }, [supabase]);
 
   // S'abonner aux notifications en temps réel
   useEffect(() => {
@@ -151,7 +151,7 @@ export function useRealtimeNotifications() {
         supabase.removeChannel(channelRef.current);
       }
     };
-  }, []);
+  }, [supabase]);
 
   // Marquer une notification comme lue
   const markAsRead = useCallback(async (notificationId: string) => {
@@ -169,7 +169,7 @@ export function useRealtimeNotifications() {
     } catch (err) {
       console.error('Erreur marquage notification:', err);
     }
-  }, []);
+  }, [supabase]);
 
   // Marquer toutes comme lues
   const markAllAsRead = useCallback(async () => {
@@ -189,7 +189,7 @@ export function useRealtimeNotifications() {
     } catch (err) {
       console.error('Erreur marquage notifications:', err);
     }
-  }, []);
+  }, [supabase]);
 
   // Supprimer une notification
   const deleteNotification = useCallback(async (notificationId: string) => {
@@ -209,7 +209,7 @@ export function useRealtimeNotifications() {
     } catch (err) {
       console.error('Erreur suppression notification:', err);
     }
-  }, [notifications]);
+  }, [notifications, supabase]);
 
   // Supprimer toutes les notifications lues
   const clearReadNotifications = useCallback(async () => {
@@ -228,7 +228,7 @@ export function useRealtimeNotifications() {
     } catch (err) {
       console.error('Erreur suppression notifications:', err);
     }
-  }, []);
+  }, [supabase]);
 
   return {
     notifications,
@@ -256,7 +256,7 @@ export function useNotificationSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   // Charger les paramètres
   useEffect(() => {
@@ -287,7 +287,7 @@ export function useNotificationSettings() {
     }
 
     loadSettings();
-  }, []);
+  }, [supabase]);
 
   // Sauvegarder les paramètres
   const saveSettings = useCallback(async (newSettings: Partial<NotificationSettings>) => {
@@ -320,7 +320,7 @@ export function useNotificationSettings() {
     } finally {
       setSaving(false);
     }
-  }, [settings]);
+  }, [settings, supabase]);
 
   return {
     settings,

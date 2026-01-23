@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -23,76 +23,226 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Input, Card, CardContent, Badge, Alert } from '@/components/ui';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 // Secteurs d'activité
 const SECTORS = [
-  { value: 'security', label: 'Sécurité privée', icon: '🛡️' },
-  { value: 'electronic_security', label: 'Sécurité électronique', icon: '📹' },
-  { value: 'construction', label: 'BTP / Construction', icon: '🏗️' },
-  { value: 'cleaning', label: 'Propreté / Nettoyage', icon: '🧹' },
-  { value: 'it_services', label: 'Services informatiques', icon: '💻' },
-  { value: 'software', label: 'Développement logiciel', icon: '👨‍💻' },
-  { value: 'consulting', label: 'Conseil / Consulting', icon: '📊' },
-  { value: 'logistics', label: 'Logistique / Transport', icon: '🚚' },
-  { value: 'maintenance', label: 'Maintenance industrielle', icon: '🔧' },
-  { value: 'energy', label: 'Énergie / Environnement', icon: '⚡' },
-  { value: 'healthcare', label: 'Santé / Médical', icon: '🏥' },
-  { value: 'food', label: 'Restauration / Traiteur', icon: '🍽️' },
-  { value: 'training', label: 'Formation', icon: '📚' },
-  { value: 'communication', label: 'Communication / Marketing', icon: '📣' },
-  { value: 'engineering', label: 'Ingénierie / Études', icon: '📐' },
-  { value: 'other', label: 'Autre', icon: '📦' },
+  { value: 'security', labelKey: 'onboarding.sectors.security', icon: '🛡️' },
+  { value: 'electronic_security', labelKey: 'onboarding.sectors.electronicSecurity', icon: '📹' },
+  { value: 'construction', labelKey: 'onboarding.sectors.construction', icon: '🏗️' },
+  { value: 'cleaning', labelKey: 'onboarding.sectors.cleaning', icon: '🧹' },
+  { value: 'it_services', labelKey: 'onboarding.sectors.itServices', icon: '💻' },
+  { value: 'software', labelKey: 'onboarding.sectors.software', icon: '👨‍💻' },
+  { value: 'consulting', labelKey: 'onboarding.sectors.consulting', icon: '📊' },
+  { value: 'logistics', labelKey: 'onboarding.sectors.logistics', icon: '🚚' },
+  { value: 'maintenance', labelKey: 'onboarding.sectors.maintenance', icon: '🔧' },
+  { value: 'energy', labelKey: 'onboarding.sectors.energy', icon: '⚡' },
+  { value: 'healthcare', labelKey: 'onboarding.sectors.healthcare', icon: '🏥' },
+  { value: 'food', labelKey: 'onboarding.sectors.food', icon: '🍽️' },
+  { value: 'training', labelKey: 'onboarding.sectors.training', icon: '📚' },
+  { value: 'communication', labelKey: 'onboarding.sectors.communication', icon: '📣' },
+  { value: 'engineering', labelKey: 'onboarding.sectors.engineering', icon: '📐' },
+  { value: 'other', labelKey: 'onboarding.sectors.other', icon: '📦' },
 ];
 
 // Tailles d'entreprise
 const COMPANY_SIZES = [
-  { value: '1', label: 'Auto-entrepreneur', employees: '1 personne' },
-  { value: '2-10', label: 'TPE', employees: '2-10 salariés' },
-  { value: '11-50', label: 'PME', employees: '11-50 salariés' },
-  { value: '51-250', label: 'ETI', employees: '51-250 salariés' },
-  { value: '251-1000', label: 'Grande entreprise', employees: '251-1000 salariés' },
-  { value: '1000+', label: 'Groupe', employees: '1000+ salariés' },
+  { value: '1', labelKey: 'onboarding.companySize.selfEmployed', employeesKey: 'onboarding.companySize.selfEmployed.employees' },
+  { value: '2-10', labelKey: 'onboarding.companySize.tpe', employeesKey: 'onboarding.companySize.tpe.employees' },
+  { value: '11-50', labelKey: 'onboarding.companySize.pme', employeesKey: 'onboarding.companySize.pme.employees' },
+  { value: '51-250', labelKey: 'onboarding.companySize.eti', employeesKey: 'onboarding.companySize.eti.employees' },
+  { value: '251-1000', labelKey: 'onboarding.companySize.large', employeesKey: 'onboarding.companySize.large.employees' },
+  { value: '1000+', labelKey: 'onboarding.companySize.group', employeesKey: 'onboarding.companySize.group.employees' },
 ];
 
 // Zones géographiques
 const GEOGRAPHIC_ZONES = [
-  { value: 'local', label: 'Local', description: 'Département' },
-  { value: 'regional', label: 'Régional', description: 'Région' },
-  { value: 'national', label: 'National', description: 'France entière' },
-  { value: 'european', label: 'Européen', description: 'Union Européenne' },
-  { value: 'international', label: 'International', description: 'Monde entier' },
+  { value: 'local', labelKey: 'onboarding.zones.local', descriptionKey: 'onboarding.zones.local.desc' },
+  { value: 'regional', labelKey: 'onboarding.zones.regional', descriptionKey: 'onboarding.zones.regional.desc' },
+  { value: 'national', labelKey: 'onboarding.zones.national', descriptionKey: 'onboarding.zones.national.desc' },
+  { value: 'european', labelKey: 'onboarding.zones.european', descriptionKey: 'onboarding.zones.european.desc' },
+  { value: 'international', labelKey: 'onboarding.zones.international', descriptionKey: 'onboarding.zones.international.desc' },
 ];
 
 // Types de marchés
 const MARKET_TYPES = [
-  { value: 'public', label: 'Marchés publics', description: 'État, collectivités, hôpitaux...' },
-  { value: 'private', label: 'Marchés privés', description: 'Entreprises, groupes...' },
-  { value: 'both', label: 'Les deux', description: 'Public et privé' },
+  { value: 'public', labelKey: 'onboarding.marketTypes.public', descriptionKey: 'onboarding.marketTypes.public.desc' },
+  { value: 'private', labelKey: 'onboarding.marketTypes.private', descriptionKey: 'onboarding.marketTypes.private.desc' },
+  { value: 'both', labelKey: 'onboarding.marketTypes.both', descriptionKey: 'onboarding.marketTypes.both.desc' },
 ];
 
 // Certifications courantes
 const CERTIFICATIONS = [
-  { value: 'iso9001', label: 'ISO 9001', category: 'Qualité' },
-  { value: 'iso14001', label: 'ISO 14001', category: 'Environnement' },
-  { value: 'iso45001', label: 'ISO 45001', category: 'Sécurité' },
-  { value: 'mase', label: 'MASE', category: 'Sécurité' },
-  { value: 'qualibat', label: 'Qualibat', category: 'BTP' },
-  { value: 'qualifelec', label: 'Qualifelec', category: 'Électricité' },
-  { value: 'rge', label: 'RGE', category: 'Énergie' },
-  { value: 'apsad', label: 'APSAD', category: 'Sécurité' },
-  { value: 'cnaps', label: 'CNAPS', category: 'Sécurité privée' },
-  { value: 'cnil', label: 'Conformité RGPD', category: 'Data' },
-  { value: 'other', label: 'Autre certification', category: 'Autre' },
+  { value: 'iso9001', labelKey: 'onboarding.certifications.iso9001' },
+  { value: 'iso14001', labelKey: 'onboarding.certifications.iso14001' },
+  { value: 'iso45001', labelKey: 'onboarding.certifications.iso45001' },
+  { value: 'mase', labelKey: 'onboarding.certifications.mase' },
+  { value: 'qualibat', labelKey: 'onboarding.certifications.qualibat' },
+  { value: 'qualifelec', labelKey: 'onboarding.certifications.qualifelec' },
+  { value: 'rge', labelKey: 'onboarding.certifications.rge' },
+  { value: 'apsad', labelKey: 'onboarding.certifications.apsad' },
+  { value: 'cnaps', labelKey: 'onboarding.certifications.cnaps' },
+  { value: 'cnil', labelKey: 'onboarding.certifications.rgpd' },
+  { value: 'other', labelKey: 'onboarding.certifications.other' },
 ];
 
 const STEPS = [
-  { id: 1, title: 'Entreprise', icon: Building2 },
-  { id: 2, title: 'Activité', icon: Briefcase },
-  { id: 3, title: 'Cibles', icon: Target },
-  { id: 4, title: 'Mots-clés', icon: Sparkles },
+  { id: 1, titleKey: 'onboarding.steps.company', icon: Building2 },
+  { id: 2, titleKey: 'onboarding.steps.activity', icon: Briefcase },
+  { id: 3, titleKey: 'onboarding.steps.targets', icon: Target },
+  { id: 4, titleKey: 'onboarding.steps.keywords', icon: Sparkles },
 ];
 
 export default function OnboardingPage() {
+  const { locale } = useLocale();
+  const entries = useMemo(
+    () => ({
+      'onboarding.exploreFirst': "Explorer d'abord",
+      'onboarding.timeRemaining': '({time} restantes)',
+      'onboarding.logout': 'Déconnexion',
+      'onboarding.title': 'Configuration de votre entreprise',
+      'onboarding.subtitle': "Ces informations permettent à notre IA de vous recommander les meilleurs appels d'offres",
+      'onboarding.explorationNotice': 'Vous avez {time} pour explorer avant de configurer votre entreprise',
+      'onboarding.explorationEnded': "Votre période d'exploration est terminée. Veuillez configurer votre entreprise pour continuer.",
+
+      'onboarding.steps.company': 'Entreprise',
+      'onboarding.steps.activity': 'Activité',
+      'onboarding.steps.targets': 'Cibles',
+      'onboarding.steps.keywords': 'Mots-clés',
+
+      'onboarding.step1.title': "Informations de l'entreprise",
+      'onboarding.step1.subtitle': 'Renseignez les informations de base',
+      'onboarding.step1.companyName.label': "Nom de l'entreprise *",
+      'onboarding.step1.companyName.placeholder': 'Ma Société SAS',
+      'onboarding.step1.siret.label': 'SIRET',
+      'onboarding.step1.siret.placeholder': '12345678901234',
+      'onboarding.step1.siret.hint': '14 chiffres (optionnel)',
+      'onboarding.step1.phone.label': 'Téléphone',
+      'onboarding.step1.phone.placeholder': '+33 1 23 45 67 89',
+      'onboarding.step1.address.label': 'Adresse',
+      'onboarding.step1.address.placeholder': '123 rue de la Paix',
+      'onboarding.step1.postalCode.label': 'Code postal',
+      'onboarding.step1.postalCode.placeholder': '75001',
+      'onboarding.step1.city.label': 'Ville',
+      'onboarding.step1.city.placeholder': 'Paris',
+      'onboarding.step1.website.label': 'Site web',
+      'onboarding.step1.website.placeholder': 'https://www.monsite.fr',
+
+      'onboarding.step2.title': 'Votre activité',
+      'onboarding.step2.subtitle': 'Secteurs, taille et certifications',
+      'onboarding.step2.sectors.label': "Secteurs d'activité *",
+      'onboarding.step2.companySize.label': "Taille de l'entreprise *",
+      'onboarding.step2.certifications.label': 'Certifications (optionnel)',
+      'onboarding.step2.description.label': "Description de l'activité",
+      'onboarding.step2.description.placeholder': 'Décrivez brièvement votre activité, vos spécialités...',
+
+      'onboarding.step3.title': 'Vos cibles',
+      'onboarding.step3.subtitle': 'Zones et types de marchés recherchés',
+      'onboarding.step3.zones.label': 'Zones géographiques *',
+      'onboarding.step3.marketTypes.label': 'Types de marchés *',
+      'onboarding.step3.budget.label': 'Budget des marchés ciblés (optionnel)',
+      'onboarding.step3.minBudget.label': 'Budget minimum (€)',
+      'onboarding.step3.minBudget.placeholder': '10000',
+      'onboarding.step3.maxBudget.label': 'Budget maximum (€)',
+      'onboarding.step3.maxBudget.placeholder': '500000',
+
+      'onboarding.step4.title': 'Mots-clés et compétences',
+      'onboarding.step4.subtitle': 'Aidez notre IA à trouver les meilleurs AO pour vous',
+      'onboarding.step4.keywords.label': 'Mots-clés de recherche',
+      'onboarding.step4.keywords.help': "Ajoutez des mots-clés que l'IA utilisera pour identifier les appels d'offres pertinents",
+      'onboarding.step4.keywordInput.placeholder': 'Ex: vidéosurveillance, React, audit...',
+      'onboarding.step4.keywordAdd': 'Ajouter',
+      'onboarding.step4.keywordEmpty': 'Aucun mot-clé ajouté',
+      'onboarding.step4.competencies.label': 'Compétences et références clés',
+      'onboarding.step4.competencies.placeholder':
+        "Décrivez vos compétences clés, références importantes, technologies maîtrisées...\n\nEx: 10 ans d'expérience en sécurité incendie, références ministères, maîtrise React/Node.js...",
+
+      'onboarding.ai.title': 'Configuration IA',
+      'onboarding.ai.intro': 'Notre IA utilisera ces informations pour :',
+      'onboarding.ai.b1': "Vous recommander les appels d'offres les plus pertinents",
+      'onboarding.ai.b2': 'Calculer votre score de compatibilité',
+      'onboarding.ai.b3': 'Générer des documents adaptés à votre profil',
+      'onboarding.ai.b4': 'Analyser vos chances de succès',
+
+      'onboarding.nav.back': 'Retour',
+      'onboarding.nav.next': 'Continuer',
+      'onboarding.nav.submitting': 'Configuration...',
+      'onboarding.nav.submit': 'Terminer la configuration',
+      'onboarding.footer.editLater': 'Vous pourrez modifier ces informations plus tard dans les paramètres',
+
+      'onboarding.errors.companyNameRequired': "Le nom de l'entreprise est requis",
+      'onboarding.errors.siretInvalid': 'Le SIRET doit contenir 14 chiffres',
+      'onboarding.errors.sectorRequired': "Sélectionnez au moins un secteur d'activité",
+      'onboarding.errors.companySizeRequired': "Sélectionnez la taille de votre entreprise",
+      'onboarding.errors.zoneRequired': 'Sélectionnez au moins une zone géographique',
+      'onboarding.errors.marketTypeRequired': 'Sélectionnez au moins un type de marché',
+      'onboarding.errors.generic': 'Une erreur est survenue',
+
+      'onboarding.sectors.security': 'Sécurité privée',
+      'onboarding.sectors.electronicSecurity': 'Sécurité électronique',
+      'onboarding.sectors.construction': 'BTP / Construction',
+      'onboarding.sectors.cleaning': 'Propreté / Nettoyage',
+      'onboarding.sectors.itServices': 'Services informatiques',
+      'onboarding.sectors.software': 'Développement logiciel',
+      'onboarding.sectors.consulting': 'Conseil / Consulting',
+      'onboarding.sectors.logistics': 'Logistique / Transport',
+      'onboarding.sectors.maintenance': 'Maintenance industrielle',
+      'onboarding.sectors.energy': 'Énergie / Environnement',
+      'onboarding.sectors.healthcare': 'Santé / Médical',
+      'onboarding.sectors.food': 'Restauration / Traiteur',
+      'onboarding.sectors.training': 'Formation',
+      'onboarding.sectors.communication': 'Communication / Marketing',
+      'onboarding.sectors.engineering': 'Ingénierie / Études',
+      'onboarding.sectors.other': 'Autre',
+
+      'onboarding.companySize.selfEmployed': 'Auto-entrepreneur',
+      'onboarding.companySize.selfEmployed.employees': '1 personne',
+      'onboarding.companySize.tpe': 'TPE',
+      'onboarding.companySize.tpe.employees': '2-10 salariés',
+      'onboarding.companySize.pme': 'PME',
+      'onboarding.companySize.pme.employees': '11-50 salariés',
+      'onboarding.companySize.eti': 'ETI',
+      'onboarding.companySize.eti.employees': '51-250 salariés',
+      'onboarding.companySize.large': 'Grande entreprise',
+      'onboarding.companySize.large.employees': '251-1000 salariés',
+      'onboarding.companySize.group': 'Groupe',
+      'onboarding.companySize.group.employees': '1000+ salariés',
+
+      'onboarding.zones.local': 'Local',
+      'onboarding.zones.local.desc': 'Département',
+      'onboarding.zones.regional': 'Régional',
+      'onboarding.zones.regional.desc': 'Région',
+      'onboarding.zones.national': 'National',
+      'onboarding.zones.national.desc': 'France entière',
+      'onboarding.zones.european': 'Européen',
+      'onboarding.zones.european.desc': 'Union Européenne',
+      'onboarding.zones.international': 'International',
+      'onboarding.zones.international.desc': 'Monde entier',
+
+      'onboarding.marketTypes.public': 'Marchés publics',
+      'onboarding.marketTypes.public.desc': 'État, collectivités, hôpitaux...',
+      'onboarding.marketTypes.private': 'Marchés privés',
+      'onboarding.marketTypes.private.desc': 'Entreprises, groupes...',
+      'onboarding.marketTypes.both': 'Les deux',
+      'onboarding.marketTypes.both.desc': 'Public et privé',
+
+      'onboarding.certifications.iso9001': 'ISO 9001',
+      'onboarding.certifications.iso14001': 'ISO 14001',
+      'onboarding.certifications.iso45001': 'ISO 45001',
+      'onboarding.certifications.mase': 'MASE',
+      'onboarding.certifications.qualibat': 'Qualibat',
+      'onboarding.certifications.qualifelec': 'Qualifelec',
+      'onboarding.certifications.rge': 'RGE',
+      'onboarding.certifications.apsad': 'APSAD',
+      'onboarding.certifications.cnaps': 'CNAPS',
+      'onboarding.certifications.rgpd': 'Conformité RGPD',
+      'onboarding.certifications.other': 'Autre certification',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
+
   const router = useRouter();
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
   const getSupabase = useCallback(() => {
@@ -248,31 +398,31 @@ export default function OnboardingPage() {
     switch (stepNum) {
       case 1:
         if (!companyName) {
-          setError('Le nom de l\'entreprise est requis');
+          setError(t('onboarding.errors.companyNameRequired'));
           return false;
         }
         if (siret && (siret.length !== 14 || !/^\d+$/.test(siret))) {
-          setError('Le SIRET doit contenir 14 chiffres');
+          setError(t('onboarding.errors.siretInvalid'));
           return false;
         }
         return true;
       case 2:
         if (sectors.length === 0) {
-          setError('Sélectionnez au moins un secteur d\'activité');
+          setError(t('onboarding.errors.sectorRequired'));
           return false;
         }
         if (!companySize) {
-          setError('Sélectionnez la taille de votre entreprise');
+          setError(t('onboarding.errors.companySizeRequired'));
           return false;
         }
         return true;
       case 3:
         if (geographicZones.length === 0) {
-          setError('Sélectionnez au moins une zone géographique');
+          setError(t('onboarding.errors.zoneRequired'));
           return false;
         }
         if (marketTypes.length === 0) {
-          setError('Sélectionnez au moins un type de marché');
+          setError(t('onboarding.errors.marketTypeRequired'));
           return false;
         }
         return true;
@@ -369,7 +519,7 @@ export default function OnboardingPage() {
 
     } catch (err: any) {
       console.error('Onboarding error:', err);
-      setError(err.message || 'Une erreur est survenue');
+      setError(err.message || t('onboarding.errors.generic'));
     } finally {
       setLoading(false);
     }
@@ -386,10 +536,10 @@ export default function OnboardingPage() {
             className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all"
           >
             <Eye className="w-4 h-4" />
-            <span className="hidden sm:inline">Explorer d'abord</span>
+            <span className="hidden sm:inline">{t('onboarding.exploreFirst')}</span>
             {explorationTimeRemaining && explorationTimeRemaining > 0 && (
               <span className="text-xs text-amber-400 ml-1">
-                ({formatTimeRemaining(explorationTimeRemaining)} restantes)
+                {t('onboarding.timeRemaining', { time: formatTimeRemaining(explorationTimeRemaining) })}
               </span>
             )}
           </button>
@@ -399,7 +549,7 @@ export default function OnboardingPage() {
           className="flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:text-red-400 bg-white/5 hover:bg-red-500/10 rounded-lg transition-all"
         >
           <LogOut className="w-4 h-4" />
-          <span className="hidden sm:inline">Déconnexion</span>
+          <span className="hidden sm:inline">{t('onboarding.logout')}</span>
         </button>
       </div>
 
@@ -416,14 +566,14 @@ export default function OnboardingPage() {
             </div>
             <span className="text-3xl font-bold text-white">WeWinBid</span>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Configuration de votre entreprise</h1>
-          <p className="text-slate-400">Ces informations permettent à notre IA de vous recommander les meilleurs appels d'offres</p>
+          <h1 className="text-2xl font-bold text-white mb-2">{t('onboarding.title')}</h1>
+          <p className="text-slate-400">{t('onboarding.subtitle')}</p>
           
           {/* Message de période d'exploration */}
           {canSkip && explorationTimeRemaining && explorationTimeRemaining > 0 && (
             <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-300 text-sm">
               <Clock className="w-4 h-4" />
-              <span>Vous avez {formatTimeRemaining(explorationTimeRemaining)} pour explorer avant de configurer votre entreprise</span>
+              <span>{t('onboarding.explorationNotice', { time: formatTimeRemaining(explorationTimeRemaining) })}</span>
             </div>
           )}
           
@@ -431,7 +581,7 @@ export default function OnboardingPage() {
           {!canSkip && (
             <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-lg text-red-300 text-sm">
               <Clock className="w-4 h-4" />
-              <span>Votre période d'exploration est terminée. Veuillez configurer votre entreprise pour continuer.</span>
+              <span>{t('onboarding.explorationEnded')}</span>
             </div>
           )}
         </div>
@@ -452,7 +602,7 @@ export default function OnboardingPage() {
                 ) : (
                   <s.icon className="w-4 h-4" />
                 )}
-                <span className="text-sm font-medium hidden sm:inline">{s.title}</span>
+                <span className="text-sm font-medium hidden sm:inline">{t(s.titleKey)}</span>
               </div>
               {idx < STEPS.length - 1 && (
                 <div className={`w-8 h-0.5 mx-2 ${
@@ -483,63 +633,63 @@ export default function OnboardingPage() {
                   className="space-y-6"
                 >
                   <div className="text-center mb-6">
-                    <h2 className="text-xl font-bold text-white mb-2">Informations de l'entreprise</h2>
-                    <p className="text-slate-400">Renseignez les informations de base</p>
+                    <h2 className="text-xl font-bold text-white mb-2">{t('onboarding.step1.title')}</h2>
+                    <p className="text-slate-400">{t('onboarding.step1.subtitle')}</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
                       <Input
-                        label="Nom de l'entreprise *"
+                        label={t('onboarding.step1.companyName.label')}
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
-                        placeholder="Ma Société SAS"
+                        placeholder={t('onboarding.step1.companyName.placeholder')}
                         className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
                       />
                     </div>
                     <Input
-                      label="SIRET"
+                      label={t('onboarding.step1.siret.label')}
                       value={siret}
                       onChange={(e) => setSiret(e.target.value.replace(/\s/g, ''))}
-                      placeholder="12345678901234"
-                      hint="14 chiffres (optionnel)"
+                      placeholder={t('onboarding.step1.siret.placeholder')}
+                      hint={t('onboarding.step1.siret.hint')}
                       className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
                     />
                     <Input
-                      label="Téléphone"
+                      label={t('onboarding.step1.phone.label')}
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+33 1 23 45 67 89"
+                      placeholder={t('onboarding.step1.phone.placeholder')}
                       className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
                     />
                     <Input
-                      label="Adresse"
+                      label={t('onboarding.step1.address.label')}
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      placeholder="123 rue de la Paix"
+                      placeholder={t('onboarding.step1.address.placeholder')}
                       className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
                     />
                     <div className="grid grid-cols-2 gap-2">
                       <Input
-                        label="Code postal"
+                        label={t('onboarding.step1.postalCode.label')}
                         value={postalCode}
                         onChange={(e) => setPostalCode(e.target.value)}
-                        placeholder="75001"
+                        placeholder={t('onboarding.step1.postalCode.placeholder')}
                         className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
                       />
                       <Input
-                        label="Ville"
+                        label={t('onboarding.step1.city.label')}
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
-                        placeholder="Paris"
+                        placeholder={t('onboarding.step1.city.placeholder')}
                         className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
                       />
                     </div>
                     <Input
-                      label="Site web"
+                      label={t('onboarding.step1.website.label')}
                       value={website}
                       onChange={(e) => setWebsite(e.target.value)}
-                      placeholder="https://www.monsite.fr"
+                      placeholder={t('onboarding.step1.website.placeholder')}
                       className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
                     />
                   </div>
@@ -556,13 +706,13 @@ export default function OnboardingPage() {
                   className="space-y-6"
                 >
                   <div className="text-center mb-6">
-                    <h2 className="text-xl font-bold text-white mb-2">Votre activité</h2>
-                    <p className="text-slate-400">Secteurs, taille et certifications</p>
+                    <h2 className="text-xl font-bold text-white mb-2">{t('onboarding.step2.title')}</h2>
+                    <p className="text-slate-400">{t('onboarding.step2.subtitle')}</p>
                   </div>
 
                   {/* Secteurs */}
                   <div>
-                    <label className="block text-sm font-medium text-white mb-3">Secteurs d'activité *</label>
+                    <label className="block text-sm font-medium text-white mb-3">{t('onboarding.step2.sectors.label')}</label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                       {SECTORS.map((sector) => (
                         <button
@@ -576,7 +726,7 @@ export default function OnboardingPage() {
                           }`}
                         >
                           <span className="text-lg mr-2">{sector.icon}</span>
-                          <span className="text-sm">{sector.label}</span>
+                          <span className="text-sm">{t(sector.labelKey)}</span>
                         </button>
                       ))}
                     </div>
@@ -584,7 +734,7 @@ export default function OnboardingPage() {
 
                   {/* Taille */}
                   <div>
-                    <label className="block text-sm font-medium text-white mb-3">Taille de l'entreprise *</label>
+                    <label className="block text-sm font-medium text-white mb-3">{t('onboarding.step2.companySize.label')}</label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                       {COMPANY_SIZES.map((size) => (
                         <button
@@ -597,8 +747,8 @@ export default function OnboardingPage() {
                               : 'bg-white/5 border-white/10 text-slate-400 hover:border-white/20'
                           }`}
                         >
-                          <div className="font-medium">{size.label}</div>
-                          <div className="text-xs opacity-70">{size.employees}</div>
+                          <div className="font-medium">{t(size.labelKey)}</div>
+                          <div className="text-xs opacity-70">{t(size.employeesKey)}</div>
                         </button>
                       ))}
                     </div>
@@ -606,7 +756,7 @@ export default function OnboardingPage() {
 
                   {/* Certifications */}
                   <div>
-                    <label className="block text-sm font-medium text-white mb-3">Certifications (optionnel)</label>
+                    <label className="block text-sm font-medium text-white mb-3">{t('onboarding.step2.certifications.label')}</label>
                     <div className="flex flex-wrap gap-2">
                       {CERTIFICATIONS.map((cert) => (
                         <button
@@ -619,7 +769,7 @@ export default function OnboardingPage() {
                               : 'bg-white/5 border-white/10 text-slate-400 hover:border-white/20'
                           }`}
                         >
-                          {cert.label}
+                          {t(cert.labelKey)}
                         </button>
                       ))}
                     </div>
@@ -627,11 +777,11 @@ export default function OnboardingPage() {
 
                   {/* Description */}
                   <div>
-                    <label className="block text-sm font-medium text-white mb-2">Description de l'activité</label>
+                    <label className="block text-sm font-medium text-white mb-2">{t('onboarding.step2.description.label')}</label>
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Décrivez brièvement votre activité, vos spécialités..."
+                      placeholder={t('onboarding.step2.description.placeholder')}
                       rows={3}
                       className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                     />
@@ -649,13 +799,13 @@ export default function OnboardingPage() {
                   className="space-y-6"
                 >
                   <div className="text-center mb-6">
-                    <h2 className="text-xl font-bold text-white mb-2">Vos cibles</h2>
-                    <p className="text-slate-400">Zones et types de marchés recherchés</p>
+                    <h2 className="text-xl font-bold text-white mb-2">{t('onboarding.step3.title')}</h2>
+                    <p className="text-slate-400">{t('onboarding.step3.subtitle')}</p>
                   </div>
 
                   {/* Zones géographiques */}
                   <div>
-                    <label className="block text-sm font-medium text-white mb-3">Zones géographiques *</label>
+                    <label className="block text-sm font-medium text-white mb-3">{t('onboarding.step3.zones.label')}</label>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                       {GEOGRAPHIC_ZONES.map((zone) => (
                         <button
@@ -668,8 +818,8 @@ export default function OnboardingPage() {
                               : 'bg-white/5 border-white/10 text-slate-400 hover:border-white/20'
                           }`}
                         >
-                          <div className="font-medium">{zone.label}</div>
-                          <div className="text-xs opacity-70">{zone.description}</div>
+                          <div className="font-medium">{t(zone.labelKey)}</div>
+                          <div className="text-xs opacity-70">{t(zone.descriptionKey)}</div>
                         </button>
                       ))}
                     </div>
@@ -677,7 +827,7 @@ export default function OnboardingPage() {
 
                   {/* Types de marchés */}
                   <div>
-                    <label className="block text-sm font-medium text-white mb-3">Types de marchés *</label>
+                    <label className="block text-sm font-medium text-white mb-3">{t('onboarding.step3.marketTypes.label')}</label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       {MARKET_TYPES.map((type) => (
                         <button
@@ -690,8 +840,8 @@ export default function OnboardingPage() {
                               : 'bg-white/5 border-white/10 text-slate-400 hover:border-white/20'
                           }`}
                         >
-                          <div className="font-medium">{type.label}</div>
-                          <div className="text-sm opacity-70">{type.description}</div>
+                          <div className="font-medium">{t(type.labelKey)}</div>
+                          <div className="text-sm opacity-70">{t(type.descriptionKey)}</div>
                         </button>
                       ))}
                     </div>
@@ -699,22 +849,22 @@ export default function OnboardingPage() {
 
                   {/* Budget cible */}
                   <div>
-                    <label className="block text-sm font-medium text-white mb-3">Budget des marchés ciblés (optionnel)</label>
+                    <label className="block text-sm font-medium text-white mb-3">{t('onboarding.step3.budget.label')}</label>
                     <div className="grid grid-cols-2 gap-4">
                       <Input
-                        label="Budget minimum (€)"
+                        label={t('onboarding.step3.minBudget.label')}
                         type="number"
                         value={minBudget}
                         onChange={(e) => setMinBudget(e.target.value)}
-                        placeholder="10000"
+                        placeholder={t('onboarding.step3.minBudget.placeholder')}
                         className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
                       />
                       <Input
-                        label="Budget maximum (€)"
+                        label={t('onboarding.step3.maxBudget.label')}
                         type="number"
                         value={maxBudget}
                         onChange={(e) => setMaxBudget(e.target.value)}
-                        placeholder="500000"
+                        placeholder={t('onboarding.step3.maxBudget.placeholder')}
                         className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
                       />
                     </div>
@@ -732,29 +882,29 @@ export default function OnboardingPage() {
                   className="space-y-6"
                 >
                   <div className="text-center mb-6">
-                    <h2 className="text-xl font-bold text-white mb-2">Mots-clés et compétences</h2>
-                    <p className="text-slate-400">Aidez notre IA à trouver les meilleurs AO pour vous</p>
+                    <h2 className="text-xl font-bold text-white mb-2">{t('onboarding.step4.title')}</h2>
+                    <p className="text-slate-400">{t('onboarding.step4.subtitle')}</p>
                   </div>
 
                   {/* Mots-clés */}
                   <div>
                     <label className="block text-sm font-medium text-white mb-3">
                       <Sparkles className="w-4 h-4 inline mr-2 text-amber-400" />
-                      Mots-clés de recherche
+                      {t('onboarding.step4.keywords.label')}
                     </label>
                     <p className="text-sm text-slate-400 mb-3">
-                      Ajoutez des mots-clés que l'IA utilisera pour identifier les appels d'offres pertinents
+                      {t('onboarding.step4.keywords.help')}
                     </p>
                     <div className="flex gap-2 mb-3">
                       <Input
                         value={newKeyword}
                         onChange={(e) => setNewKeyword(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addKeyword())}
-                        placeholder="Ex: vidéosurveillance, React, audit..."
+                        placeholder={t('onboarding.step4.keywordInput.placeholder')}
                         className="flex-1 bg-white/5 border-white/10 text-white placeholder:text-slate-500"
                       />
                       <Button type="button" onClick={addKeyword} variant="primary">
-                        Ajouter
+                        {t('onboarding.step4.keywordAdd')}
                       </Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -770,18 +920,18 @@ export default function OnboardingPage() {
                         </button>
                       ))}
                       {keywords.length === 0 && (
-                        <span className="text-slate-500 text-sm">Aucun mot-clé ajouté</span>
+                        <span className="text-slate-500 text-sm">{t('onboarding.step4.keywordEmpty')}</span>
                       )}
                     </div>
                   </div>
 
                   {/* Compétences spécifiques */}
                   <div>
-                    <label className="block text-sm font-medium text-white mb-2">Compétences et références clés</label>
+                    <label className="block text-sm font-medium text-white mb-2">{t('onboarding.step4.competencies.label')}</label>
                     <textarea
                       value={competencies}
                       onChange={(e) => setCompetencies(e.target.value)}
-                      placeholder="Décrivez vos compétences clés, références importantes, technologies maîtrisées...&#10;&#10;Ex: 10 ans d'expérience en sécurité incendie, références ministères, maîtrise React/Node.js..."
+                      placeholder={t('onboarding.step4.competencies.placeholder')}
                       rows={4}
                       className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                     />
@@ -791,16 +941,16 @@ export default function OnboardingPage() {
                   <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                     <h3 className="font-medium text-emerald-400 mb-2 flex items-center gap-2">
                       <Sparkles className="w-4 h-4" />
-                      Configuration IA
+                      {t('onboarding.ai.title')}
                     </h3>
                     <p className="text-sm text-slate-300">
-                      Notre IA utilisera ces informations pour :
+                      {t('onboarding.ai.intro')}
                     </p>
                     <ul className="text-sm text-slate-400 mt-2 space-y-1">
-                      <li>• Vous recommander les appels d'offres les plus pertinents</li>
-                      <li>• Calculer votre score de compatibilité</li>
-                      <li>• Générer des documents adaptés à votre profil</li>
-                      <li>• Analyser vos chances de succès</li>
+                      <li>• {t('onboarding.ai.b1')}</li>
+                      <li>• {t('onboarding.ai.b2')}</li>
+                      <li>• {t('onboarding.ai.b3')}</li>
+                      <li>• {t('onboarding.ai.b4')}</li>
                     </ul>
                   </div>
                 </motion.div>
@@ -812,7 +962,7 @@ export default function OnboardingPage() {
               {step > 1 ? (
                 <Button type="button" variant="outline" onClick={handleBack} className="border-white/20 text-white">
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Retour
+                  {t('onboarding.nav.back')}
                 </Button>
               ) : (
                 <div />
@@ -820,7 +970,7 @@ export default function OnboardingPage() {
 
               {step < 4 ? (
                 <Button type="button" variant="primary" onClick={handleNext}>
-                  Continuer
+                  {t('onboarding.nav.next')}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               ) : (
@@ -831,7 +981,7 @@ export default function OnboardingPage() {
                   loading={loading}
                   className="bg-gradient-to-r from-emerald-500 to-teal-500"
                 >
-                  {loading ? 'Configuration...' : 'Terminer la configuration'}
+                  {loading ? t('onboarding.nav.submitting') : t('onboarding.nav.submit')}
                   {!loading && <Check className="w-4 h-4 ml-2" />}
                 </Button>
               )}
@@ -840,7 +990,7 @@ export default function OnboardingPage() {
         </Card>
 
         <p className="text-center text-sm text-slate-500 mt-6">
-          Vous pourrez modifier ces informations plus tard dans les paramètres
+          {t('onboarding.footer.editLater')}
         </p>
       </motion.div>
     </div>

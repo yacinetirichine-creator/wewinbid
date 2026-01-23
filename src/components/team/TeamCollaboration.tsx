@@ -1,5 +1,6 @@
 'use client';
 
+import NextImage from 'next/image';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -113,11 +114,14 @@ export function PresenceIndicator({
             title={member.name}
           >
             {member.avatar ? (
-              <img
-                src={member.avatar}
-                alt={member.name}
-                className="w-8 h-8 rounded-full border-2 border-white object-cover"
-              />
+              <NextImage
+                  src={member.avatar}
+                  alt={member.name}
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 rounded-full border-2 border-white object-cover"
+                  unoptimized
+                />
             ) : (
               <div className="w-8 h-8 rounded-full border-2 border-white bg-primary-100 flex items-center justify-center">
                 <span className="text-xs font-medium text-primary-700">
@@ -239,11 +243,14 @@ function MessageBubble({
     >
       {/* Avatar */}
       {message.author.avatar ? (
-        <img
-          src={message.author.avatar}
-          alt={message.author.name}
-          className="w-8 h-8 rounded-full flex-shrink-0"
-        />
+        <NextImage
+            src={message.author.avatar}
+            alt={message.author.name}
+            width={32}
+            height={32}
+            className="w-8 h-8 rounded-full flex-shrink-0"
+            unoptimized
+          />
       ) : (
         <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
           <span className="text-sm font-medium text-primary-700">

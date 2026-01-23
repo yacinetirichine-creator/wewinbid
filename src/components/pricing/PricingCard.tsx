@@ -9,6 +9,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { redirectToCheckout } from '@/lib/stripe-client';
 import { Check } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 interface PricingCardProps {
   plan: 'free' | 'pro' | 'business';
@@ -39,6 +42,22 @@ export function PricingCard({
   currentPlan = false,
 }: PricingCardProps) {
   const [loading, setLoading] = useState(false);
+  const { locale } = useLocale();
+
+  const entries = {
+    'pricing.card.badge.popular': 'Le plus populaire',
+    'pricing.card.badge.current': 'Plan actuel',
+    'pricing.card.price.free': 'Gratuit',
+    'pricing.card.interval.month': 'mois',
+    'pricing.card.interval.year': 'an',
+    'pricing.card.yearly.equivalent': 'Soit {amount}/mois',
+    'pricing.card.cta.current': 'Plan actuel',
+    'pricing.card.cta.free': 'Commencer gratuitement',
+    'pricing.card.cta.subscribe': 'Souscrire',
+    'pricing.card.error.checkout': 'Erreur lors de la redirection vers le paiement',
+  } as const;
+
+  const { t } = useUiTranslations(locale, entries);
 
   const displayPrice = interval === 'monthly' ? price.monthly : price.yearly;
   const pricePerMonth = interval === 'yearly' ? price.yearly / 12 : price.monthly;
@@ -63,7 +82,7 @@ export function PricingCard({
       await redirectToCheckout(sessionId);
     } catch (error) {
       console.error('Checkout error:', error);
-      alert('Erreur lors de la redirection vers le paiement');
+      toast.error(t('pricing.card.error.checkout'));
     } finally {
       setLoading(false);
     }
@@ -82,7 +101,7 @@ export function PricingCard({
       {highlighted && (
         <div className="absolute -top-4 left-1/2 -translate-x-1/2">
           <span className="inline-block rounded-full bg-blue-600 px-4 py-1 text-sm font-semibold text-white">
-            Le plus populaire
+            {t('pricing.card.badge.popular')}
           </span>
         </div>
       )}
@@ -90,7 +109,7 @@ export function PricingCard({
       {currentPlan && (
         <div className="absolute -top-4 right-8">
           <span className="inline-block rounded-full bg-green-600 px-4 py-1 text-sm font-semibold text-white">
-            Plan actuel
+            {t('pricing.card.badge.current')}
           </span>
         </div>
       )}
@@ -103,7 +122,7 @@ export function PricingCard({
       <div className="mb-6">
         {plan === 'free' ? (
           <div className="flex items-baseline">
-            <span className="text-4xl font-bold text-gray-900">Gratuit</span>
+            <span className="text-4xl font-bold text-gray-900">{t('pricing.card.price.free')}</span>
           </div>
         ) : (
           <>
@@ -112,12 +131,17 @@ export function PricingCard({
                 {currencySymbol}{displayPrice}
               </span>
               <span className="ml-2 text-gray-600">
-                /{interval === 'monthly' ? 'mois' : 'an'}
+                /
+                {interval === 'monthly'
+                  ? t('pricing.card.interval.month')
+                  : t('pricing.card.interval.year')}
               </span>
             </div>
             {interval === 'yearly' && (
               <p className="mt-1 text-sm text-gray-600">
-                Soit {currencySymbol}{pricePerMonth.toFixed(0)}/mois
+                {t('pricing.card.yearly.equivalent', {
+                  amount: `${currencySymbol}${pricePerMonth.toFixed(0)}`,
+                })}
               </p>
             )}
           </>
@@ -132,7 +156,11 @@ export function PricingCard({
         isLoading={loading}
         disabled={currentPlan || plan === 'free'}
       >
-        {currentPlan ? 'Plan actuel' : plan === 'free' ? 'Commencer gratuitement' : 'Souscrire'}
+        {currentPlan
+          ? t('pricing.card.cta.current')
+          : plan === 'free'
+            ? t('pricing.card.cta.free')
+            : t('pricing.card.cta.subscribe')}
       </Button>
 
       <ul className="space-y-3">
