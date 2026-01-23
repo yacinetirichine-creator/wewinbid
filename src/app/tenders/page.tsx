@@ -258,8 +258,8 @@ export default function TendersPage() {
       }
 
       // Récupérer le company_id de l'utilisateur via company_members
-      const { data: memberData } = await supabase
-        .from('company_members')
+      const { data: memberData } = await (supabase
+        .from('company_members') as any)
         .select('company_id')
         .eq('user_id', user.id)
         .single();
@@ -271,7 +271,7 @@ export default function TendersPage() {
       }
 
       // Récupérer uniquement les AO de l'entreprise de l'utilisateur
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('tenders')
         .select('*')
         .eq('company_id', memberData.company_id)

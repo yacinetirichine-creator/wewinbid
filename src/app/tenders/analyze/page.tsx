@@ -172,8 +172,8 @@ export default function TenderAnalyzePage() {
       }
 
       // Récupérer le company_id de l'utilisateur
-      const { data: memberData } = await supabase
-        .from('company_members')
+      const { data: memberData } = await (supabase
+        .from('company_members') as any)
         .select('company_id')
         .eq('user_id', user.id)
         .single();

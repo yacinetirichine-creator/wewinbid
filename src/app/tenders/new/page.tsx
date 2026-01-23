@@ -178,13 +178,13 @@ export default function NewTenderPage() {
       if (!userData.user) throw new Error('Non authentifié');
 
       // Récupérer la company de l'utilisateur
-      const { data: membership } = await supabase
-        .from('company_members')
+      const { data: membership } = await (supabase
+        .from('company_members') as any)
         .select('company_id')
         .eq('user_id', userData.user.id)
         .single();
 
-      if (!membership) throw new Error('Aucune entreprise associée');
+      if (!membership?.company_id) throw new Error('Aucune entreprise associée');
 
       const { data, error } = await (supabase as any)
         .from('tenders')
