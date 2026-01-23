@@ -294,7 +294,7 @@ export function TenderResponseWizard({
           const tenderInfo = {
             reference: analysis.reference,
             title: analysis.title,
-            buyer: analysis.buyer || 'Acheteur public',
+            buyer: analysis.buyer?.name || 'Acheteur public',
             deadline: analysis.dates.submissionDeadline,
           };
           
@@ -321,13 +321,18 @@ export function TenderResponseWizard({
           const tenderInfo = {
             reference: analysis.reference,
             title: analysis.title,
-            buyer: analysis.buyer || 'Acheteur public',
+            buyer: analysis.buyer?.name || 'Acheteur public',
             deadline: analysis.dates.submissionDeadline,
           };
 
           const analysisData = {
             summary: analysis.summary || 'Résumé de l\'appel d\'offres',
-            requirements: analysis.requirements || [],
+            requirements: [
+              ...(analysis.requirements?.technical || []),
+              ...(analysis.requirements?.administrative || []),
+              ...(analysis.requirements?.financial || []),
+              ...(analysis.requirements?.certifications || []),
+            ],
             methodology: 'Méthodologie de réponse',
           };
 
@@ -584,11 +589,9 @@ export function TenderResponseWizard({
                                   className="hidden"
                                   onChange={(e) => e.target.files?.[0] && handleFileUpload(doc.id, e.target.files[0])}
                                 />
-                                <Button variant="outline" size="sm" asChild>
-                                  <span>
-                                    <Upload className="w-4 h-4 mr-1" />
-                                    Uploader
-                                  </span>
+                                <Button type="button" variant="outline" size="sm">
+                                  <Upload className="w-4 h-4 mr-1" />
+                                  Uploader
                                 </Button>
                               </label>
                             )}

@@ -71,8 +71,8 @@ export function useAutoSave(
         }
 
         // Charger depuis tender_responses
-        const { data, error } = await supabase
-          .from('tender_responses')
+            const { data, error } = await (supabase
+              .from('tender_responses') as any)
           .select('*')
           .eq('tender_id', tenderId)
           .eq('user_id', user.id)
@@ -137,8 +137,8 @@ export function useAutoSave(
       };
 
       // Upsert dans tender_responses
-      const { data, error } = await supabase
-        .from('tender_responses')
+        const { data, error } = await (supabase
+          .from('tender_responses') as any)
         .upsert({
           id: draft.id,
           tender_id: draftToSave.tender_id,

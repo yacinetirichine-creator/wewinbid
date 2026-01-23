@@ -1,0 +1,27 @@
+# Dependency directories
+node_modules
+
+# Build outputs
+.next
+out
+coverage
+
+# VCS
+.git
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor / OS
+.DS_Store
+.vscode
+
+# Local env
+.env
+.env.*
+
+# Playwright
+playwright-report

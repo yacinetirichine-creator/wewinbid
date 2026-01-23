@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
-import { useDebounce } from '@/hooks/useDebounce';
+import { useDebounce } from '@/hooks';
 import {
   FileText,
   Plus,
@@ -813,7 +813,7 @@ Notre entreprise {{company_name}} est spécialisée dans {{domain}}."
           <Button type="button" variant="ghost" onClick={onClose}>
             Annuler
           </Button>
-          <Button type="submit" loading={saving}>
+          <Button type="submit" isLoading={saving}>
             Créer le template
           </Button>
         </div>

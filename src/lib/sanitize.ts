@@ -81,8 +81,6 @@ export function sanitizeRichText(dirty: string): string {
     ALLOW_DATA_ATTR: false,
     FORBID_TAGS: ['script', 'iframe', 'form', 'input', 'object', 'embed', 'meta', 'link'],
     FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur', 'onsubmit'],
-    // Limiter les styles autorisés
-    ALLOWED_STYLE_PROPS: ['color', 'background-color', 'font-size', 'font-weight', 'text-align', 'margin', 'padding'],
   });
 }
 

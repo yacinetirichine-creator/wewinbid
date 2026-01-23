@@ -75,10 +75,16 @@ export async function POST(request: NextRequest) {
       success: true,
       extractedDocuments: extractedDocuments.map(doc => ({
         filename: doc.filename,
-        type: doc.type,
-        wordCount: doc.wordCount,
-        pageCount: doc.pageCount,
-        extractedAt: doc.extractedAt,
+        extractionMethod: doc.extractionMethod,
+        success: doc.success,
+        error: doc.error,
+        wordCount: doc.content
+          ? doc.content
+              .trim()
+              .split(/\s+/)
+              .filter(Boolean).length
+          : 0,
+        pageCount: doc.pages ?? null,
         // Limiter le contenu retourné pour éviter des réponses trop lourdes
         contentPreview: doc.content.substring(0, 500) + (doc.content.length > 500 ? '...' : ''),
         hasFullContent: doc.content.length > 0,

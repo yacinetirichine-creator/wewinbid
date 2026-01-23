@@ -352,14 +352,26 @@ export default function CompanyProfilePage() {
           .single();
 
         if (data) {
-          setProfile({
-            ...profile,
-            ...data,
-            sectors: data.sectors || [],
-            certifications: data.certifications || [],
-            qualifications: data.qualifications || [],
-            preferred_regions: data.preferred_regions || [],
-            company_references: data.company_references || [],
+          setProfile((prev) => {
+            const patch = (data as unknown) as Partial<CompanyProfile> & {
+              sectors?: string[] | null;
+              certifications?: string[] | null;
+              qualifications?: string[] | null;
+              preferred_regions?: string[] | null;
+              company_references?: unknown;
+            };
+
+            return {
+              ...prev,
+              ...patch,
+              sectors: patch.sectors || [],
+              certifications: patch.certifications || [],
+              qualifications: patch.qualifications || [],
+              preferred_regions: patch.preferred_regions || [],
+              company_references: Array.isArray(patch.company_references)
+                ? patch.company_references
+                : [],
+            };
           });
         }
       } catch (err) {
@@ -384,8 +396,8 @@ export default function CompanyProfilePage() {
       
       if (!user) throw new Error('Non authentifié');
 
-      const { error } = await supabase
-        .from('company_profiles')
+      const { error } = await (supabase
+        .from('company_profiles') as any)
         .upsert({
           user_id: user.id,
           ...profile,

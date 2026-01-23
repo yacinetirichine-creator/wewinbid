@@ -219,7 +219,7 @@ export function SlackTeamsIntegrations({ onSave }: SlackTeamsIntegrationsProps) 
 
       {/* Save Button */}
       <div className="flex justify-end">
-        <Button onClick={handleSave} loading={saving}>
+        <Button onClick={handleSave} isLoading={saving}>
           Enregistrer les modifications
         </Button>
       </div>

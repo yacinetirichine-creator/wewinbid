@@ -778,7 +778,7 @@ function verifyWebhook(payload, signature, secret) {
                 <Button variant="outline" onClick={() => setShowCreateKeyModal(false)}>
                   Annuler
                 </Button>
-                <Button onClick={handleCreateKey} disabled={!keyForm.name || creating} loading={creating}>
+                <Button onClick={handleCreateKey} disabled={!keyForm.name || creating} isLoading={creating}>
                   Créer la clé
                 </Button>
               </div>
@@ -878,7 +878,7 @@ function verifyWebhook(payload, signature, secret) {
                 <Button
                   onClick={handleCreateWebhook}
                   disabled={!webhookForm.name || !webhookForm.url || webhookForm.events.length === 0 || creating}
-                  loading={creating}
+                  isLoading={creating}
                 >
                   Créer le webhook
                 </Button>

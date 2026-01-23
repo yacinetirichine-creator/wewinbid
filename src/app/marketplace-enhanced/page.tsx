@@ -96,13 +96,17 @@ const TENDER_TYPES = ['PUBLIC', 'PRIVATE', 'EUROPEAN'];
 
 // Main component
 export default function EnhancedMarketplacePage() {
-  const supabase = createClientComponentClient();
+  const [supabase, setSupabase] = useState<any>(null);
   const [tenders, setTenders] = useState<Tender[]>([]);
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  useEffect(() => {
+    setSupabase(createClientComponentClient());
+  }, []);
 
   // Filters state
   const [filters, setFilters] = useState<SearchFilters>({
@@ -126,6 +130,7 @@ export default function EnhancedMarketplacePage() {
   // Fetch tenders with filters
   const fetchTenders = useCallback(async () => {
     try {
+      if (!supabase) return;
       setLoading(true);
       let query = supabase
         .from('tenders')

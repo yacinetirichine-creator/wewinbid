@@ -113,8 +113,7 @@ export function useTenderAnalysis() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Non authentifié');
 
-    const { data, error } = await supabase
-      .from('tenders')
+    const { data, error } = await (supabase.from('tenders') as any)
       .insert({
         user_id: user.id,
         title: analysis.title,

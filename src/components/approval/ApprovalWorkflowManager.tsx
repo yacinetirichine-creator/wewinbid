@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/Textarea';
+import { Textarea } from '@/components/ui';
 import {
   CheckCircle,
   XCircle,
@@ -575,7 +575,7 @@ export function ApprovalWorkflowManager({
                   <Button
                     variant={decisionType === 'rejected' ? 'danger' : 'primary'}
                     onClick={handleDecision}
-                    loading={submitting}
+                    isLoading={submitting}
                     disabled={
                       (decisionType !== 'approved' && !decisionComment.trim()) ||
                       submitting

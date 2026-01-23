@@ -661,7 +661,7 @@ export function CalendarView({
                 <Button
                   onClick={handleCreateEvent}
                   disabled={!newEvent.title || !newEvent.start_date || creating}
-                  loading={creating}
+                  isLoading={creating}
                 >
                   Créer
                 </Button>

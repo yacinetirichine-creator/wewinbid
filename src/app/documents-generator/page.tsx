@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import {
   Card,
   CardContent,
@@ -72,7 +71,6 @@ const CATEGORIES = [
 ];
 
 export default function DocumentsPage() {
-  const supabase = createClient();
   const [activeTab, setActiveTab] = useState<'documents' | 'templates'>('documents');
   const [documents, setDocuments] = useState<GeneratedDocument[]>([]);
   const [templates, setTemplates] = useState<DocumentTemplate[]>([]);

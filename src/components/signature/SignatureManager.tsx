@@ -480,7 +480,7 @@ function CreateSignatureModal({ isOpen, onClose, onSubmit }: CreateSignatureModa
           <Button type="button" variant="ghost" onClick={onClose}>
             Annuler
           </Button>
-          <Button type="submit" loading={saving}>
+          <Button type="submit" isLoading={saving}>
             <Send className="h-4 w-4 mr-2" />
             {formData.send_immediately ? 'Créer et envoyer' : 'Créer le brouillon'}
           </Button>

@@ -27,7 +27,8 @@ export interface ExtractionProgress {
 export async function extractFromPDF(buffer: Buffer, filename: string): Promise<ExtractedDocument> {
   try {
     // Import dynamique pour éviter les erreurs côté client
-    const pdfParse = (await import('pdf-parse')).default;
+    const pdfParseModule = await import('pdf-parse');
+    const pdfParse: any = (pdfParseModule as any).default ?? (pdfParseModule as any);
     
     const data = await pdfParse(buffer);
     

@@ -78,7 +78,7 @@ interface SidebarProps {
   };
 }
 
-export function Sidebar({ user, company }: SidebarProps) {
+export function LegacySidebar({ user, company }: SidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -294,7 +294,7 @@ interface HeaderProps {
   };
 }
 
-export function PageHeader({ title, subtitle, description, actions, action }: HeaderProps) {
+export function LegacyPageHeader({ title, subtitle, description, actions, action }: HeaderProps) {
   const displaySubtitle = subtitle || description;
   
   return (
@@ -321,7 +321,7 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-export function AppLayout({ children }: AppLayoutProps) {
+export function LegacyAppLayout({ children }: AppLayoutProps) {
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
   const getSupabase = useCallback(() => {
     if (!supabaseRef.current) {
@@ -379,9 +379,9 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="min-h-screen bg-surface-50">
-      <Sidebar user={user || undefined} company={company || undefined} />
+      <LegacySidebar user={user || undefined} company={company || undefined} />
       <main className="lg:pl-[280px] min-h-screen">
-        <TopBar />
+        <OldTopBar />
         <div className="p-4 lg:p-8">{children}</div>
       </main>
     </div>

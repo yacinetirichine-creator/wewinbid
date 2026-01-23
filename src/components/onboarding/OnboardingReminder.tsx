@@ -202,6 +202,8 @@ export function OnboardingReminder({ onComplete, variant = 'banner' }: Onboardin
 
   // Variant Banner (pour le dashboard)
   if (variant === 'banner') {
+    const timeRemaining = status?.timeRemaining;
+
     return (
       <AnimatePresence>
         <motion.div
@@ -224,13 +226,13 @@ export function OnboardingReminder({ onComplete, variant = 'banner' }: Onboardin
                       <h3 className="text-lg font-bold text-surface-900">
                         Configurez votre profil entreprise
                       </h3>
-                      {status?.timeRemaining !== null && status.timeRemaining > 0 && (
+                      {timeRemaining != null && timeRemaining > 0 && (
                         <Badge variant="warning" className="text-xs">
                           <Clock className="w-3 h-3 mr-1" />
-                          {formatTimeRemaining(status.timeRemaining)} restantes
+                          {formatTimeRemaining(timeRemaining)} restantes
                         </Badge>
                       )}
-                      {status?.timeRemaining === 0 && (
+                      {timeRemaining === 0 && (
                         <Badge variant="danger" className="text-xs">
                           <AlertCircle className="w-3 h-3 mr-1" />
                           Configuration requise
@@ -339,6 +341,8 @@ export function OnboardingReminder({ onComplete, variant = 'banner' }: Onboardin
 
   // Variant Sidebar (pour intégration dans la sidebar)
   if (variant === 'sidebar') {
+    const timeRemaining = status?.timeRemaining;
+
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -357,15 +361,15 @@ export function OnboardingReminder({ onComplete, variant = 'banner' }: Onboardin
           </div>
         </div>
         
-        {status?.timeRemaining !== null && status.timeRemaining > 0 && (
+        {timeRemaining != null && timeRemaining > 0 && (
           <div className="flex items-center gap-1 text-xs text-amber-600 mb-2">
             <Clock className="w-3 h-3" />
-            <span>{formatTimeRemaining(status.timeRemaining)} restantes</span>
+            <span>{formatTimeRemaining(timeRemaining)} restantes</span>
           </div>
         )}
         
         <Link href="/onboarding">
-          <Button variant="warning" size="sm" className="w-full">
+          <Button variant="primary" size="sm" className="w-full">
             Configurer
           </Button>
         </Link>

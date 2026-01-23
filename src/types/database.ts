@@ -89,6 +89,7 @@ export interface Database {
           timezone?: string
           email_notifications?: boolean
         }
+        Relationships: []
       }
       companies: {
         Row: {
@@ -139,6 +140,98 @@ export interface Database {
           sectors?: Sector[]
           subscription_plan?: SubscriptionPlan
         }
+        Relationships: []
+      }
+
+      company_profiles: {
+        Row: {
+          id: string
+          user_id: string
+          company_name: string | null
+          siret: string | null
+          legal_form: string | null
+          address: string | null
+          city: string | null
+          postal_code: string | null
+          country: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          website: string | null
+          annual_revenue: number | null
+          employee_count: number | null
+          years_experience: number | null
+          sectors: string[] | null
+          certifications: string[] | null
+          qualifications: string[] | null
+          kbis_url: string | null
+          kbis_valid_until: string | null
+          insurance_rc_url: string | null
+          insurance_decennale_url: string | null
+          company_references: Json
+          preferred_regions: string[] | null
+          min_contract_value: number | null
+          max_contract_value: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          company_name?: string | null
+          siret?: string | null
+          legal_form?: string | null
+          address?: string | null
+          city?: string | null
+          postal_code?: string | null
+          country?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          website?: string | null
+          annual_revenue?: number | null
+          employee_count?: number | null
+          years_experience?: number | null
+          sectors?: string[] | null
+          certifications?: string[] | null
+          qualifications?: string[] | null
+          kbis_url?: string | null
+          kbis_valid_until?: string | null
+          insurance_rc_url?: string | null
+          insurance_decennale_url?: string | null
+          company_references?: Json
+          preferred_regions?: string[] | null
+          min_contract_value?: number | null
+          max_contract_value?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string | null
+          siret?: string | null
+          legal_form?: string | null
+          address?: string | null
+          city?: string | null
+          postal_code?: string | null
+          country?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          website?: string | null
+          annual_revenue?: number | null
+          employee_count?: number | null
+          years_experience?: number | null
+          sectors?: string[] | null
+          certifications?: string[] | null
+          qualifications?: string[] | null
+          kbis_url?: string | null
+          kbis_valid_until?: string | null
+          insurance_rc_url?: string | null
+          insurance_decennale_url?: string | null
+          company_references?: Json
+          preferred_regions?: string[] | null
+          min_contract_value?: number | null
+          max_contract_value?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       tenders: {
         Row: {
@@ -188,6 +281,123 @@ export interface Database {
           status?: TenderStatus
           sector?: Sector | null
         }
+        Relationships: []
+      }
+
+      tender_responses: {
+        Row: {
+          id: string
+          user_id: string
+          tender_id: string | null
+          analysis_id: string | null
+          reference: string | null
+          title: string | null
+          current_step: string | number | null
+          workflow_data: Json | null
+          documents: Json | null
+          documents_status: Json | null
+          notes: Json | null
+          checklist: Json | null
+          form_data: Json | null
+          status: string
+          completion_percentage: number | null
+          started_at: string | null
+          submitted_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          tender_id?: string | null
+          analysis_id?: string | null
+          reference?: string | null
+          title?: string | null
+          current_step?: string | number | null
+          workflow_data?: Json | null
+          documents?: Json | null
+          documents_status?: Json | null
+          notes?: Json | null
+          checklist?: Json | null
+          form_data?: Json | null
+          status?: string
+          completion_percentage?: number | null
+          started_at?: string
+          submitted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          tender_id?: string | null
+          analysis_id?: string | null
+          reference?: string | null
+          title?: string | null
+          current_step?: string | number | null
+          workflow_data?: Json | null
+          documents?: Json | null
+          documents_status?: Json | null
+          notes?: Json | null
+          checklist?: Json | null
+          form_data?: Json | null
+          status?: string
+          completion_percentage?: number | null
+          started_at?: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+
+      tender_response_documents: {
+        Row: {
+          id: string
+          response_id: string
+          document_key: string
+          document_name: string
+          document_category: string
+          document_type: string
+          is_ai_generated: boolean
+          file_url: string | null
+          file_size: number | null
+          file_type: string | null
+          generated_content: string | null
+          generation_prompt: string | null
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          response_id: string
+          document_key: string
+          document_name: string
+          document_category: string
+          document_type?: string
+          is_ai_generated?: boolean
+          file_url?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          generated_content?: string | null
+          generation_prompt?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          document_key?: string
+          document_name?: string
+          document_category?: string
+          document_type?: string
+          is_ai_generated?: boolean
+          file_url?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          generated_content?: string | null
+          generation_prompt?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       documents: {
         Row: {
@@ -219,6 +429,7 @@ export interface Database {
           status?: DocumentStatus
           content?: string | null
         }
+        Relationships: []
       }
       partnerships: {
         Row: {
@@ -241,6 +452,7 @@ export interface Database {
         Update: {
           status?: PartnershipStatus
         }
+        Relationships: []
       }
       tender_alerts: {
         Row: {
@@ -268,6 +480,7 @@ export interface Database {
           keywords?: string[]
           is_active?: boolean
         }
+        Relationships: []
       }
       creative_contents: {
         Row: {
@@ -296,6 +509,7 @@ export interface Database {
           content?: string | null
           status?: ContentStatus
         }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -318,6 +532,7 @@ export interface Database {
         Update: {
           read?: boolean
         }
+        Relationships: []
       }
       activities: {
         Row: {
@@ -337,7 +552,8 @@ export interface Database {
           description?: string | null
           tender_id?: string | null
         }
-        Update: never
+        Update: {}
+        Relationships: []
       }
       price_history: {
         Row: {
@@ -360,7 +576,8 @@ export interface Database {
           winning_price?: number | null
           won?: boolean | null
         }
-        Update: never
+        Update: {}
+        Relationships: []
       }
       winner_analysis: {
         Row: {
@@ -382,7 +599,8 @@ export interface Database {
           tender_ref?: string | null
           tender_title?: string | null
         }
-        Update: never
+        Update: {}
+        Relationships: []
       }
       client_references: {
         Row: {
@@ -412,6 +630,7 @@ export interface Database {
           project_title?: string
           description?: string | null
         }
+        Relationships: []
       }
       external_sources: {
         Row: {
@@ -446,6 +665,7 @@ export interface Database {
           next_sync_at?: string | null
           updated_at?: string
         }
+        Relationships: []
       }
       source_sync_logs: {
         Row: {
@@ -474,10 +694,109 @@ export interface Database {
           tenders_imported?: number
           error_message?: string | null
         }
+        Relationships: []
+      }
+
+      // Calendar (feature #12)
+      calendar_events: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          description: string | null
+          event_type: string
+          start_date: string
+          end_date: string | null
+          all_day: boolean
+          is_recurring: boolean
+          recurrence_rule: string | null
+          color: string | null
+          category: string | null
+          entity_type: string | null
+          entity_id: string | null
+          metadata: Json
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          description?: string | null
+          event_type?: string
+          start_date: string
+          end_date?: string | null
+          all_day?: boolean
+          is_recurring?: boolean
+          recurrence_rule?: string | null
+          color?: string | null
+          category?: string | null
+          entity_type?: string | null
+          entity_id?: string | null
+          metadata?: Json
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          title?: string
+          description?: string | null
+          event_type?: string
+          start_date?: string
+          end_date?: string | null
+          all_day?: boolean
+          is_recurring?: boolean
+          recurrence_rule?: string | null
+          color?: string | null
+          category?: string | null
+          entity_type?: string | null
+          entity_id?: string | null
+          metadata?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+
+      event_reminders: {
+        Row: {
+          id: string
+          event_id: string
+          user_id: string
+          reminder_type: string
+          minutes_before: number
+          is_sent: boolean
+          sent_at: string | null
+          scheduled_for: string | null
+          error_message: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          user_id: string
+          reminder_type?: string
+          minutes_before?: number
+          is_sent?: boolean
+          sent_at?: string | null
+          scheduled_for?: string | null
+          error_message?: string | null
+          created_at?: string
+        }
+        Update: {
+          reminder_type?: string
+          minutes_before?: number
+          is_sent?: boolean
+          sent_at?: string | null
+          scheduled_for?: string | null
+          error_message?: string | null
+        }
+        Relationships: []
       }
     }
-    Views: {}
-    Functions: {}
+    Views: { [_ in never]: never }
+    Functions: { [_ in never]: never }
     Enums: {
       subscription_plan: SubscriptionPlan
       tender_type: TenderType
@@ -494,6 +813,7 @@ export interface Database {
       activity_type: ActivityType
       notification_type: NotificationType
     }
+    CompositeTypes: {}
   }
 }
 

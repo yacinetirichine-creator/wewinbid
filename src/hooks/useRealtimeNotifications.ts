@@ -59,8 +59,7 @@ export function useRealtimeNotifications() {
           return;
         }
 
-        const { data, error } = await supabase
-          .from('notifications')
+        const { data, error } = await (supabase.from('notifications') as any)
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
@@ -68,10 +67,10 @@ export function useRealtimeNotifications() {
 
         if (error) throw error;
 
-        const notifs = (data || []).map(n => ({
-          ...n,
-          priority: n.priority || 'medium',
-        }));
+        const notifs = ((data as any[]) || []).map((n) => ({
+          ...(n as any),
+          priority: (n as any).priority || 'medium',
+        })) as RealtimeNotification[];
         
         setNotifications(notifs);
         setUnreadCount(notifs.filter(n => !n.read).length);
@@ -157,8 +156,7 @@ export function useRealtimeNotifications() {
   // Marquer une notification comme lue
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
-      const { error } = await supabase
-        .from('notifications')
+      const { error } = await (supabase.from('notifications') as any)
         .update({ read: true })
         .eq('id', notificationId);
 
@@ -179,8 +177,7 @@ export function useRealtimeNotifications() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase
-        .from('notifications')
+      const { error } = await (supabase.from('notifications') as any)
         .update({ read: true })
         .eq('user_id', user.id)
         .eq('read', false);
@@ -199,8 +196,7 @@ export function useRealtimeNotifications() {
     try {
       const notification = notifications.find(n => n.id === notificationId);
       
-      const { error } = await supabase
-        .from('notifications')
+      const { error } = await (supabase.from('notifications') as any)
         .delete()
         .eq('id', notificationId);
 
@@ -221,8 +217,7 @@ export function useRealtimeNotifications() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase
-        .from('notifications')
+      const { error } = await (supabase.from('notifications') as any)
         .delete()
         .eq('user_id', user.id)
         .eq('read', true);
@@ -273,14 +268,16 @@ export function useNotificationSettings() {
           return;
         }
 
-        const { data, error } = await supabase
-          .from('user_preferences')
+        const { data, error } = await (supabase.from('user_preferences') as any)
           .select('notification_settings')
           .eq('user_id', user.id)
           .single();
 
-        if (data?.notification_settings) {
-          setSettings(data.notification_settings);
+        if (error) throw error;
+
+        const prefs = data as any;
+        if (prefs?.notification_settings) {
+          setSettings(prefs.notification_settings);
         }
       } catch (err) {
         console.error('Erreur chargement paramètres:', err);
@@ -302,15 +299,17 @@ export function useNotificationSettings() {
 
       const updatedSettings = { ...settings, ...newSettings };
 
-      const { error } = await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: user.id,
-          notification_settings: updatedSettings,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id',
-        });
+      const { error } = await (supabase.from('user_preferences') as any)
+        .upsert(
+          {
+            user_id: user.id,
+            notification_settings: updatedSettings,
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: 'user_id',
+          }
+        );
 
       if (error) throw error;
 
