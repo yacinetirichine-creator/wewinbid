@@ -100,28 +100,28 @@ export default function SettingsPage() {
 
   // Form states
   const [profile, setProfile] = useState<UserProfile>({
-    id: '1',
-    email: 'yacine@jarvis-sas.fr',
-    first_name: 'Yacine',
-    last_name: 'MMAYT',
-    phone: '+33 6 12 34 56 78',
-    role: 'admin',
-    created_at: '2024-01-15T10:00:00Z',
+    id: '',
+    email: '',
+    first_name: '',
+    last_name: '',
+    phone: '',
+    role: 'user',
+    created_at: '',
   });
 
   const [company, setCompany] = useState<Company>({
-    id: '1',
-    name: 'JARVIS SAS',
-    siret: '123 456 789 00012',
-    address: '123 Avenue de la République',
-    city: 'Paris',
-    postal_code: '75011',
+    id: '',
+    name: '',
+    siret: '',
+    address: '',
+    city: '',
+    postal_code: '',
     country: 'FR',
-    website: 'https://jarvis-sas.fr',
-    phone: '+33 1 23 45 67 89',
-    email: 'contact@jarvis-sas.fr',
-    description: 'Éditeur de solutions SaaS innovantes pour les entreprises',
-    sectors: ['Informatique / Développement', 'Consulting'],
+    website: '',
+    phone: '',
+    email: '',
+    description: '',
+    sectors: [],
   });
 
   const [notifications, setNotifications] = useState<NotificationSettings>({
@@ -314,8 +314,79 @@ export default function SettingsPage() {
   };
 
   useEffect(() => {
-    // Simulate loading
-    setLoading(false);
+    async function loadUserData() {
+      try {
+        // Import dynamique pour éviter les problèmes SSR
+        const { createClient } = await import('@/lib/supabase/client');
+        const supabase = createClient();
+
+        // Récupérer l'utilisateur connecté
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+          console.error('Utilisateur non connecté:', userError);
+          setLoading(false);
+          return;
+        }
+
+        // Récupérer le profil utilisateur
+        const { data: profileData } = await (supabase
+          .from('profiles') as any)
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (profileData) {
+          setProfile({
+            id: profileData.id,
+            email: profileData.email || user.email || '',
+            first_name: profileData.full_name?.split(' ')[0] || '',
+            last_name: profileData.full_name?.split(' ').slice(1).join(' ') || '',
+            phone: profileData.phone || '',
+            role: profileData.subscription_plan === 'business' ? 'admin' : 'user',
+            created_at: profileData.created_at || '',
+          });
+        }
+
+        // Récupérer l'entreprise via company_members
+        const { data: memberData } = await (supabase
+          .from('company_members') as any)
+          .select('company_id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (memberData?.company_id) {
+          const { data: companyData } = await (supabase
+            .from('companies') as any)
+            .select('*')
+            .eq('id', memberData.company_id)
+            .single();
+
+          if (companyData) {
+            setCompany({
+              id: companyData.id,
+              name: companyData.name || '',
+              siret: companyData.siret || '',
+              address: companyData.address || '',
+              city: companyData.city || '',
+              postal_code: companyData.postal_code || '',
+              country: companyData.country || 'FR',
+              website: companyData.website || '',
+              phone: companyData.phone || '',
+              email: companyData.email || '',
+              logo_url: companyData.logo_url || '',
+              description: companyData.description || '',
+              sectors: Array.isArray(companyData.sectors) ? companyData.sectors : [],
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Erreur chargement données:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadUserData();
   }, []);
 
   const showMessage = (type: 'success' | 'error', text: string) => {
@@ -325,16 +396,67 @@ export default function SettingsPage() {
 
   const handleSaveProfile = async () => {
     setSaving(true);
-    await new Promise(r => setTimeout(r, 1000));
-    showMessage('success', t('settings.message.profileSaved'));
-    setSaving(false);
+    try {
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) throw new Error('Non authentifié');
+
+      const { error } = await (supabase
+        .from('profiles') as any)
+        .update({
+          full_name: `${profile.first_name} ${profile.last_name}`.trim(),
+          phone: profile.phone,
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      showMessage('success', t('settings.message.profileSaved'));
+    } catch (err) {
+      console.error('Erreur sauvegarde profil:', err);
+      showMessage('error', t('settings.message.networkError'));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSaveCompany = async () => {
     setSaving(true);
-    await new Promise(r => setTimeout(r, 1000));
-    showMessage('success', t('settings.message.companySaved'));
-    setSaving(false);
+    try {
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      
+      if (!company.id) {
+        showMessage('error', 'Entreprise non trouvée');
+        return;
+      }
+
+      const { error } = await (supabase
+        .from('companies') as any)
+        .update({
+          name: company.name,
+          siret: company.siret,
+          address: company.address,
+          city: company.city,
+          postal_code: company.postal_code,
+          country: company.country,
+          website: company.website,
+          phone: company.phone,
+          email: company.email,
+          description: company.description,
+          sectors: company.sectors,
+        })
+        .eq('id', company.id);
+
+      if (error) throw error;
+      showMessage('success', t('settings.message.companySaved'));
+    } catch (err) {
+      console.error('Erreur sauvegarde entreprise:', err);
+      showMessage('error', t('settings.message.networkError'));
+    } finally {
+      setSaving(false);
+    }
   };
   const handleSaveMatching = async () => {
     setSaving(true);
