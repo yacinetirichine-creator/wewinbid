@@ -22,9 +22,13 @@ export function useLocale() {
     setLocaleState(normalizeLocale(saved || browser));
   }, []);
 
-  const setLocale = (next: Locale) => {
+  const setLocale = (next: Locale, reload = true) => {
     setLocaleState(next);
     window.localStorage.setItem('locale', next);
+    // Recharger la page pour appliquer la nouvelle langue partout
+    if (reload) {
+      window.location.reload();
+    }
   };
 
   return { locale, setLocale };

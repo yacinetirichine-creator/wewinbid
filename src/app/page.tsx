@@ -212,6 +212,8 @@ export default function LandingPage() {
   const handleLocaleChange = (next: Locale) => {
     setLocale(next);
     window.localStorage.setItem('locale', next);
+    // Recharger pour appliquer la nouvelle langue à tous les composants
+    window.location.reload();
   };
 
   const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {

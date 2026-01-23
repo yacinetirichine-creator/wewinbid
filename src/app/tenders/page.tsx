@@ -129,6 +129,20 @@ function TenderCard({
               </div>
             </div>
           )}
+
+          {/* Bouton Continuer pour les AO en cours */}
+          {['ANALYSIS', 'IN_PROGRESS', 'REVIEW', 'DRAFT'].includes(tender.status) && (
+            <div className="pt-2 border-t border-slate-100">
+              <Link 
+                href={`/tenders/${tender.id}/respond`}
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center justify-center gap-1.5 w-full py-1.5 text-xs font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors"
+              >
+                <SparklesIcon className="w-3.5 h-3.5" />
+                Continuer la réponse
+              </Link>
+            </div>
+          )}
         </div>
       </Link>
     </motion.div>

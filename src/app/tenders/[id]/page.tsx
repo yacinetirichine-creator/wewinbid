@@ -394,6 +394,15 @@ export default function TenderDetailPage() {
         description={`Référence: ${tender.reference}`}
         actions={
           <div className="flex items-center gap-2">
+            {/* Bouton Continuer la réponse pour les AO en cours */}
+            {['ANALYSIS', 'IN_PROGRESS', 'REVIEW', 'DRAFT'].includes(tender.status) && (
+              <Link href={`/tenders/${tenderId}/respond`}>
+                <Button size="sm">
+                  <SparklesIcon className="w-4 h-4 mr-2" />
+                  Continuer la réponse
+                </Button>
+              </Link>
+            )}
             <Button variant="ghost" size="sm" onClick={() => setShowStatusModal(true)}>
               <div className={`flex items-center gap-2 px-2 py-1 rounded-full ${statusConfig.color}`}>
                 <StatusIcon className="w-4 h-4" />
