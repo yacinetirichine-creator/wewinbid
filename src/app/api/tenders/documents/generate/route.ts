@@ -449,7 +449,7 @@ export async function POST(request: NextRequest) {
     // Si un responseId est fourni, sauvegarder le document
     if (responseId) {
       const template = DOCUMENT_TEMPLATES[documentKey];
-      await supabase.from('tender_response_documents').upsert({
+      await (supabase as any).from('tender_response_documents').upsert({
         response_id: responseId,
         document_key: documentKey,
         document_name: template?.name || documentKey,

@@ -102,18 +102,18 @@ export function NewAppLayout({
   }, [getSupabase]);
 
   return (
-    <div className="min-h-screen bg-surface-50">
+    <div className="min-h-screen bg-[#F8FAFC]">
       {/* Sidebar */}
       <NewSidebar user={user || undefined} company={company || undefined} />
       
       {/* Main Content */}
-      <main className="lg:pl-[280px] min-h-screen transition-all duration-300">
+      <main className="lg:pl-[280px] min-h-screen transition-all duration-300 flex flex-col">
         {/* Top Bar avec breadcrumbs */}
         <NewTopBar showSearch={showSearch} title={pageTitle} />
         
         {/* Header avec actions (optionnel) */}
         {headerActions && (
-          <div className="px-4 lg:px-6 py-4 border-b border-surface-200 bg-white">
+          <div className="px-4 lg:px-6 py-4 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-16 z-10">
             <div className="flex items-center justify-end gap-3">
               {headerActions}
             </div>
@@ -135,12 +135,17 @@ export function NewAppLayout({
       </main>
       
       {/* Footer simple */}
-      <footer className="lg:pl-[280px] mt-auto py-4 px-4 border-t border-surface-200 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center text-sm text-surface-500">
-            <p>
-              © {new Date().getFullYear()} WeWinBid - Commercialisé par JARVIS SAS
-            </p>
+      <footer className="lg:pl-[280px] mt-auto py-6 px-6 border-t border-slate-200/50 bg-[#F8FAFC]">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
+             <span>© {new Date().getFullYear()} WeWinBid</span>
+             <span className="w-1 h-1 rounded-full bg-slate-300" />
+             <span>Product of JARVIS SAS</span>
+          </div>
+          <div className="flex gap-4 text-xs font-medium text-slate-500">
+             <a href="#" className="hover:text-primary-600 transition-colors">Support</a>
+             <a href="#" className="hover:text-primary-600 transition-colors">Privacy</a>
+             <a href="#" className="hover:text-primary-600 transition-colors">Terms</a>
           </div>
         </div>
       </footer>
@@ -167,13 +172,13 @@ export function PageHeader({ title, subtitle, description, actions, action }: Pa
   const displaySubtitle = subtitle || description;
   
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
       <div>
-        <h1 className="text-2xl lg:text-3xl font-display font-bold text-surface-900">
+        <h1 className="text-2xl lg:text-3xl font-display font-bold text-slate-900 tracking-tight">
           {title}
         </h1>
         {displaySubtitle && (
-          <p className="text-surface-500 mt-1 text-sm lg:text-base">{displaySubtitle}</p>
+          <p className="text-slate-500 mt-1.5 text-sm lg:text-base max-w-2xl">{displaySubtitle}</p>
         )}
       </div>
       <div className="flex items-center gap-3">
@@ -181,7 +186,7 @@ export function PageHeader({ title, subtitle, description, actions, action }: Pa
         {action && (
           <Link
             href={action.href}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors shadow-sm"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 transition-all shadow-sm shadow-primary-500/20 hover:shadow-md hover:shadow-primary-500/30 active:scale-95"
           >
             {action.icon}
             {action.label}

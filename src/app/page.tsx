@@ -229,52 +229,60 @@ export default function LandingPage() {
 
   return (
     <div
-      className="min-h-screen bg-surface-50 overflow-x-hidden selection:bg-primary-500/30"
+      className="min-h-screen bg-[#F8FAFC] overflow-x-hidden selection:bg-primary-500/30 selection:text-primary-900"
       dir={isRTL(locale) ? 'rtl' : 'ltr'}
     >
-      <div className="fixed inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
+      {/* Dynamic Grid Background - Replaces static SVG */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+          <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-white to-transparent"></div>
+      </div>
       
       {/* Navigation */}
       <motion.nav 
-        style={{ backgroundColor: "rgba(255,255,255,0.8)", backdropFilter: "blur(12px)" }}
-        className="fixed top-0 left-0 right-0 z-50 border-b border-surface-200/50"
+        style={{ 
+          backgroundColor: "rgba(255,255,255,0.75)", 
+          backdropFilter: "blur(16px)",
+          borderBottom: "1px solid rgba(226, 232, 240, 0.6)" 
+        }}
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            <Link href="/" className="flex items-center">
-              <Logo size="md" />
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="bg-slate-900 text-white w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg shadow-sm group-hover:shadow-md transition-all">W</div>
+              <span className="font-display font-bold text-xl text-slate-900 tracking-tight">WeWinBid</span>
             </Link>
             <div className="hidden md:flex items-center gap-10">
               <a 
                 href="#features" 
                 onClick={(e) => handleSmoothScroll(e, 'features')}
-                className="text-sm font-medium text-surface-600 hover:text-primary-600 transition-colors cursor-pointer"
+                className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors cursor-pointer tracking-wide"
               >
                 {t('landing.nav.features')}
               </a>
               <a 
                 href="#pricing" 
                 onClick={(e) => handleSmoothScroll(e, 'pricing')}
-                className="text-sm font-medium text-surface-600 hover:text-primary-600 transition-colors cursor-pointer"
+                className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors cursor-pointer tracking-wide"
               >
                 {t('landing.nav.pricing')}
               </a>
               <a 
                 href="#roi" 
                 onClick={(e) => handleSmoothScroll(e, 'roi')}
-                className="text-sm font-medium text-surface-600 hover:text-primary-600 transition-colors cursor-pointer"
+                className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors cursor-pointer tracking-wide"
               >
                 ROI & Performances
               </a>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <Link href="/auth/login">
-                <Button variant="ghost" className="font-medium text-surface-600 hover:text-surface-900">{t('landing.nav.login')}</Button>
+                <Button variant="ghost" className="font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg">{t('landing.nav.login')}</Button>
               </Link>
               <Link href="/auth/register">
-                <Button className="btn-gradient shadow-lg shadow-primary-500/25 rounded-full px-6">
+                <Button className="bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-500/20 rounded-lg px-5 py-2.5 font-medium transition-all hover:scale-[1.02] active:scale-[0.98]">
                   {t('landing.nav.trial')}
-                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
             </div>
@@ -283,10 +291,17 @@ export default function LandingPage() {
       </motion.nav>
 
       {/* Hero */}
-      <section className="relative pt-40 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        {/* Background blobs */}
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-primary-400/20 blur-[120px] rounded-full mix-blend-multiply opacity-50 animate-pulse-soft" />
-        <div className="absolute top-40 left-1/4 w-[600px] h-[400px] bg-secondary-400/20 blur-[100px] rounded-full mix-blend-multiply opacity-50 animate-float" />
+      <section className="relative pt-40 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden bg-slate-50/50">
+        {/* Modern Fintech Background */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          {/* Subtle Grid */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+          {/* Top Fade */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-transparent to-transparent"></div>
+          {/* Spotlight Effect */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary-500/10 blur-[100px] rounded-full pointer-events-none" />
+          <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-blue-400/5 blur-[120px] rounded-full pointer-events-none" />
+        </div>
         
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -360,44 +375,142 @@ export default function LandingPage() {
               className="relative"
             >
               <Hero3DCard>
-                <div className="bg-surface-50 aspect-[4/3] p-1">
+                <div className="bg-slate-50 aspect-[4/3] p-1.5 rounded-2xl">
                   {/* Mock Dashboard UI */}
-                  <div className="w-full h-full bg-white rounded-xl overflow-hidden flex flex-col">
-                    <div className="h-10 border-b border-surface-100 flex items-center px-4 gap-2 bg-surface-50">
+                  <div className="w-full h-full bg-white rounded-xl overflow-hidden flex flex-col shadow-inner select-none pointer-events-none">
+                    {/* Fake Browser Header */}
+                    <div className="h-10 border-b border-slate-100 flex items-center px-4 gap-2 bg-slate-50/50 backdrop-blur-sm">
                       <div className="flex gap-1.5">
-                        <div className="w-2.5 h-2.5 rounded-full bg-danger-400" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-warning-400" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-success-400" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-rose-400/80" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-amber-400/80" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-400/80" />
                       </div>
-                      <div className="px-3 py-1 rounded-md bg-white border border-surface-200 text-xs text-surface-400 font-mono ml-4 flex-1 text-center">
-                        wewinbid.ai/dashboard
+                      <div className="flex-1 flex justify-center px-12">
+                         <div className="w-full max-w-[240px] h-6 bg-white rounded-md border border-slate-200 flex items-center justify-center text-[10px] text-slate-400 font-medium font-mono">
+                            app.wewinbid.com/dashboard
+                         </div>
                       </div>
+                      <div className="w-8" />
                     </div>
-                    <div className="flex-1 p-6 flex gap-6">
-                      <div className="w-48 hidden sm:flex flex-col gap-3 border-r border-surface-100 pr-4">
-                        <div className="h-8 w-24 bg-surface-100 rounded-md mb-4" />
-                        <div className="h-6 w-full bg-primary-50 rounded-md text-primary-600 text-xs flex items-center px-2 font-medium">Dashboard</div>
-                        <div className="h-6 w-full hover:bg-surface-50 rounded-md text-surface-400 text-xs flex items-center px-2">Tenders</div>
-                        <div className="h-6 w-full hover:bg-surface-50 rounded-md text-surface-400 text-xs flex items-center px-2">Analytics</div>
+
+                    <div className="flex-1 flex overflow-hidden">
+                      {/* Sidebar Mock */}
+                      <div className="w-48 bg-slate-50/50 border-r border-slate-100 flex flex-col gap-1 p-3">
+                        <div className="flex items-center gap-2 px-2 py-2 mb-4 opacity-80">
+                           <div className="w-6 h-6 rounded bg-primary-600 flex items-center justify-center text-white">
+                              <span className="font-bold text-[10px]">W</span>
+                           </div>
+                           <div className="h-3 w-20 bg-slate-200 rounded" />
+                        </div>
+                        
+                        {[
+                          { icon: Layers, label: 'Tableau de bord', active: true },
+                          { icon: Search, label: 'Appels d\'offres', active: false },
+                          { icon: Sparkles, label: 'Analyse IA', active: false },
+                          { icon: FileText, label: 'Documents', active: false },
+                        ].map((item, i) => (
+                           <div key={i} className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[10px] font-medium transition-colors ${item.active ? 'bg-white text-primary-600 shadow-sm border border-slate-100' : 'text-slate-500 hover:bg-slate-100/50'}`}>
+                             <item.icon className="w-3.5 h-3.5" />
+                             {item.label}
+                           </div>
+                        ))}
+                        
+                        <div className="mt-auto">
+                           <div className="p-3 bg-gradient-to-br from-primary-500 to-indigo-600 rounded-xl text-white relative overflow-hidden">
+                              <div className="relative z-10">
+                                <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center mb-2">
+                                  <Sparkles className="w-3 h-3 text-white" />
+                                </div>
+                                <div className="h-2 w-16 bg-white/40 rounded mb-1.5" />
+                                <div className="h-1.5 w-12 bg-white/30 rounded" />
+                              </div>
+                              <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-white/10 rounded-full blur-xl" />
+                           </div>
+                        </div>
                       </div>
-                      <div className="flex-1 flex flex-col gap-4">
+
+                      {/* Main Content Mock */}
+                      <div className="flex-1 bg-[#F8FAFC] p-6 overflow-hidden flex flex-col gap-6 relative">
+                        
+                        {/* Header Area */}
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <div className="h-4 w-32 bg-slate-200 rounded mb-2" />
+                            <div className="h-3 w-48 bg-slate-100 rounded" />
+                          </div>
+                          <div className="flex gap-2">
+                             <div className="w-8 h-8 rounded-full bg-white border border-slate-200 shadow-sm" />
+                             <div className="w-8 h-8 rounded-full bg-primary-600 shadow-lg shadow-primary-500/20 ring-2 ring-white" />
+                          </div>
+                        </div>
+
+                        {/* KPI Cards */}
                         <div className="flex gap-4">
-                          <div className="h-24 flex-1 bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl p-3">
-                             <div className="h-6 w-6 rounded-lg bg-primary-500/20 mb-2" />
-                             <div className="h-4 w-12 bg-white/50 rounded-md" />
-                          </div>
-                          <div className="h-24 flex-1 bg-surface-50 rounded-xl p-3">
-                             <div className="h-6 w-6 rounded-lg bg-surface-200 mb-2" />
-                             <div className="h-4 w-12 bg-surface-200/50 rounded-md" />
-                          </div>
-                          <div className="h-24 flex-1 bg-surface-50 rounded-xl p-3">
-                            <div className="h-6 w-6 rounded-lg bg-surface-200 mb-2" />
-                            <div className="h-4 w-12 bg-surface-200/50 rounded-md" />
-                          </div>
+                           <div className="flex-1 bg-white rounded-xl p-4 border border-slate-100 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)]">
+                              <div className="flex justify-between items-start mb-3">
+                                 <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
+                                   <Search className="w-4 h-4" />
+                                 </div>
+                                 <Badge variant="success" className="text-[9px] px-1.5 h-5">+5%</Badge>
+                              </div>
+                              <div className="h-5 w-12 bg-slate-800 rounded mb-1" />
+                              <div className="h-2 w-20 bg-slate-100 rounded" />
+                           </div>
+                           <div className="flex-1 bg-white rounded-xl p-4 border border-slate-100 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)]">
+                              <div className="flex justify-between items-start mb-3">
+                                 <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center text-violet-500">
+                                   <Sparkles className="w-4 h-4" />
+                                 </div>
+                                 <Badge variant="success" className="text-[9px] px-1.5 h-5">92%</Badge>
+                              </div>
+                              <div className="h-5 w-10 bg-slate-800 rounded mb-1" />
+                              <div className="h-2 w-24 bg-slate-100 rounded" />
+                           </div>
                         </div>
-                        <div className="flex-1 bg-surface-50 rounded-xl border border-dashed border-surface-200 flex items-center justify-center text-surface-400 text-sm">
-                           {t('landing.hero.preview')}
+
+                        {/* Active Tender Card Analysis Mock */}
+                        <div className="flex-1 bg-white rounded-xl border border-slate-100 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.05)] p-4 relative overflow-hidden group">
+                           <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center gap-2.5">
+                                 <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                                    <Target className="w-4 h-4" />
+                                 </div>
+                                 <div> 
+                                    <div className="h-3.5 w-32 bg-slate-800 rounded mb-1" />
+                                    <div className="h-2 w-24 bg-slate-300 rounded" />
+                                 </div>
+                              </div>
+                              <div className="px-2 py-1 rounded bg-emerald-50 text-emerald-600 text-[10px] font-bold">
+                                 94% MATCH
+                              </div>
+                           </div>
+                           
+                           {/* Fake progress bars */}
+                           <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                 <div className="h-2 w-16 bg-slate-100 rounded" />
+                                 <div className="h-2 w-8 bg-slate-100 rounded" />
+                              </div>
+                              <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                 <div className="bg-primary-500 h-full w-[85%] rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                              </div>
+                              
+                              <div className="flex items-center justify-between pt-1">
+                                 <div className="h-2 w-20 bg-slate-100 rounded" />
+                                 <div className="h-2 w-6 bg-slate-100 rounded" />
+                              </div>
+                              <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                 <div className="bg-indigo-500 h-full w-[60%] rounded-full" />
+                              </div>
+                           </div>
                         </div>
+
+                        {/* Floating "Smart" Badge over the UI */}
+                        <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur border border-slate-200 shadow-lg rounded-full px-4 py-2 flex items-center gap-2 animate-bounce">
+                           <Sparkles className="w-4 h-4 text-amber-500" />
+                           <span className="text-xs font-semibold text-slate-700">AI Powered</span>
+                        </div>
+
                       </div>
                     </div>
                   </div>
@@ -441,51 +554,47 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Stats with Glassmorphism */}
-      <section className="py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative rounded-3xl bg-surface-900 overflow-hidden px-8 py-12 shadow-2xl">
-             <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 bg-repeat" />
-             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-500/30 blur-[100px] rounded-full mix-blend-overlay" />
-             
-             <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-8">
+      {/* Stats with Modern Fintech Style */}
+      <section className="py-12 border-b border-slate-100 bg-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-slate-50/50" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {stats.map((stat, index) => (
                 <motion.div
                   key={stat.labelKey}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
-                  className="text-center group"
+                  className="text-center group p-6 rounded-2xl hover:bg-white hover:shadow-lg hover:shadow-slate-100/50 transition-all duration-300 border border-transparent hover:border-slate-100"
                 >
-                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/10 mb-4 group-hover:bg-white/20 transition-colors backdrop-blur-md">
-                    <stat.icon className="w-7 h-7 text-primary-300" />
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary-50 text-primary-600 mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm">
+                    <stat.icon className="w-6 h-6" />
                   </div>
-                  <div className="text-4xl font-display font-bold text-white mb-2 tracking-tight">{stat.value}</div>
-                  <div className="text-surface-400 font-medium">{t(stat.labelKey)}</div>
+                  <div className="text-3xl font-display font-bold text-slate-900 mb-1 tracking-tight">{stat.value}</div>
+                  <div className="text-sm font-medium text-slate-500 uppercase tracking-wide">{t(stat.labelKey)}</div>
                 </motion.div>
               ))}
             </div>
-          </div>
         </div>
       </section>
 
       {/* Features Bento Grid */}
-      <section id="features" className="py-32 px-4 sm:px-6 lg:px-8 relative">
+      <section id="features" className="py-32 px-4 sm:px-6 lg:px-8 relative bg-[#F8FAFC]">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
-            <Badge variant="secondary" className="mb-4">
+            <Badge variant="primary" className="mb-4 bg-primary-100 text-primary-700 border-none px-4 py-1.5 text-sm font-medium rounded-full">
               {t('landing.features.badge')}
             </Badge>
-            <h2 className="text-4xl sm:text-5xl font-display font-bold text-surface-900 mb-6 tracking-tight">
+            <h2 className="text-4xl sm:text-5xl font-display font-bold text-slate-900 mb-6 tracking-tight">
               {t('landing.features.title')}
             </h2>
-            <p className="text-xl text-surface-600 max-w-2xl mx-auto">
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
               {t('landing.features.subtitle')}
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 auto-rows-fr">
+          <div className="grid md:grid-cols-3 gap-8 auto-rows-fr">
             {features.map((feature, index) => (
               <BentoItem key={index} feature={feature} index={index} t={t} />
             ))}
@@ -494,41 +603,41 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-surface-50">
+      <section id="pricing" className="py-32 px-4 sm:px-6 lg:px-8 bg-white border-t border-slate-100">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
-            <Badge variant="secondary" className="mb-4">
+            <Badge variant="primary" className="mb-4 bg-primary-100 text-primary-700 border-none px-4 py-1.5 text-sm font-medium rounded-full">
               {t('landing.pricing.badge')}
             </Badge>
-            <h2 className="text-4xl sm:text-5xl font-display font-bold text-surface-900 mb-6 tracking-tight">
+            <h2 className="text-4xl sm:text-5xl font-display font-bold text-slate-900 mb-6 tracking-tight">
               {t('landing.pricing.title')}
             </h2>
-            <p className="text-xl text-surface-600 max-w-2xl mx-auto">
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
               {t('landing.pricing.subtitle')}
             </p>
             
             {/* Billing Toggle */}
-            <div className="mt-8 inline-flex items-center gap-4 bg-surface-100 p-1.5 rounded-full">
+            <div className="mt-8 inline-flex items-center gap-1 bg-slate-100 p-1.5 rounded-full border border-slate-200">
               <button
                 onClick={() => setBillingPeriod('monthly')}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ${
                   billingPeriod === 'monthly'
-                    ? 'bg-white text-surface-900 shadow-md'
-                    : 'text-surface-600 hover:text-surface-900'
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50'
+                    : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
                 {t('landing.pricing.monthly')}
               </button>
               <button
                 onClick={() => setBillingPeriod('yearly')}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ${
                   billingPeriod === 'yearly'
-                    ? 'bg-white text-surface-900 shadow-md'
-                    : 'text-surface-600 hover:text-surface-900'
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50'
+                    : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
                 {t('landing.pricing.yearly')}
-                <span className="ml-2 text-xs bg-success-100 text-success-700 px-2 py-0.5 rounded-full">
+                <span className="ml-2 text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">
                   -17%
                 </span>
               </button>
@@ -542,39 +651,39 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0 }}
-              className="relative rounded-3xl border-2 border-surface-200 bg-white p-8 hover:border-surface-300 transition-all"
+              className="relative rounded-2xl border border-slate-200 bg-white p-8 hover:border-slate-300 transition-all shadow-sm hover:shadow-lg"
             >
               <div className="mb-6">
-                <h3 className="text-2xl font-bold text-surface-900 mb-2">Gratuit</h3>
-                <p className="text-surface-500">Pour découvrir WeWinBid</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Gratuit</h3>
+                <p className="text-sm text-slate-500">Pour découvrir WeWinBid</p>
               </div>
               <div className="mb-8">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-bold text-surface-900">0€</span>
-                  <span className="text-surface-500">/ mois</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-bold text-slate-900 tracking-tight">0€</span>
+                  <span className="text-slate-500 font-medium">/ mois</span>
                 </div>
               </div>
               <Link href="/auth/register">
-                <Button variant="outline" className="w-full mb-8" size="lg">
+                <Button variant="outline" className="w-full mb-8 border-slate-200 hover:bg-slate-50 hover:text-slate-900" size="lg">
                   Commencer gratuitement
                 </Button>
               </Link>
               <ul className="space-y-4">
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-surface-700">2 réponses AO / mois</span>
+                <li className="flex items-start gap-3 text-sm">
+                  <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                  <span className="text-slate-600">2 réponses AO / mois</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-surface-700">1 collaborateur</span>
+                <li className="flex items-start gap-3 text-sm">
+                  <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                  <span className="text-slate-600">1 collaborateur</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-surface-700">100 MB de stockage</span>
+                <li className="flex items-start gap-3 text-sm">
+                  <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                  <span className="text-slate-600">100 MB de stockage</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-surface-300 flex-shrink-0 mt-0.5" />
-                  <span className="text-surface-400">Support email</span>
+                <li className="flex items-start gap-3 text-sm">
+                  <CheckCircle className="w-5 h-5 text-slate-300 flex-shrink-0" />
+                  <span className="text-slate-400">Support email</span>
                 </li>
               </ul>
             </motion.div>
@@ -585,58 +694,58 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="relative rounded-3xl border-2 border-primary-500 bg-white p-8 shadow-2xl shadow-primary-500/20 scale-105 z-10"
+              className="relative rounded-2xl border-2 border-primary-600 bg-white p-8 shadow-xl shadow-primary-900/5 scale-105 z-10"
             >
               <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <Badge className="bg-primary-500 text-white px-4 py-1">
+                <div className="bg-primary-600 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-md">
                   {t('landing.pricing.popular')}
-                </Badge>
+                </div>
               </div>
               <div className="mb-6">
-                <h3 className="text-2xl font-bold text-surface-900 mb-2">Pro</h3>
-                <p className="text-surface-500">Pour les TPE/PME actives</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Pro</h3>
+                <p className="text-sm text-slate-500">Pour les TPE/PME actives</p>
               </div>
               <div className="mb-8">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-bold text-surface-900">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-bold text-slate-900 tracking-tight">
                     {billingPeriod === 'monthly' ? '49€' : '41€'}
                   </span>
-                  <span className="text-surface-500">/ mois</span>
+                  <span className="text-slate-500 font-medium">/ mois</span>
                 </div>
                 {billingPeriod === 'yearly' && (
-                  <p className="text-sm text-surface-500 mt-2">490€ facturés annuellement</p>
+                  <p className="text-xs text-emerald-600 font-medium mt-2 bg-emerald-50 inline-block px-2 py-1 rounded-md">490€ / an (2 mois offerts)</p>
                 )}
               </div>
               <Link href="/auth/register?plan=pro">
-                <Button className="w-full mb-8" size="lg">
+                <Button className="w-full mb-8 bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-500/20" size="lg">
                   Essayer gratuitement
-                  <ArrowRight className="w-5 h-5 ml-2" />
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
               <ul className="space-y-4">
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-surface-700 font-medium">20 réponses AO / mois</span>
+                <li className="flex items-start gap-3 text-sm">
+                  <CheckCircle className="w-5 h-5 text-primary-600 flex-shrink-0" />
+                  <span className="text-slate-700 font-medium">20 réponses AO / mois</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-surface-700 font-medium">5 collaborateurs</span>
+                <li className="flex items-start gap-3 text-sm">
+                  <CheckCircle className="w-5 h-5 text-primary-600 flex-shrink-0" />
+                  <span className="text-slate-700 font-medium">5 collaborateurs</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-surface-700 font-medium">5 GB de stockage</span>
+                <li className="flex items-start gap-3 text-sm">
+                  <CheckCircle className="w-5 h-5 text-primary-600 flex-shrink-0" />
+                  <span className="text-slate-700 font-medium">5 GB de stockage</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-surface-700">Score IA + Analyse gagnants</span>
+                <li className="flex items-start gap-3 text-sm">
+                  <CheckCircle className="w-5 h-5 text-primary-600 flex-shrink-0" />
+                  <span className="text-slate-700">Score IA + Analyse gagnants</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-surface-700">Marketplace partenaires</span>
+                <li className="flex items-start gap-3 text-sm">
+                  <CheckCircle className="w-5 h-5 text-primary-600 flex-shrink-0" />
+                  <span className="text-slate-700">Marketplace partenaires</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-surface-700">Support prioritaire</span>
+                <li className="flex items-start gap-3 text-sm">
+                  <CheckCircle className="w-5 h-5 text-primary-600 flex-shrink-0" />
+                  <span className="text-slate-700">Support prioritaire</span>
                 </li>
               </ul>
             </motion.div>
@@ -647,52 +756,52 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
-              className="relative rounded-3xl border-2 border-surface-200 bg-white p-8 hover:border-surface-300 transition-all"
+              className="relative rounded-2xl border border-slate-200 bg-white p-8 hover:border-slate-300 transition-all shadow-sm hover:shadow-lg"
             >
               <div className="mb-6">
-                <h3 className="text-2xl font-bold text-surface-900 mb-2">Business</h3>
-                <p className="text-surface-500">Pour les équipes commerciales</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Business</h3>
+                <p className="text-sm text-slate-500">Pour les équipes commerciales</p>
               </div>
               <div className="mb-8">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-bold text-surface-900">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-bold text-slate-900 tracking-tight">
                     {billingPeriod === 'monthly' ? '149€' : '124€'}
                   </span>
-                  <span className="text-surface-500">/ mois</span>
+                  <span className="text-slate-500 font-medium">/ mois</span>
                 </div>
                 {billingPeriod === 'yearly' && (
-                  <p className="text-sm text-surface-500 mt-2">1490€ facturés annuellement</p>
+                  <p className="text-xs text-emerald-600 font-medium mt-2 bg-emerald-50 inline-block px-2 py-1 rounded-md">1490€ / an (2 mois offerts)</p>
                 )}
               </div>
               <Link href="/auth/register?plan=business">
-                <Button className="w-full mb-8" size="lg">
+                <Button className="w-full mb-8 bg-slate-900 hover:bg-slate-800 text-white" size="lg">
                   Essayer gratuitement
-                  <ArrowRight className="w-5 h-5 ml-2" />
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
               <ul className="space-y-4">
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-surface-700 font-medium">Réponses illimitées</span>
+                <li className="flex items-start gap-3 text-sm">
+                  <CheckCircle className="w-5 h-5 text-slate-900 flex-shrink-0" />
+                  <span className="text-slate-700 font-semibold">Réponses illimitées</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-surface-700 font-medium">20 collaborateurs</span>
+                <li className="flex items-start gap-3 text-sm">
+                  <CheckCircle className="w-5 h-5 text-slate-900 flex-shrink-0" />
+                  <span className="text-slate-700 font-semibold">20 collaborateurs</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-surface-700 font-medium">50 GB de stockage</span>
+                <li className="flex items-start gap-3 text-sm">
+                  <CheckCircle className="w-5 h-5 text-slate-900 flex-shrink-0" />
+                  <span className="text-slate-700 font-semibold">50 GB de stockage</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-surface-700">Tout Pro +</span>
+                <li className="flex items-start gap-3 text-sm">
+                  <CheckCircle className="w-5 h-5 text-slate-700 flex-shrink-0" />
+                  <span className="text-slate-600">Tout Pro +</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-surface-700">Co-rédaction temps réel</span>
+                <li className="flex items-start gap-3 text-sm">
+                  <CheckCircle className="w-5 h-5 text-slate-700 flex-shrink-0" />
+                  <span className="text-slate-600">Co-rédaction temps réel</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
+                <li className="flex items-start gap-3 text-sm">
+                  <CheckCircle className="w-5 h-5 text-slate-700 flex-shrink-0" />
                   <span className="text-surface-700">Studio créatif + API</span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -902,8 +1011,8 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="mt-16 text-center"
           >
-            <h3 className="text-2xl font-bold text-surface-900 mb-8">15+ secteurs d'activité couverts</h3>
-            <div className="flex flex-wrap justify-center gap-3">
+            <h3 className="text-xl font-bold text-slate-800 mb-8">15+ secteurs d'activité couverts</h3>
+            <div className="flex flex-wrap justify-center gap-2">
               {[
                 'Sécurité privée', 'Sécurité électronique', 'BTP', 'Logistique', 
                 'IT & Software', 'Maintenance', 'Conseil', 'Nettoyage', 
@@ -912,7 +1021,7 @@ export default function LandingPage() {
               ].map((sector) => (
                 <span
                   key={sector}
-                  className="px-4 py-2 rounded-full bg-surface-100 text-surface-700 text-sm font-medium hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                  className="px-4 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-slate-600 text-sm font-medium hover:border-primary-200 hover:text-primary-700 hover:bg-white transition-all duration-200 shadow-sm"
                 >
                   {sector}
                 </span>
@@ -922,15 +1031,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-32 px-4 sm:px-6 lg:px-8 bg-surface-900 relative overflow-hidden">
-        <div className="absolute inset-0">
-           <div className="absolute inset-0 bg-gradient-to-r from-primary-900 to-surface-900" />
-           <div className="absolute right-0 top-0 w-[800px] h-[800px] bg-primary-600/20 blur-[120px] rounded-full" />
-           <div className="absolute left-0 bottom-0 w-[600px] h-[600px] bg-secondary-600/20 blur-[100px] rounded-full" />
+      {/* CTA - Modern Fintech Dark Mode */}
+      <section className="py-32 px-4 sm:px-6 lg:px-8 bg-slate-900 relative overflow-hidden">
+        {/* Abstract Grid Background */}
+        <div className="absolute inset-0 z-0">
+           <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+           <div className="absolute right-0 top-0 w-[800px] h-[800px] bg-primary-500/10 blur-[150px] rounded-full" />
+           <div className="absolute left-0 bottom-0 w-[600px] h-[600px] bg-blue-500/10 blur-[120px] rounded-full" />
         </div>
         
-        <div className="max-w-5xl mx-auto text-center relative z-10">
+        <div className="max-w-4xl mx-auto text-center relative z-10">
           <h2 className="text-5xl sm:text-6xl font-display font-bold text-white mb-8 tracking-tight">
             {t('landing.cta.title')}
           </h2>
@@ -954,30 +1064,30 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-20 px-4 sm:px-6 lg:px-8 bg-surface-50 border-t border-surface-200">
+      <footer className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50 border-t border-slate-200">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-4 gap-12 mb-16">
             <div className="col-span-1 md:col-span-1">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-600 to-secondary-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                   W
                 </div>
-                <span className="font-display font-bold text-2xl text-surface-900">WeWinBid</span>
+                <span className="font-display font-bold text-xl text-slate-900 tracking-tight">WeWinBid</span>
               </div>
-              <p className="text-surface-500 leading-relaxed mb-6">
+              <p className="text-slate-500 leading-relaxed mb-6 text-sm">
                 {t('landing.footer.about')}
               </p>
-              <div className="flex gap-4">
+              <div className="flex gap-3">
                  {/* Social icons placeholders */}
-                 <div className="w-8 h-8 rounded-full bg-surface-200 hover:bg-primary-100 hover:text-primary-600 transition-colors cursor-pointer" />
-                 <div className="w-8 h-8 rounded-full bg-surface-200 hover:bg-primary-100 hover:text-primary-600 transition-colors cursor-pointer" />
-                 <div className="w-8 h-8 rounded-full bg-surface-200 hover:bg-primary-100 hover:text-primary-600 transition-colors cursor-pointer" />
+                 <div className="w-8 h-8 rounded-full bg-white border border-slate-200 hover:border-primary-500 hover:text-primary-600 transition-all cursor-pointer flex items-center justify-center shadow-sm" />
+                 <div className="w-8 h-8 rounded-full bg-white border border-slate-200 hover:border-primary-500 hover:text-primary-600 transition-all cursor-pointer flex items-center justify-center shadow-sm" />
+                 <div className="w-8 h-8 rounded-full bg-white border border-slate-200 hover:border-primary-500 hover:text-primary-600 transition-all cursor-pointer flex items-center justify-center shadow-sm" />
               </div>
             </div>
             
             <div>
-              <h4 className="font-bold text-surface-900 mb-6">{t('landing.footer.product')}</h4>
-              <ul className="space-y-4 text-surface-500">
+              <h4 className="font-bold text-slate-900 mb-6 text-sm uppercase tracking-wider">{t('landing.footer.product')}</h4>
+              <ul className="space-y-3 text-slate-500 text-sm font-medium">
                 <li><a href="#features" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.features')}</a></li>
                 <li><a href="#pricing" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.pricing')}</a></li>
                 <li><a href="#roi" className="hover:text-primary-600 transition-colors">ROI & Performances</a></li>
@@ -985,8 +1095,8 @@ export default function LandingPage() {
             </div>
             
             <div>
-              <h4 className="font-bold text-surface-900 mb-6">{t('landing.footer.company')}</h4>
-              <ul className="space-y-4 text-surface-500">
+              <h4 className="font-bold text-slate-900 mb-6 text-sm uppercase tracking-wider">{t('landing.footer.company')}</h4>
+              <ul className="space-y-3 text-slate-500 text-sm font-medium">
                 <li><Link href="/contact" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.contact')}</Link></li>
                 <li><a href="https://calendly.com/commercial-wewinbid/30min" target="_blank" rel="noopener noreferrer" className="hover:text-primary-600 transition-colors">Prendre rendez-vous</a></li>
                 <li><a href="mailto:commercial@wewinbid.com" className="hover:text-primary-600 transition-colors">commercial@wewinbid.com</a></li>
@@ -994,8 +1104,8 @@ export default function LandingPage() {
             </div>
             
             <div>
-              <h4 className="font-bold text-surface-900 mb-6">{t('landing.footer.legal')}</h4>
-              <ul className="space-y-4 text-surface-500">
+              <h4 className="font-bold text-slate-900 mb-6 text-sm uppercase tracking-wider">{t('landing.footer.legal')}</h4>
+              <ul className="space-y-3 text-slate-500 text-sm font-medium">
                 <li><a href="/legal/privacy" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.privacy')}</a></li>
                 <li><a href="/legal/terms" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.terms')}</a></li>
                 <li><a href="/legal/cgv" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.cgv')}</a></li>
@@ -1005,16 +1115,16 @@ export default function LandingPage() {
             </div>
           </div>
           
-          <div className="pt-8 border-t border-surface-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-surface-400 text-sm">
+          <div className="pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-slate-400 text-sm">
               {t('landing.footer.copyright')}
             </p>
-            <div className="flex items-center gap-2">
-              <span className="text-surface-500 text-sm">Langue :</span>
-              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-surface-200 shadow-sm">
-                <Globe className="w-4 h-4 text-primary-500" />
+            <div className="flex items-center gap-3">
+              <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">Langue</span>
+              <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm hover:border-slate-300 transition-colors">
+                <Globe className="w-3.5 h-3.5 text-slate-400" />
                 <select
-                  className="bg-transparent text-surface-700 text-sm font-medium border-none focus:ring-0 cursor-pointer outline-none pr-6"
+                  className="bg-transparent text-slate-600 text-sm font-medium border-none focus:ring-0 cursor-pointer outline-none pr-6 py-0 pl-1"
                   value={locale}
                   onChange={(event) => handleLocaleChange(event.target.value as Locale)}
                 >

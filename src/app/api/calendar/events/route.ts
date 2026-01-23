@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
       ).toISOString(),
     }));
 
-    await supabase.from('event_reminders').insert(reminderInserts);
+    await (supabase as any).from('event_reminders').insert(reminderInserts);
   }
 
   return NextResponse.json({ event }, { status: 201 });

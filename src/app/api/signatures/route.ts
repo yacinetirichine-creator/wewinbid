@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log d'audit
-    await supabase.from('signature_audit_log').insert({
+    await (supabase as any).from('signature_audit_log').insert({
       signature_request_id: signatureRequest.id,
       action: 'created',
       actor_id: user.id,

@@ -193,7 +193,7 @@ export default function TenderAnalyzePage() {
         updated_at: new Date().toISOString(),
       };
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('tenders')
         .insert(tenderData)
         .select('id')

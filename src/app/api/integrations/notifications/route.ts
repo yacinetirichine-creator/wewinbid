@@ -347,7 +347,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log l'envoi
-    await supabase.from('notification_logs').insert({
+    await (supabase as any).from('notification_logs').insert({
       user_id: user.id,
       type: `${platform}_webhook`,
       channel: platform,
