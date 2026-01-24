@@ -571,29 +571,31 @@ export default function ImageGenerator() {
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {TEMPLATES.map((template) => (
-                <Card
+                <div
                   key={template.id}
-                  className="p-4 hover:shadow-lg transition-shadow cursor-pointer group"
                   onClick={() => handleUseTemplate(template)}
+                  className="cursor-pointer"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center flex-shrink-0">
-                      <template.icon className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-medium text-slate-900 dark:text-white text-sm truncate">
-                          {template.name}
-                        </h3>
-                        <Badge variant="secondary" size="sm">{template.category}</Badge>
+                  <Card className="p-4 hover:shadow-lg transition-shadow group">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center flex-shrink-0">
+                        <template.icon className="w-5 h-5 text-white" />
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
-                        {template.prompt}
-                      </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-medium text-slate-900 dark:text-white text-sm truncate">
+                            {template.name}
+                          </h3>
+                          <Badge variant="secondary" size="sm">{template.category}</Badge>
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
+                          {template.prompt}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors flex-shrink-0" />
                     </div>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors flex-shrink-0" />
-                  </div>
-                </Card>
+                  </Card>
+                </div>
               ))}
             </div>
           </motion.div>

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Send, Edit2, Trash2, Reply, AtSign } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, type Locale } from 'date-fns';
 import { enUS, fr } from 'date-fns/locale';
 import { useLocale } from '@/hooks/useLocale';
 import { useUiTranslations } from '@/hooks/useUiTranslations';
