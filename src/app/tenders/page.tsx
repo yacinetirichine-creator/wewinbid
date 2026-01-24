@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { 
-  PlusIcon, 
-  FunnelIcon, 
+import {
+  PlusIcon,
+  FunnelIcon,
   MagnifyingGlassIcon,
   BuildingOfficeIcon,
   CalendarIcon,
@@ -18,9 +18,15 @@ import {
 } from '@heroicons/react/24/outline';
 import { Button, Badge, Card, Input, Select, Modal, ScoreGauge, EmptyState } from '@/components/ui';
 import { NewAppLayout as AppLayout, PageHeader } from '@/components/layout/NewAppLayout';
+import { TenderProgressBar } from '@/components/tenders/TenderProgressBar';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate, getDaysRemaining, getScoreColor } from '@/lib/utils';
 import type { Tender, TenderStatus, TenderType } from '@/types/database';
+
+// Extended tender with progress data
+interface TenderWithProgress extends Tender {
+  completion_percentage?: number | null;
+}
 import { useLocale } from '@/hooks/useLocale';
 import { useUiTranslations } from '@/hooks/useUiTranslations';
 
@@ -41,7 +47,7 @@ function TenderCard({
   onStatusChange,
   t,
 }: {
-  tender: Tender;
+  tender: TenderWithProgress;
   onStatusChange: (id: string, status: TenderStatus) => void;
   t: (key: string) => string;
 }) {
@@ -130,17 +136,28 @@ function TenderCard({
             </div>
           )}
 
+          {/* Progression de la réponse */}
+          {['ANALYSIS', 'IN_PROGRESS', 'REVIEW', 'DRAFT'].includes(tender.status) && tender.completion_percentage !== undefined && tender.completion_percentage !== null && (
+            <div className="pt-2 border-t border-slate-100">
+              <TenderProgressBar
+                percentage={tender.completion_percentage}
+                variant="compact"
+                size="sm"
+              />
+            </div>
+          )}
+
           {/* Bouton Continuer pour les AO en cours */}
           {['ANALYSIS', 'IN_PROGRESS', 'REVIEW', 'DRAFT'].includes(tender.status) && (
-            <div className="pt-2 border-t border-slate-100">
-              <Link 
+            <div className={tender.completion_percentage ? 'pt-2' : 'pt-2 border-t border-slate-100'}>
+              <Link
                 href={`/tenders/${tender.id}/respond`}
                 onClick={(e) => e.stopPropagation()}
                 className="flex items-center justify-center gap-1.5 w-full py-1.5 text-xs font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors group"
                 title="Reprenez votre travail là où vous vous êtes arrêté. Vos progrès sont automatiquement sauvegardés."
               >
                 <SparklesIcon className="w-3.5 h-3.5" />
-                <span>Continuer la réponse</span>
+                <span>{tender.completion_percentage && tender.completion_percentage > 0 ? 'Continuer' : 'Démarrer'} la réponse</span>
                 <span className="text-[10px] opacity-60 group-hover:opacity-100">• Auto-sauvegardé</span>
               </Link>
             </div>
@@ -152,14 +169,14 @@ function TenderCard({
 }
 
 // Composant Colonne Kanban
-function KanbanColumn({ 
-  column, 
-  tenders, 
+function KanbanColumn({
+  column,
+  tenders,
   onStatusChange,
   t,
-}: { 
+}: {
   column: typeof KANBAN_COLUMNS[0];
-  tenders: Tender[];
+  tenders: TenderWithProgress[];
   onStatusChange: (id: string, status: TenderStatus) => void;
   t: (key: string) => string;
 }) {
@@ -204,7 +221,7 @@ export default function TendersPage() {
     return supabaseRef.current;
   }, []);
   const { locale } = useLocale();
-  const [tenders, setTenders] = useState<Tender[]>([]);
+  const [tenders, setTenders] = useState<TenderWithProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<TenderType | 'ALL'>('ALL');
@@ -278,7 +295,35 @@ export default function TendersPage() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setTenders(data || []);
+
+      // Récupérer les pourcentages de complétion des réponses
+      const tenderIds = (data || []).map((t: Tender) => t.id);
+      let progressMap: Record<string, number> = {};
+
+      if (tenderIds.length > 0) {
+        const { data: responsesData } = await (supabase as any)
+          .from('tender_responses')
+          .select('tender_id, completion_percentage')
+          .in('tender_id', tenderIds);
+
+        if (responsesData) {
+          // Créer un map des progressions (prendre le max si plusieurs réponses)
+          progressMap = responsesData.reduce((acc: Record<string, number>, r: any) => {
+            if (r.tender_id && r.completion_percentage !== null) {
+              acc[r.tender_id] = Math.max(acc[r.tender_id] || 0, r.completion_percentage);
+            }
+            return acc;
+          }, {});
+        }
+      }
+
+      // Fusionner les données
+      const tendersWithProgress: TenderWithProgress[] = (data || []).map((t: Tender) => ({
+        ...t,
+        completion_percentage: progressMap[t.id] ?? null,
+      }));
+
+      setTenders(tendersWithProgress);
     } catch (error) {
       console.error('Error fetching tenders:', error);
     } finally {
@@ -324,7 +369,7 @@ export default function TendersPage() {
   const tendersByStatus = KANBAN_COLUMNS.reduce((acc, col) => {
     acc[col.status] = filteredTenders.filter(t => t.status === col.status);
     return acc;
-  }, {} as Record<TenderStatus, Tender[]>);
+  }, {} as Record<TenderStatus, TenderWithProgress[]>);
 
   // Stats rapides
   const stats = {

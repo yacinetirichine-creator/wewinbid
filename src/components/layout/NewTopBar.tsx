@@ -47,7 +47,6 @@ export function NewTopBar({ showSearch = true, title }: NewTopBarProps) {
 
       'topbar.breadcrumb.dashboard': 'Tableau de bord',
       'topbar.breadcrumb.tenders': "Appels d'offres",
-      'topbar.breadcrumb.marketplace': 'Marketplace',
       'topbar.breadcrumb.analytics': 'Analytics',
       'topbar.breadcrumb.calendar': 'Calendrier',
       'topbar.breadcrumb.chat': 'Assistant IA',

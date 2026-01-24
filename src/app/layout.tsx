@@ -5,7 +5,7 @@ import { QueryProvider } from '@/components/providers/QueryProvider';
 import { AnalyticsProvider } from '@/components/providers/AnalyticsProvider';
 import { LocaleHtmlUpdater } from '@/components/providers/LocaleHtmlUpdater';
 import { ThemeProvider, themeScript } from '@/components/providers/ThemeProvider';
-import AIChatWidget from '@/components/chat/AIChatWidget';
+import { LazyAIChatWidget } from '@/components/chat/LazyAIChatWidget';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     default: 'WeWinBid - L\'IA pour Gagner vos Appels d\'Offres Publics et Privés',
     template: '%s | WeWinBid',
   },
-  description: 'Automatisez la détection, l\'analyse et la réponse aux appels d\'offres. Score de compatibilité IA, rédaction de mémoires techniques, et marketplace partenaires. Gagnez du temps et remportez plus de marchés.',
+  description: 'Automatisez la détection, l\'analyse et la réponse aux appels d\'offres. Score de compatibilité IA, rédaction de mémoires techniques et bibliothèque de modèles. Gagnez du temps et remportez plus de marchés.',
   keywords: [
     'appels d\'offres',
     'marchés publics',
@@ -143,7 +143,7 @@ export default function RootLayout({
             <QueryProvider>
               <AnalyticsProvider>
                 {children}
-                <AIChatWidget />
+                <LazyAIChatWidget />
               </AnalyticsProvider>
             </QueryProvider>
           </ThemeProvider>

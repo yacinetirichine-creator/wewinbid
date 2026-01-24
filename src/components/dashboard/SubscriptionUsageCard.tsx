@@ -26,7 +26,7 @@ const entries = {
   'subscriptionUsage.features.title': 'Available features',
   'subscriptionUsage.features.aiScore': 'AI score',
   'subscriptionUsage.features.winnerAnalysis': 'Winner analysis',
-  'subscriptionUsage.features.marketplace': 'Marketplace',
+  'subscriptionUsage.features.templates': 'Templates',
   'subscriptionUsage.features.coEditing': 'Co-editing',
   'subscriptionUsage.features.api': 'API',
 } as const;
@@ -57,7 +57,7 @@ interface UsageStats {
   features: {
     aiScore: boolean;
     winnerAnalysis: boolean;
-    marketplace: boolean;
+    templates: boolean;
     coEditing: boolean;
     api: boolean;
   };
@@ -263,10 +263,10 @@ export function SubscriptionUsageCard() {
           <div className="flex items-center gap-2">
             <CheckCircle
               className={`w-4 h-4 ${
-                stats.features.marketplace ? 'text-success-600' : 'text-surface-300'
+                stats.features.templates ? 'text-success-600' : 'text-surface-300'
               }`}
             />
-            <span className="text-sm text-surface-700">{t('subscriptionUsage.features.marketplace')}</span>
+            <span className="text-sm text-surface-700">{t('subscriptionUsage.features.templates')}</span>
           </div>
           <div className="flex items-center gap-2">
             <CheckCircle

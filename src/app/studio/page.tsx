@@ -10,6 +10,7 @@ import {
 } from '@/components/ui';
 import { NewAppLayout as AppLayout, PageHeader } from '@/components/layout/NewAppLayout';
 import ImageGenerator from '@/components/studio/ImageGenerator';
+import PresentationStudio from '@/components/studio/PresentationStudio';
 import { useLocale } from '@/hooks/useLocale';
 import { useUiTranslations } from '@/hooks/useUiTranslations';
 import {
@@ -642,6 +643,8 @@ export default function StudioPage() {
         {/* Contenu */}
         {activeTab === 'images' ? (
           <ImageGenerator />
+        ) : activeTab === 'presentations' ? (
+          <PresentationStudio />
         ) : activeTab === 'templates' ? (
           <>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">

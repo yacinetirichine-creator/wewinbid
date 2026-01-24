@@ -38,18 +38,7 @@ import {
 import { useLocale } from '@/hooks/useLocale';
 import { useUiTranslations } from '@/hooks/useUiTranslations';
 
-// ✅ LAZY LOADING: Recharts composant complet chargé dynamiquement
-const ChartsComponents = dynamic(
-  () => import('recharts').then((mod) => ({
-    default: () => null, // Placeholder, les composants seront importés normalement dans le composant
-  })),
-  {
-    loading: () => <Skeleton variant="rectangular" className="h-[300px] w-full" />,
-    ssr: false,
-  }
-);
-
-// Import direct de Recharts (sera tree-shaken si pas utilisé)
+// Recharts components for data visualization
 import {
   LineChart,
   Line,

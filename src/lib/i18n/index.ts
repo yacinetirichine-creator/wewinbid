@@ -72,7 +72,7 @@ export interface Translations {
   nav: {
     dashboard: string;
     tenders: string;
-    marketplace: string;
+    templates: string;
     analytics: string;
     studio: string;
     alerts: string;
@@ -178,7 +178,7 @@ const translations: Record<Locale, Translations> = {
     nav: {
       dashboard: 'Tableau de bord',
       tenders: 'Appels d\'offres',
-      marketplace: 'Marketplace',
+      templates: 'Modèles',
       analytics: 'Analytiques',
       studio: 'Studio créatif',
       alerts: 'Alertes',
@@ -276,7 +276,7 @@ const translations: Record<Locale, Translations> = {
     nav: {
       dashboard: 'Dashboard',
       tenders: 'Tenders',
-      marketplace: 'Marketplace',
+      templates: 'Templates',
       analytics: 'Analytics',
       studio: 'Creative Studio',
       alerts: 'Alerts',
@@ -374,7 +374,7 @@ const translations: Record<Locale, Translations> = {
     nav: {
       dashboard: 'Dashboard',
       tenders: 'Ausschreibungen',
-      marketplace: 'Marktplatz',
+      templates: 'Vorlagen',
       analytics: 'Analytik',
       studio: 'Kreativstudio',
       alerts: 'Benachrichtigungen',
@@ -472,7 +472,7 @@ const translations: Record<Locale, Translations> = {
     nav: {
       dashboard: 'Panel',
       tenders: 'Licitaciones',
-      marketplace: 'Marketplace',
+      templates: 'Plantillas',
       analytics: 'Analíticas',
       studio: 'Estudio creativo',
       alerts: 'Alertas',
@@ -570,7 +570,7 @@ const translations: Record<Locale, Translations> = {
     nav: {
       dashboard: 'Dashboard',
       tenders: 'Gare d\'appalto',
-      marketplace: 'Marketplace',
+      templates: 'Modelli',
       analytics: 'Analisi',
       studio: 'Studio creativo',
       alerts: 'Avvisi',
@@ -668,7 +668,7 @@ const translations: Record<Locale, Translations> = {
     nav: {
       dashboard: 'Painel',
       tenders: 'Licitações',
-      marketplace: 'Marketplace',
+      templates: 'Modelos',
       analytics: 'Análises',
       studio: 'Estúdio criativo',
       alerts: 'Alertas',
@@ -766,7 +766,7 @@ const translations: Record<Locale, Translations> = {
     nav: {
       dashboard: 'Dashboard',
       tenders: 'Aanbestedingen',
-      marketplace: 'Marktplaats',
+      templates: 'Sjablonen',
       analytics: 'Analyses',
       studio: 'Creatieve studio',
       alerts: 'Meldingen',
@@ -864,7 +864,7 @@ const translations: Record<Locale, Translations> = {
     nav: {
       dashboard: 'لوحة التحكم',
       tenders: 'المناقصات',
-      marketplace: 'السوق',
+      templates: 'القوالب',
       analytics: 'التحليلات',
       studio: 'الاستوديو الإبداعي',
       alerts: 'التنبيهات',

@@ -26,7 +26,6 @@ import {
   Calendar,
   MessageSquare,
   Search,
-  Store,
   FileSignature,
   Library,
   UserPlus,
@@ -165,15 +164,9 @@ const navigationConfig: NavCategory[] = [
     icon: Users,
     defaultOpen: false,
     items: [
-      { 
-        labelKey: 'nav.marketplace', 
-        href: '/marketplace', 
-        icon: Store,
-        descriptionKey: 'nav.desc.marketplace'
-      },
-      { 
-        labelKey: 'nav.teams', 
-        href: '/teams', 
+      {
+        labelKey: 'nav.teams',
+        href: '/teams',
         icon: Users,
         descriptionKey: 'nav.desc.teams'
       },
@@ -224,7 +217,6 @@ export function NewSidebar({ user, company }: NewSidebarProps) {
       'nav.dashboard': 'Tableau de bord',
       'nav.tenders': "Appels d'offres",
       'nav.analyzeAO': 'Analyser un AO',
-      'nav.marketplace': 'Marketplace',
       'nav.analytics': 'Analytics',
       'nav.calendar': 'Calendrier',
       'nav.aiChat': 'Assistant IA',
@@ -254,7 +246,6 @@ export function NewSidebar({ user, company }: NewSidebarProps) {
       'nav.desc.documents': 'Bibliothèque de documents',
       'nav.desc.library': 'Réponses types et modèles',
       'nav.desc.aiChat': 'Assistant IA',
-      'nav.desc.marketplace': 'Trouver des partenaires',
       'nav.desc.teams': 'Gérer vos équipes',
     }),
     []

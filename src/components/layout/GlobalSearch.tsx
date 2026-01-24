@@ -19,7 +19,6 @@ import {
   Bell,
   FolderOpen,
   MessageSquare,
-  Store,
   Command,
 } from 'lucide-react';
 import { useLocale } from '@/hooks/useLocale';
@@ -69,15 +68,6 @@ const quickActionConfigs: QuickActionConfig[] = [
     href: '/tenders/new',
     icon: FileText,
     categoryKey: 'globalSearch.category.quickActions',
-  },
-  {
-    id: 'marketplace',
-    type: 'page',
-    titleKey: 'globalSearch.quick.marketplace.title',
-    descriptionKey: 'globalSearch.quick.marketplace.description',
-    href: '/marketplace',
-    icon: Store,
-    categoryKey: 'globalSearch.category.navigation',
   },
   {
     id: 'calendar',
@@ -177,8 +167,6 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
       'globalSearch.quick.tenders.description': "Gérer vos appels d'offres",
       'globalSearch.quick.newTender.title': "Nouvel appel d'offre",
       'globalSearch.quick.newTender.description': 'Créer un nouvel AO',
-      'globalSearch.quick.marketplace.title': 'Marketplace',
-      'globalSearch.quick.marketplace.description': 'Trouver des partenaires',
       'globalSearch.quick.calendar.title': 'Calendrier',
       'globalSearch.quick.calendar.description': 'Échéances et planning',
       'globalSearch.quick.documents.title': 'Documents',
