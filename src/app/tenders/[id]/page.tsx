@@ -997,9 +997,9 @@ export default function TenderDetailPage() {
                                       className="w-full"
                                     />
                                     <div className="flex justify-between text-xs text-slate-500 mt-1">
-                                      <span>0%</span>
-                                      <span>50%</span>
-                                      <span>100%</span>
+                                      {[0, 50, 100].map((value) => (
+                                        <span key={value}>{`${value}%`}</span>
+                                      ))}
                                     </div>
                                   </div>
 

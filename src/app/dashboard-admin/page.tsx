@@ -53,6 +53,16 @@ interface AdminMetrics {
 export default function AdminDashboard() {
   const { locale } = useLocale();
 
+  const eurFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: 'EUR',
+        maximumFractionDigits: 0,
+      }),
+    [locale]
+  );
+
   const entries = useMemo(
     () => ({
       'admin.dashboard.title': 'Admin Dashboard',
@@ -315,7 +325,7 @@ export default function AdminDashboard() {
                       {Math.round((subscriptions.free / overview.totalCompanies) * 100)}%
                     </p>
                   </div>
-                  <Badge variant="gray">€0</Badge>
+                  <Badge variant="gray">{eurFormatter.format(0)}</Badge>
                 </div>
               </div>
               <div className="rounded-lg border-2 border-blue-200 bg-blue-50 p-6">
@@ -327,7 +337,7 @@ export default function AdminDashboard() {
                       {Math.round((subscriptions.pro / overview.totalCompanies) * 100)}%
                     </p>
                   </div>
-                  <Badge variant="blue">€49</Badge>
+                  <Badge variant="blue">{eurFormatter.format(49)}</Badge>
                 </div>
               </div>
               <div className="rounded-lg border-2 border-purple-200 bg-purple-50 p-6">
@@ -339,7 +349,7 @@ export default function AdminDashboard() {
                       {Math.round((subscriptions.business / overview.totalCompanies) * 100)}%
                     </p>
                   </div>
-                  <Badge variant="purple">€149</Badge>
+                  <Badge variant="purple">{eurFormatter.format(149)}</Badge>
                 </div>
               </div>
             </div>

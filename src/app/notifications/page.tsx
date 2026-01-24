@@ -6,6 +6,30 @@ import { Card, Badge, Button } from '@/components/ui';
 import NotificationList from '@/components/notifications/NotificationList';
 import NotificationPreferences from '@/components/notifications/NotificationPreferences';
 import { Bell, Settings, Trash2, Check } from 'lucide-react';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
+
+const entries = {
+  'notificationsPage.title': 'Notifications',
+  'notificationsPage.description': 'Manage your notifications and preferences',
+
+  'notificationsPage.tabs.notifications': 'Notifications',
+  'notificationsPage.tabs.preferences': 'Preferences',
+
+  'notificationsPage.filters.all': 'All',
+  'notificationsPage.filters.unread': 'Unread',
+
+  'notificationsPage.actions.markAllRead': 'Mark all as read',
+  'notificationsPage.actions.deleteRead': 'Delete read',
+  'notificationsPage.confirm.deleteRead': 'Delete all read notifications?',
+
+  'notificationsPage.loading': 'Loading…',
+
+  'notificationsPage.empty.none.title': 'No notifications',
+  'notificationsPage.empty.none.subtitle': 'Important notifications will appear here',
+  'notificationsPage.empty.unread.title': 'No unread notifications',
+  'notificationsPage.empty.unread.subtitle': 'All your notifications are read',
+} as const;
 
 interface Notification {
   id: string;
@@ -19,6 +43,9 @@ interface Notification {
 }
 
 export default function NotificationsPage() {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+
   const [activeTab, setActiveTab] = useState<'notifications' | 'preferences'>('notifications');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -107,7 +134,7 @@ export default function NotificationsPage() {
 
   // Clear all read notifications
   const handleClearRead = async () => {
-    if (!confirm('Supprimer toutes les notifications lues ?')) return;
+    if (!confirm(t('notificationsPage.confirm.deleteRead'))) return;
 
     try {
       const res = await fetch('/api/notifications', {
@@ -125,8 +152,8 @@ export default function NotificationsPage() {
   return (
     <AppLayout>
       <PageHeader
-        title="Notifications"
-        description="Gérez vos notifications et préférences"
+        title={t('notificationsPage.title')}
+        description={t('notificationsPage.description')}
       />
 
       <div className="max-w-5xl">
@@ -145,7 +172,7 @@ export default function NotificationsPage() {
           >
             <div className="flex items-center gap-2">
               <Bell className="w-5 h-5" />
-              <span>Notifications</span>
+              <span>{t('notificationsPage.tabs.notifications')}</span>
               {unreadCount > 0 && (
                 <Badge variant="primary" className="ml-1">
                   {unreadCount}
@@ -167,7 +194,7 @@ export default function NotificationsPage() {
           >
             <div className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              <span>Préférences</span>
+              <span>{t('notificationsPage.tabs.preferences')}</span>
             </div>
           </button>
         </div>
@@ -183,14 +210,14 @@ export default function NotificationsPage() {
                   size="sm"
                   onClick={() => setFilter('all')}
                 >
-                  Toutes
+                  {t('notificationsPage.filters.all')}
                 </Button>
                 <Button
                   variant={filter === 'unread' ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => setFilter('unread')}
                 >
-                  Non lues
+                  {t('notificationsPage.filters.unread')}
                 </Button>
               </div>
 
@@ -202,7 +229,7 @@ export default function NotificationsPage() {
                     onClick={handleMarkAllAsRead}
                   >
                     <Check className="w-4 h-4 mr-2" />
-                    Tout marquer lu
+                    {t('notificationsPage.actions.markAllRead')}
                   </Button>
                 )}
 
@@ -213,7 +240,7 @@ export default function NotificationsPage() {
                   className="text-red-600 hover:text-red-700"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Supprimer les lues
+                  {t('notificationsPage.actions.deleteRead')}
                 </Button>
               </div>
             </div>
@@ -223,20 +250,20 @@ export default function NotificationsPage() {
               {loading ? (
                 <div className="p-12 text-center">
                   <div className="animate-spin w-8 h-8 border-2 border-primary-600 border-t-transparent rounded-full mx-auto"></div>
-                  <p className="mt-4 text-surface-600">Chargement...</p>
+                  <p className="mt-4 text-surface-600">{t('notificationsPage.loading')}</p>
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="p-12 text-center">
                   <Bell className="w-12 h-12 text-surface-300 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-surface-900 dark:text-white mb-2">
                     {filter === 'unread'
-                      ? 'Aucune notification non lue'
-                      : 'Aucune notification'}
+                      ? t('notificationsPage.empty.unread.title')
+                      : t('notificationsPage.empty.none.title')}
                   </h3>
                   <p className="text-surface-600 dark:text-surface-400">
                     {filter === 'unread'
-                      ? 'Toutes vos notifications sont lues'
-                      : 'Vous recevrez ici vos notifications importantes'}
+                      ? t('notificationsPage.empty.unread.subtitle')
+                      : t('notificationsPage.empty.none.subtitle')}
                   </p>
                 </div>
               ) : (
