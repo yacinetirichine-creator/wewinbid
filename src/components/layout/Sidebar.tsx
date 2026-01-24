@@ -52,7 +52,6 @@ interface NavItem {
 const mainNav: NavItem[] = [
   { labelKey: 'nav.dashboard', href: '/dashboard', icon: LayoutDashboard },
   { labelKey: 'nav.tenders', href: '/tenders', icon: FileText, badge: 3 },
-  { labelKey: 'nav.marketplace', href: '/marketplace', icon: Users },
   { labelKey: 'nav.analytics', href: '/analytics', icon: BarChart3 },
   { labelKey: 'nav.calendar', href: '/calendar', icon: Calendar },
   { labelKey: 'nav.aiChat', href: '/chat', icon: MessageSquare },
@@ -88,7 +87,6 @@ export function LegacySidebar({ user, company }: SidebarProps) {
     () => ({
       'nav.dashboard': 'Tableau de bord',
       'nav.tenders': "Appels d'offres",
-      'nav.marketplace': 'Marketplace',
       'nav.analytics': 'Analytics',
       'nav.calendar': 'Calendrier',
       'nav.aiChat': 'Chat IA',

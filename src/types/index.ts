@@ -98,7 +98,7 @@ export interface PlanLimits {
   storage: string;
   aiScore: boolean;
   winnerAnalysis: boolean;
-  marketplace: boolean;
+  templates: boolean;
   coEditing: boolean;
   roiDashboard: boolean;
   priceHistory: boolean;

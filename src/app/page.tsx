@@ -44,9 +44,9 @@ const features = [
     color: 'from-blue-500 to-cyan-500',
   },
   {
-    icon: Users,
-    titleKey: 'landing.features.marketplace.title',
-    descriptionKey: 'landing.features.marketplace.description',
+    icon: Search,
+    titleKey: 'landing.features.search.title',
+    descriptionKey: 'landing.features.search.description',
     color: 'from-emerald-500 to-teal-500',
   },
   {

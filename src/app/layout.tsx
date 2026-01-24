@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     default: 'WeWinBid - L\'IA pour Gagner vos Appels d\'Offres Publics et Privés',
     template: '%s | WeWinBid',
   },
-  description: 'Automatisez la détection, l\'analyse et la réponse aux appels d\'offres. Score de compatibilité IA, rédaction de mémoires techniques, et marketplace partenaires. Gagnez du temps et remportez plus de marchés.',
+  description: 'Automatisez la détection, l\'analyse et la réponse aux appels d\'offres. Score de compatibilité IA, rédaction de mémoires techniques et bibliothèque de modèles. Gagnez du temps et remportez plus de marchés.',
   keywords: [
     'appels d\'offres',
     'marchés publics',
