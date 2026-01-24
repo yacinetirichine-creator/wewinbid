@@ -16,11 +16,37 @@ import {
 import { Button, Badge } from '@/components/ui';
 import { usePWA, usePushNotifications } from '@/hooks/usePWA';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
+
+const entries = {
+  'pwa.install.title': 'Install WeWinBid',
+  'pwa.install.description': "Get quick access from your home screen, even offline.",
+  'pwa.install.installing': 'Installing…',
+  'pwa.install.cta': 'Install',
+
+  'pwa.network.online': 'Connection restored',
+  'pwa.network.offline': 'You are offline — some features may be limited',
+
+  'pwa.update.available': 'A new version is available',
+  'pwa.update.updating': 'Updating…',
+  'pwa.update.cta': 'Update',
+
+  'pwa.notifications.unsupported': 'Notifications not supported',
+  'pwa.notifications.enabled': 'Notifications enabled',
+  'pwa.notifications.blocked': 'Notifications blocked',
+  'pwa.notifications.disabled': 'Notifications disabled',
+
+  'pwa.badge.installed': 'App installed',
+} as const;
 
 /**
  * Bannière d'installation PWA
  */
 export function InstallBanner({ className }: { className?: string }) {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+
   const { state, install } = usePWA();
   const [dismissed, setDismissed] = useState(false);
   const [installing, setInstalling] = useState(false);
@@ -85,10 +111,10 @@ export function InstallBanner({ className }: { className?: string }) {
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-white mb-1">
-            Installez WeWinBid
+            {t('pwa.install.title')}
           </h3>
           <p className="text-sm text-white/80 mb-3">
-            Accédez rapidement à l'app depuis votre écran d'accueil, même hors ligne.
+            {t('pwa.install.description')}
           </p>
           <Button
             variant="secondary"
@@ -100,12 +126,12 @@ export function InstallBanner({ className }: { className?: string }) {
             {installing ? (
               <>
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                Installation...
+                {t('pwa.install.installing')}
               </>
             ) : (
               <>
                 <Download className="w-4 h-4 mr-2" />
-                Installer
+                {t('pwa.install.cta')}
               </>
             )}
           </Button>
@@ -119,6 +145,9 @@ export function InstallBanner({ className }: { className?: string }) {
  * Indicateur de statut réseau
  */
 export function NetworkStatus({ className }: { className?: string }) {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+
   const { state } = usePWA();
   const [show, setShow] = useState(false);
 
@@ -151,12 +180,12 @@ export function NetworkStatus({ className }: { className?: string }) {
             {state.isOnline ? (
               <>
                 <Wifi className="w-4 h-4" />
-                Connexion rétablie
+                {t('pwa.network.online')}
               </>
             ) : (
               <>
                 <WifiOff className="w-4 h-4" />
-                Vous êtes hors ligne - Certaines fonctionnalités peuvent être limitées
+                {t('pwa.network.offline')}
               </>
             )}
           </div>
@@ -170,6 +199,9 @@ export function NetworkStatus({ className }: { className?: string }) {
  * Bannière de mise à jour disponible
  */
 export function UpdateBanner({ className }: { className?: string }) {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+
   const { state, update } = usePWA();
   const [updating, setUpdating] = useState(false);
 
@@ -195,7 +227,7 @@ export function UpdateBanner({ className }: { className?: string }) {
         <div className="flex items-center gap-2">
           <RefreshCw className="w-5 h-5" />
           <span className="text-sm font-medium">
-            Une nouvelle version est disponible
+            {t('pwa.update.available')}
           </span>
         </div>
         <Button
@@ -205,7 +237,7 @@ export function UpdateBanner({ className }: { className?: string }) {
           disabled={updating}
           className="bg-white text-blue-600 hover:bg-white/90"
         >
-          {updating ? 'Mise à jour...' : 'Mettre à jour'}
+          {updating ? t('pwa.update.updating') : t('pwa.update.cta')}
         </Button>
       </div>
     </motion.div>
@@ -222,6 +254,9 @@ export function NotificationToggle({
   vapidPublicKey: string;
   className?: string;
 }) {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+
   const { 
     isSupported, 
     permission, 
@@ -237,7 +272,7 @@ export function NotificationToggle({
     return (
       <div className={cn('flex items-center gap-2 text-surface-500 text-sm', className)}>
         <BellOff className="w-4 h-4" />
-        Notifications non supportées
+        {t('pwa.notifications.unsupported')}
       </div>
     );
   }
@@ -291,17 +326,17 @@ export function NotificationToggle({
         {isEnabled ? (
           <>
             <Bell className="w-4 h-4 text-primary-500" />
-            <span className="text-sm text-surface-700">Notifications activées</span>
+            <span className="text-sm text-surface-700">{t('pwa.notifications.enabled')}</span>
           </>
         ) : permission === 'denied' ? (
           <>
             <BellOff className="w-4 h-4 text-surface-400" />
-            <span className="text-sm text-surface-500">Notifications bloquées</span>
+            <span className="text-sm text-surface-500">{t('pwa.notifications.blocked')}</span>
           </>
         ) : (
           <>
             <BellOff className="w-4 h-4 text-surface-400" />
-            <span className="text-sm text-surface-500">Notifications désactivées</span>
+            <span className="text-sm text-surface-500">{t('pwa.notifications.disabled')}</span>
           </>
         )}
       </div>
@@ -313,6 +348,9 @@ export function NotificationToggle({
  * Badge PWA installé
  */
 export function PWABadge({ className }: { className?: string }) {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+
   const { state } = usePWA();
 
   if (!state.isInstalled) {
@@ -322,7 +360,7 @@ export function PWABadge({ className }: { className?: string }) {
   return (
     <Badge variant="success" className={cn('flex items-center gap-1', className)}>
       <CheckCircle className="w-3 h-3" />
-      App installée
+      {t('pwa.badge.installed')}
     </Badge>
   );
 }
