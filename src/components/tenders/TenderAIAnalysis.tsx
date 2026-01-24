@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles,
@@ -26,6 +26,8 @@ import {
 } from 'lucide-react';
 import { Button, Card, Badge, Progress } from '@/components/ui';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 export interface TenderAnalysisResult {
   // Informations générales
@@ -167,7 +169,7 @@ function CollapsibleSection({
 }
 
 // Composant pour la jauge de compatibilité
-function MatchScoreGauge({ score }: { score: number }) {
+function MatchScoreGauge({ score, t }: { score: number; t: (key: string, params?: Record<string, string | number>) => string }) {
   const getColor = () => {
     if (score >= 80) return 'text-green-500';
     if (score >= 60) return 'text-yellow-500';
@@ -212,12 +214,12 @@ function MatchScoreGauge({ score }: { score: number }) {
         </div>
       </div>
       <div>
-        <p className="font-semibold text-surface-900">Score de compatibilité</p>
+        <p className="font-semibold text-surface-900">{t('tenders.aiAnalysis.matchScore.title')}</p>
         <p className="text-sm text-surface-500">
-          {score >= 80 && 'Excellent match avec votre profil'}
-          {score >= 60 && score < 80 && 'Bon potentiel de réponse'}
-          {score >= 40 && score < 60 && 'Évaluez les risques'}
-          {score < 40 && 'Match faible'}
+          {score >= 80 && t('tenders.aiAnalysis.matchScore.level.excellent')}
+          {score >= 60 && score < 80 && t('tenders.aiAnalysis.matchScore.level.good')}
+          {score >= 40 && score < 60 && t('tenders.aiAnalysis.matchScore.level.review')}
+          {score < 40 && t('tenders.aiAnalysis.matchScore.level.low')}
         </p>
       </div>
     </div>
@@ -230,11 +232,82 @@ export function TenderAIAnalysis({
   onDecline,
   isLoading = false,
 }: TenderAIAnalysisProps) {
+  const { locale } = useLocale();
+
+  const entries = useMemo(
+    () => ({
+      'tenders.aiAnalysis.header.aiConfidenceLabel': 'AI analysis – Confidence:',
+      'tenders.aiAnalysis.header.documentsAnalyzed': '({count} documents analyzed)',
+
+      'tenders.aiAnalysis.matchScore.title': 'Compatibility score',
+      'tenders.aiAnalysis.matchScore.level.excellent': 'Excellent match with your profile',
+      'tenders.aiAnalysis.matchScore.level.good': 'Strong response potential',
+      'tenders.aiAnalysis.matchScore.level.review': 'Review the risks',
+      'tenders.aiAnalysis.matchScore.level.low': 'Low match',
+
+      'tenders.aiAnalysis.deadline.overdue': 'Deadline has passed!',
+      'tenders.aiAnalysis.deadline.remaining': 'Only {days, plural, one {# day} other {# days}} left to respond',
+      'tenders.aiAnalysis.deadline.label': 'Deadline: {date}',
+      'tenders.aiAnalysis.badge.daysRemaining': 'D-{days}',
+
+      'tenders.aiAnalysis.summary.title': 'AI summary',
+      'tenders.aiAnalysis.summary.more': 'Show more',
+      'tenders.aiAnalysis.summary.less': 'Show less',
+
+      'tenders.aiAnalysis.dates.title': 'Important dates',
+      'tenders.aiAnalysis.dates.submissionDeadline': 'Submission deadline',
+      'tenders.aiAnalysis.dates.mandatoryVisit': 'Mandatory site visit',
+      'tenders.aiAnalysis.dates.questionsDeadline': 'Questions deadline',
+      'tenders.aiAnalysis.dates.startDate': 'Contract start date',
+      'tenders.aiAnalysis.dates.duration': 'Contract duration',
+
+      'tenders.aiAnalysis.keywords.title': 'Keywords & Sectors',
+      'tenders.aiAnalysis.keywords.primary': 'Main keywords',
+      'tenders.aiAnalysis.keywords.sectors': 'Business sectors',
+
+      'tenders.aiAnalysis.budget.title': 'Budget & Financials',
+      'tenders.aiAnalysis.budget.estimated': 'Estimated amount',
+      'tenders.aiAnalysis.budget.range': 'Budget range',
+      'tenders.aiAnalysis.budget.paymentTerms': 'Payment terms',
+      'tenders.aiAnalysis.budget.guarantees': 'Required guarantees',
+
+      'tenders.aiAnalysis.lots.title': 'Lots',
+      'tenders.aiAnalysis.lots.badge': '{count} lot(s)',
+      'tenders.aiAnalysis.lots.lotNumber': 'Lot {number}',
+
+      'tenders.aiAnalysis.requirements.title': 'Requirements',
+      'tenders.aiAnalysis.requirements.technical': 'Technical',
+      'tenders.aiAnalysis.requirements.administrative': 'Administrative',
+      'tenders.aiAnalysis.requirements.financial': 'Financial',
+      'tenders.aiAnalysis.requirements.certifications': 'Required certifications',
+
+      'tenders.aiAnalysis.awardCriteria.title': 'Award criteria',
+
+      'tenders.aiAnalysis.risks.title': 'Identified risks',
+      'tenders.aiAnalysis.risks.levelLabel': 'Risk level: {level}',
+      'tenders.aiAnalysis.risks.level.high': 'High',
+      'tenders.aiAnalysis.risks.level.medium': 'Medium',
+      'tenders.aiAnalysis.risks.level.low': 'Low',
+
+      'tenders.aiAnalysis.opportunities.title': 'Opportunities',
+
+      'tenders.aiAnalysis.matchDetails.title': 'Compatibility analysis with your profile',
+
+      'tenders.aiAnalysis.cta.title': 'Do you want to respond to this tender?',
+      'tenders.aiAnalysis.cta.subtitle': 'Our assistant will guide you step by step to build your response.',
+      'tenders.aiAnalysis.cta.decline': 'No, thanks',
+      'tenders.aiAnalysis.cta.respond': 'Yes, I want to respond',
+    }),
+    []
+  );
+
+  const { t } = useUiTranslations(locale, entries);
+
   const [showFullSummary, setShowFullSummary] = useState(false);
 
   const formatDate = (dateStr: string) => {
     try {
-      return new Date(dateStr).toLocaleDateString('fr-FR', {
+      return new Date(dateStr).toLocaleDateString(locale, {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
@@ -278,7 +351,7 @@ export function TenderAIAnalysis({
           </div>
           
           {analysis.matchScore !== undefined && (
-            <MatchScoreGauge score={analysis.matchScore} />
+            <MatchScoreGauge score={analysis.matchScore} t={t} />
           )}
         </div>
 
@@ -287,10 +360,10 @@ export function TenderAIAnalysis({
           <div className="flex items-center gap-2 text-sm">
             <Sparkles className="w-4 h-4 text-primary-500" />
             <span className="text-surface-600">
-              Analyse IA - Confiance: <strong>{analysis.confidence}%</strong>
+              {t('tenders.aiAnalysis.header.aiConfidenceLabel')} <strong>{analysis.confidence}%</strong>
             </span>
             <span className="text-surface-400 ml-2">
-              ({analysis.analyzedDocuments.length} documents analysés)
+              {t('tenders.aiAnalysis.header.documentsAnalyzed', { count: analysis.analyzedDocuments.length })}
             </span>
           </div>
         </div>
@@ -316,22 +389,22 @@ export function TenderAIAnalysis({
               daysToDeadline <= 3 ? 'text-red-700' : 'text-orange-700'
             )}>
               {daysToDeadline <= 0 
-                ? 'Date limite dépassée !'
-                : `Plus que ${daysToDeadline} jour${daysToDeadline > 1 ? 's' : ''} pour répondre`
+                ? t('tenders.aiAnalysis.deadline.overdue')
+                : t('tenders.aiAnalysis.deadline.remaining', { days: daysToDeadline })
               }
             </p>
             <p className={cn(
               'text-sm',
               daysToDeadline <= 3 ? 'text-red-600' : 'text-orange-600'
             )}>
-              Date limite : {formatDate(analysis.dates.submissionDeadline)}
+              {t('tenders.aiAnalysis.deadline.label', { date: formatDate(analysis.dates.submissionDeadline) })}
             </p>
           </div>
         </motion.div>
       )}
 
       {/* Résumé IA */}
-      <CollapsibleSection title="Résumé IA" icon={FileSearch} defaultOpen>
+      <CollapsibleSection title={t('tenders.aiAnalysis.summary.title')} icon={FileSearch} defaultOpen>
         <div className="prose prose-sm max-w-none text-surface-700">
           <p className={cn(!showFullSummary && 'line-clamp-4')}>
             {analysis.summary}
@@ -341,7 +414,7 @@ export function TenderAIAnalysis({
               onClick={() => setShowFullSummary(!showFullSummary)}
               className="text-primary-600 hover:text-primary-700 font-medium text-sm"
             >
-              {showFullSummary ? 'Voir moins' : 'Voir plus'}
+              {showFullSummary ? t('tenders.aiAnalysis.summary.less') : t('tenders.aiAnalysis.summary.more')}
             </button>
           )}
         </div>
@@ -349,16 +422,16 @@ export function TenderAIAnalysis({
 
       {/* Dates clés */}
       <CollapsibleSection 
-        title="Dates importantes" 
+        title={t('tenders.aiAnalysis.dates.title')} 
         icon={Calendar} 
-        badge={daysToDeadline !== null && daysToDeadline > 0 ? `J-${daysToDeadline}` : undefined}
+        badge={daysToDeadline !== null && daysToDeadline > 0 ? t('tenders.aiAnalysis.badge.daysRemaining', { days: daysToDeadline }) : undefined}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {analysis.dates.submissionDeadline && (
             <div className="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-100">
               <Clock className="w-5 h-5 text-red-500 mt-0.5" />
               <div>
-                <p className="font-semibold text-red-700">Date limite de réponse</p>
+                <p className="font-semibold text-red-700">{t('tenders.aiAnalysis.dates.submissionDeadline')}</p>
                 <p className="text-sm text-red-600">{formatDate(analysis.dates.submissionDeadline)}</p>
               </div>
             </div>
@@ -368,7 +441,7 @@ export function TenderAIAnalysis({
             <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
               <MapPin className="w-5 h-5 text-blue-500 mt-0.5" />
               <div>
-                <p className="font-semibold text-blue-700">Visite obligatoire</p>
+                <p className="font-semibold text-blue-700">{t('tenders.aiAnalysis.dates.mandatoryVisit')}</p>
                 <p className="text-sm text-blue-600">{formatDate(analysis.dates.visitDate)}</p>
               </div>
             </div>
@@ -378,7 +451,7 @@ export function TenderAIAnalysis({
             <div className="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-100">
               <AlertTriangle className="w-5 h-5 text-yellow-500 mt-0.5" />
               <div>
-                <p className="font-semibold text-yellow-700">Date limite des questions</p>
+                <p className="font-semibold text-yellow-700">{t('tenders.aiAnalysis.dates.questionsDeadline')}</p>
                 <p className="text-sm text-yellow-600">{formatDate(analysis.dates.questionsDeadline)}</p>
               </div>
             </div>
@@ -388,7 +461,7 @@ export function TenderAIAnalysis({
             <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg border border-green-100">
               <Calendar className="w-5 h-5 text-green-500 mt-0.5" />
               <div>
-                <p className="font-semibold text-green-700">Début du marché</p>
+                <p className="font-semibold text-green-700">{t('tenders.aiAnalysis.dates.startDate')}</p>
                 <p className="text-sm text-green-600">{formatDate(analysis.dates.startDate)}</p>
               </div>
             </div>
@@ -398,7 +471,7 @@ export function TenderAIAnalysis({
             <div className="flex items-start gap-3 p-3 bg-surface-50 rounded-lg border border-surface-200">
               <Clock className="w-5 h-5 text-surface-500 mt-0.5" />
               <div>
-                <p className="font-semibold text-surface-700">Durée du marché</p>
+                <p className="font-semibold text-surface-700">{t('tenders.aiAnalysis.dates.duration')}</p>
                 <p className="text-sm text-surface-600">{analysis.dates.duration}</p>
               </div>
             </div>
@@ -407,10 +480,10 @@ export function TenderAIAnalysis({
       </CollapsibleSection>
 
       {/* Mots-clés */}
-      <CollapsibleSection title="Mots-clés & Secteurs" icon={Tag} badge={`${analysis.keywords.length}`}>
+      <CollapsibleSection title={t('tenders.aiAnalysis.keywords.title')} icon={Tag} badge={`${analysis.keywords.length}`}>
         <div className="space-y-4">
           <div>
-            <p className="text-sm font-medium text-surface-600 mb-2">Mots-clés principaux</p>
+            <p className="text-sm font-medium text-surface-600 mb-2">{t('tenders.aiAnalysis.keywords.primary')}</p>
             <div className="flex flex-wrap gap-2">
               {analysis.keywords.map((keyword, idx) => (
                 <Badge key={idx} variant="primary" size="sm" className="bg-primary-100 text-primary-700">
@@ -421,7 +494,7 @@ export function TenderAIAnalysis({
           </div>
           
           <div>
-            <p className="text-sm font-medium text-surface-600 mb-2">Secteurs d'activité</p>
+            <p className="text-sm font-medium text-surface-600 mb-2">{t('tenders.aiAnalysis.keywords.sectors')}</p>
             <div className="flex flex-wrap gap-2">
               {analysis.sectors.map((sector, idx) => (
                 <Badge key={idx} variant="secondary" size="sm">
@@ -434,32 +507,32 @@ export function TenderAIAnalysis({
       </CollapsibleSection>
 
       {/* Budget */}
-      <CollapsibleSection title="Budget & Financier" icon={Euro}>
+      <CollapsibleSection title={t('tenders.aiAnalysis.budget.title')} icon={Euro}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {analysis.financials.estimatedValue && (
             <div className="p-4 bg-surface-50 rounded-lg">
-              <p className="text-sm text-surface-500">Montant estimé</p>
+              <p className="text-sm text-surface-500">{t('tenders.aiAnalysis.budget.estimated')}</p>
               <p className="text-xl font-bold text-surface-900">{analysis.financials.estimatedValue}</p>
             </div>
           )}
           
           {analysis.financials.budgetRange && (
             <div className="p-4 bg-surface-50 rounded-lg">
-              <p className="text-sm text-surface-500">Fourchette budgétaire</p>
+              <p className="text-sm text-surface-500">{t('tenders.aiAnalysis.budget.range')}</p>
               <p className="text-xl font-bold text-surface-900">{analysis.financials.budgetRange}</p>
             </div>
           )}
           
           {analysis.financials.paymentTerms && (
             <div className="p-4 bg-surface-50 rounded-lg">
-              <p className="text-sm text-surface-500">Conditions de paiement</p>
+              <p className="text-sm text-surface-500">{t('tenders.aiAnalysis.budget.paymentTerms')}</p>
               <p className="font-medium text-surface-700">{analysis.financials.paymentTerms}</p>
             </div>
           )}
           
           {analysis.financials.guarantees && analysis.financials.guarantees.length > 0 && (
             <div className="p-4 bg-surface-50 rounded-lg">
-              <p className="text-sm text-surface-500 mb-2">Garanties demandées</p>
+              <p className="text-sm text-surface-500 mb-2">{t('tenders.aiAnalysis.budget.guarantees')}</p>
               <ul className="space-y-1">
                 {analysis.financials.guarantees.map((g, idx) => (
                   <li key={idx} className="flex items-center gap-2 text-sm text-surface-700">
@@ -475,13 +548,13 @@ export function TenderAIAnalysis({
 
       {/* Lots */}
       {analysis.lots && analysis.lots.length > 0 && (
-        <CollapsibleSection title="Lots" icon={Briefcase} badge={`${analysis.lots.length} lot(s)`}>
+        <CollapsibleSection title={t('tenders.aiAnalysis.lots.title')} icon={Briefcase} badge={t('tenders.aiAnalysis.lots.badge', { count: analysis.lots.length })}>
           <div className="space-y-3">
             {analysis.lots.map((lot, idx) => (
               <div key={idx} className="p-4 bg-surface-50 rounded-lg border border-surface-200">
                 <div className="flex items-start justify-between">
                   <div>
-                    <Badge variant="secondary" size="sm">Lot {lot.number}</Badge>
+                    <Badge variant="secondary" size="sm">{t('tenders.aiAnalysis.lots.lotNumber', { number: lot.number })}</Badge>
                     <h4 className="font-semibold text-surface-900 mt-2">{lot.title}</h4>
                     <p className="text-sm text-surface-600 mt-1">{lot.description}</p>
                   </div>
@@ -496,13 +569,13 @@ export function TenderAIAnalysis({
       )}
 
       {/* Exigences */}
-      <CollapsibleSection title="Exigences" icon={ListChecks}>
+      <CollapsibleSection title={t('tenders.aiAnalysis.requirements.title')} icon={ListChecks}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {analysis.requirements.technical.length > 0 && (
             <div>
               <h4 className="font-semibold text-surface-900 mb-2 flex items-center gap-2">
                 <Target className="w-4 h-4 text-blue-500" />
-                Techniques
+                {t('tenders.aiAnalysis.requirements.technical')}
               </h4>
               <ul className="space-y-2">
                 {analysis.requirements.technical.map((req, idx) => (
@@ -519,7 +592,7 @@ export function TenderAIAnalysis({
             <div>
               <h4 className="font-semibold text-surface-900 mb-2 flex items-center gap-2">
                 <FileText className="w-4 h-4 text-purple-500" />
-                Administratives
+                {t('tenders.aiAnalysis.requirements.administrative')}
               </h4>
               <ul className="space-y-2">
                 {analysis.requirements.administrative.map((req, idx) => (
@@ -536,7 +609,7 @@ export function TenderAIAnalysis({
             <div>
               <h4 className="font-semibold text-surface-900 mb-2 flex items-center gap-2">
                 <Euro className="w-4 h-4 text-yellow-500" />
-                Financières
+                {t('tenders.aiAnalysis.requirements.financial')}
               </h4>
               <ul className="space-y-2">
                 {analysis.requirements.financial.map((req, idx) => (
@@ -553,7 +626,7 @@ export function TenderAIAnalysis({
             <div>
               <h4 className="font-semibold text-surface-900 mb-2 flex items-center gap-2">
                 <Users className="w-4 h-4 text-green-500" />
-                Certifications requises
+                {t('tenders.aiAnalysis.requirements.certifications')}
               </h4>
               <div className="flex flex-wrap gap-2">
                 {analysis.requirements.certifications.map((cert, idx) => (
@@ -566,7 +639,7 @@ export function TenderAIAnalysis({
       </CollapsibleSection>
 
       {/* Critères d'attribution */}
-      <CollapsibleSection title="Critères d'attribution" icon={TrendingUp}>
+      <CollapsibleSection title={t('tenders.aiAnalysis.awardCriteria.title')} icon={TrendingUp}>
         <div className="space-y-3">
           {analysis.awardCriteria.map((criteria, idx) => (
             <div key={idx} className="flex items-center gap-4">
@@ -595,7 +668,7 @@ export function TenderAIAnalysis({
       {/* Risques et Opportunités */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <CollapsibleSection 
-          title="Risques identifiés" 
+          title={t('tenders.aiAnalysis.risks.title')} 
           icon={AlertTriangle}
           badge={analysis.risks.level.toUpperCase()}
           defaultOpen={false}
@@ -612,10 +685,14 @@ export function TenderAIAnalysis({
               analysis.risks.level === 'medium' && 'text-orange-700',
               analysis.risks.level === 'low' && 'text-green-700',
             )}>
-              Niveau de risque : {
-                analysis.risks.level === 'high' ? 'Élevé' :
-                analysis.risks.level === 'medium' ? 'Modéré' : 'Faible'
-              }
+              {t('tenders.aiAnalysis.risks.levelLabel', {
+                level:
+                  analysis.risks.level === 'high'
+                    ? t('tenders.aiAnalysis.risks.level.high')
+                    : analysis.risks.level === 'medium'
+                      ? t('tenders.aiAnalysis.risks.level.medium')
+                      : t('tenders.aiAnalysis.risks.level.low'),
+              })}
             </p>
           </div>
           <ul className="space-y-2">
@@ -629,7 +706,7 @@ export function TenderAIAnalysis({
         </CollapsibleSection>
 
         <CollapsibleSection 
-          title="Opportunités" 
+          title={t('tenders.aiAnalysis.opportunities.title')} 
           icon={Target}
           badge={`${analysis.opportunities.length}`}
           defaultOpen={false}
@@ -650,7 +727,7 @@ export function TenderAIAnalysis({
         <Card className="p-4 bg-primary-50 border-primary-200">
           <h4 className="font-semibold text-primary-900 mb-3 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary-600" />
-            Analyse de compatibilité avec votre profil
+            {t('tenders.aiAnalysis.matchDetails.title')}
           </h4>
           <ul className="space-y-2">
             {analysis.matchDetails.map((detail, idx) => (
@@ -673,10 +750,10 @@ export function TenderAIAnalysis({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-bold text-surface-900">
-              Voulez-vous répondre à cet appel d'offres ?
+              {t('tenders.aiAnalysis.cta.title')}
             </h3>
             <p className="text-sm text-surface-500">
-              Notre assistant vous guidera étape par étape pour constituer votre dossier
+              {t('tenders.aiAnalysis.cta.subtitle')}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -685,7 +762,7 @@ export function TenderAIAnalysis({
               onClick={onDecline}
               disabled={isLoading}
             >
-              Non, merci
+              {t('tenders.aiAnalysis.cta.decline')}
             </Button>
             <Button
               variant="primary"
@@ -694,7 +771,7 @@ export function TenderAIAnalysis({
               disabled={isLoading}
               className="shadow-lg shadow-primary-500/25"
             >
-              Oui, je veux répondre
+              {t('tenders.aiAnalysis.cta.respond')}
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </div>

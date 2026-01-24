@@ -34,6 +34,8 @@ import {
 import { Button, Card, Badge, Progress, Textarea, Input, Checkbox } from '@/components/ui';
 import { SaveIndicator } from '@/components/ui/SaveIndicator';
 import { useAutoSave } from '@/hooks/useAutoSave';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 import { cn } from '@/lib/utils';
 import { TenderAnalysisResult } from './TenderAIAnalysis';
 import { 
@@ -74,47 +76,47 @@ interface TenderResponseWizardProps {
 const WIZARD_STEPS: WizardStep[] = [
   {
     id: 'technical',
-    title: 'Offre technique',
-    description: 'Mémoire technique, méthodologie, références',
+    title: 'Technical offer',
+    description: 'Technical proposal, methodology, references',
     icon: FileCheck,
     status: 'current',
     aiAssisted: true,
   },
   {
     id: 'team',
-    title: 'Équipe proposée',
-    description: 'CV, qualifications, moyens humains',
+    title: 'Proposed team',
+    description: 'CVs, qualifications, staffing',
     icon: Users,
     status: 'pending',
     aiAssisted: true,
   },
   {
     id: 'financial',
-    title: 'Offre financière',
-    description: 'BPU, DPGF, détail des prix',
+    title: 'Financial offer',
+    description: 'Unit prices, price breakdown, pricing detail',
     icon: Euro,
     status: 'pending',
     aiAssisted: false,
   },
   {
     id: 'administrative',
-    title: 'Documents administratifs',
-    description: 'Attestations, KBIS, documents légaux',
+    title: 'Administrative documents',
+    description: 'Certificates, registration extract, legal documents',
     icon: FileText,
     status: 'pending',
     aiAssisted: true,
   },
   {
     id: 'review',
-    title: 'Vérification finale',
-    description: 'Contrôle et validation du dossier',
+    title: 'Final review',
+    description: 'Check and validate the file',
     icon: Eye,
     status: 'pending',
   },
   {
     id: 'submit',
-    title: 'Téléchargement',
-    description: 'Télécharger le dossier complet',
+    title: 'Download',
+    description: 'Download the complete file',
     icon: Download,
     status: 'pending',
   },
@@ -123,34 +125,34 @@ const WIZARD_STEPS: WizardStep[] = [
 // Documents par étape
 const DOCUMENTS_BY_STEP: Record<string, DocumentItem[]> = {
   administrative: [
-    { id: 'dc1', name: 'Formulaire DC1 (Lettre de candidature)', type: 'required', status: 'missing', aiGenerated: true },
-    { id: 'dc2', name: 'Formulaire DC2 (Déclaration du candidat)', type: 'required', status: 'missing', aiGenerated: true },
-    { id: 'kbis', name: 'Extrait KBIS (moins de 3 mois)', type: 'required', status: 'missing' },
-    { id: 'attestation_fiscale', name: 'Attestation fiscale', type: 'required', status: 'missing' },
-    { id: 'attestation_sociale', name: 'Attestation URSSAF', type: 'required', status: 'missing' },
-    { id: 'assurance_rc', name: 'Attestation d\'assurance RC Pro', type: 'required', status: 'missing' },
-    { id: 'assurance_decennale', name: 'Attestation d\'assurance décennale', type: 'optional', status: 'missing' },
-    { id: 'acte_engagement', name: 'Acte d\'engagement', type: 'generated', status: 'missing', aiGenerated: true },
+    { id: 'dc1', name: 'DC1 form (application letter)', type: 'required', status: 'missing', aiGenerated: true },
+    { id: 'dc2', name: 'DC2 form (candidate declaration)', type: 'required', status: 'missing', aiGenerated: true },
+    { id: 'kbis', name: 'Company registration extract (less than 3 months old)', type: 'required', status: 'missing' },
+    { id: 'attestation_fiscale', name: 'Tax compliance certificate', type: 'required', status: 'missing' },
+    { id: 'attestation_sociale', name: 'URSSAF certificate', type: 'required', status: 'missing' },
+    { id: 'assurance_rc', name: "Professional liability insurance certificate", type: 'required', status: 'missing' },
+    { id: 'assurance_decennale', name: 'Decennial liability insurance certificate', type: 'optional', status: 'missing' },
+    { id: 'acte_engagement', name: 'Commitment deed', type: 'generated', status: 'missing', aiGenerated: true },
   ],
   technical: [
-    { id: 'memoire_technique', name: 'Mémoire technique', type: 'generated', status: 'missing', aiGenerated: true },
-    { id: 'note_methodologique', name: 'Note méthodologique', type: 'generated', status: 'missing', aiGenerated: true },
-    { id: 'planning', name: 'Planning prévisionnel', type: 'generated', status: 'missing', aiGenerated: true },
-    { id: 'references', name: 'Liste des références', type: 'generated', status: 'missing', aiGenerated: true },
-    { id: 'certifications', name: 'Certificats et qualifications', type: 'required', status: 'missing' },
-    { id: 'organigramme', name: 'Organigramme projet', type: 'generated', status: 'missing', aiGenerated: true },
+    { id: 'memoire_technique', name: 'Technical proposal', type: 'generated', status: 'missing', aiGenerated: true },
+    { id: 'note_methodologique', name: 'Method statement', type: 'generated', status: 'missing', aiGenerated: true },
+    { id: 'planning', name: 'Indicative schedule', type: 'generated', status: 'missing', aiGenerated: true },
+    { id: 'references', name: 'Reference list', type: 'generated', status: 'missing', aiGenerated: true },
+    { id: 'certifications', name: 'Certificates and qualifications', type: 'required', status: 'missing' },
+    { id: 'organigramme', name: 'Project organization chart', type: 'generated', status: 'missing', aiGenerated: true },
   ],
   team: [
-    { id: 'cv_responsable', name: 'CV du responsable de projet', type: 'required', status: 'missing', aiGenerated: true },
-    { id: 'cv_equipe', name: 'CV de l\'équipe proposée', type: 'required', status: 'missing', aiGenerated: true },
-    { id: 'moyens_humains', name: 'Tableau des moyens humains', type: 'generated', status: 'missing', aiGenerated: true },
-    { id: 'qualifications', name: 'Qualifications de l\'équipe', type: 'optional', status: 'missing' },
+    { id: 'cv_responsable', name: 'Project manager CV', type: 'required', status: 'missing', aiGenerated: true },
+    { id: 'cv_equipe', name: 'Proposed team CVs', type: 'required', status: 'missing', aiGenerated: true },
+    { id: 'moyens_humains', name: 'Staffing table', type: 'generated', status: 'missing', aiGenerated: true },
+    { id: 'qualifications', name: 'Team qualifications', type: 'optional', status: 'missing' },
   ],
   financial: [
-    { id: 'dpgf', name: 'DPGF (Décomposition du Prix Global et Forfaitaire)', type: 'required', status: 'missing' },
-    { id: 'bpu', name: 'BPU (Bordereau des Prix Unitaires)', type: 'required', status: 'missing' },
-    { id: 'detail_estimatif', name: 'Détail estimatif', type: 'optional', status: 'missing' },
-    { id: 'sous_traitance', name: 'Déclaration de sous-traitance (DC4)', type: 'optional', status: 'missing', aiGenerated: true },
+    { id: 'dpgf', name: 'DPGF (lump-sum price breakdown)', type: 'required', status: 'missing' },
+    { id: 'bpu', name: 'BPU (unit price schedule)', type: 'required', status: 'missing' },
+    { id: 'detail_estimatif', name: 'Estimate detail', type: 'optional', status: 'missing' },
+    { id: 'sous_traitance', name: 'Subcontracting declaration (DC4)', type: 'optional', status: 'missing', aiGenerated: true },
   ],
 };
 
@@ -160,6 +162,70 @@ export function TenderResponseWizard({
   onComplete,
   onCancel,
 }: TenderResponseWizardProps) {
+  const { locale } = useLocale();
+  const entries = useMemo(
+    () => ({
+      'tenderResponseWizard.header.title': 'Tender response',
+      'tenderResponseWizard.header.deadline': 'Deadline: {date}',
+      'tenderResponseWizard.action.saveAndExit': 'Save & exit',
+
+      'tenderResponseWizard.progress.label': 'File progress',
+
+      'tenderResponseWizard.action.generateWithAi': 'Generate with AI',
+      'tenderResponseWizard.action.generatingWithProgress': 'Generating… {progress}%',
+
+      'tenderResponseWizard.doc.required': 'Required',
+      'tenderResponseWizard.doc.optional': 'Optional',
+      'tenderResponseWizard.doc.generating': 'Generating…',
+      'tenderResponseWizard.doc.upload': 'Upload',
+      'tenderResponseWizard.doc.download': 'Download document',
+
+      'tenderResponseWizard.notes.title': 'Notes for this step',
+      'tenderResponseWizard.notes.placeholder': 'Add your notes, remarks, or points of attention…',
+
+      'tenderResponseWizard.aiTips.title': 'AI tips',
+      'tenderResponseWizard.aiTips.line1': 'For this step, our AI can automatically generate documents marked with',
+      'tenderResponseWizard.aiTips.line2': 'Generated documents are personalized based on your company profile and the tender requirements.',
+
+      'tenderResponseWizard.attention.title': 'Points to watch',
+      'tenderResponseWizard.attention.admin.1': 'Make sure the company registration extract is less than 3 months old',
+      'tenderResponseWizard.attention.admin.2': 'Your tax compliance certificate must be up to date',
+      'tenderResponseWizard.attention.tech.1': 'The technical proposal represents 40% of the final score',
+      'tenderResponseWizard.attention.tech.2': 'Include recent similar references',
+      'tenderResponseWizard.attention.team.1': 'Highlight relevant certifications',
+      'tenderResponseWizard.attention.fin.1': 'Price represents 60% of the final score',
+      'tenderResponseWizard.attention.fin.2': 'Double-check that every line item is priced',
+
+      'tenderResponseWizard.review.title': 'Final review',
+      'tenderResponseWizard.review.subtitle': 'Make sure your file is complete before finalizing.',
+      'tenderResponseWizard.review.requiredDocs': '{done}/{total} required documents',
+      'tenderResponseWizard.review.action.complete': 'Complete',
+      'tenderResponseWizard.review.checklist.title': 'Final checklist',
+      'tenderResponseWizard.review.checklist.1': 'I verified that all documents are signed',
+      'tenderResponseWizard.review.checklist.2': 'Financial amounts are correct',
+      'tenderResponseWizard.review.checklist.3': 'The file matches the required format',
+      'tenderResponseWizard.review.checklist.4': 'I proofread the technical proposal',
+
+      'tenderResponseWizard.submit.title': 'Your file is ready!',
+      'tenderResponseWizard.submit.subtitle': 'All documents have been generated and assembled. You can download the complete file.',
+      'tenderResponseWizard.submit.stats.documents': 'Documents',
+      'tenderResponseWizard.submit.stats.compatibility': 'Compatibility',
+      'tenderResponseWizard.submit.stats.status': 'Status',
+      'tenderResponseWizard.submit.stats.onTime': 'On time',
+      'tenderResponseWizard.submit.action.downloadFull': 'Download full file',
+      'tenderResponseWizard.submit.zipNote': 'Secure ZIP file • Ready for submission',
+
+      'tenderResponseWizard.nav.previous': 'Previous',
+      'tenderResponseWizard.nav.next': 'Next',
+      'tenderResponseWizard.nav.finalize': 'Finalize',
+
+      'tenderResponseWizard.log.draftSaved': 'Draft saved:',
+      'tenderResponseWizard.log.saveError': 'Save error:',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
+
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [steps, setSteps] = useState<WizardStep[]>(
     WIZARD_STEPS.map((s, i) => ({ ...s, status: i === 0 ? 'current' : 'pending' }))
@@ -185,10 +251,10 @@ export function TenderResponseWizard({
   } = useAutoSave(tenderId, {
     debounceMs: 1500,
     onSave: (savedDraft) => {
-      console.log('Brouillon sauvegardé:', savedDraft.id);
+      console.log(t('tenderResponseWizard.log.draftSaved'), savedDraft.id);
     },
     onError: (error) => {
-      console.error('Erreur sauvegarde:', error);
+      console.error(t('tenderResponseWizard.log.saveError'), error);
     },
   });
 
@@ -259,7 +325,7 @@ export function TenderResponseWizard({
     saveChecklist(itemId, checked);
   }, [saveChecklist]);
 
-  // Générer les documents avec l'IA et PDF
+  // Generate documents with AI + PDF
   const generateDocuments = async () => {
     setIsGenerating(true);
     setGenerationProgress(0);
@@ -278,8 +344,8 @@ export function TenderResponseWizard({
       }));
 
       try {
-        // Générer le PDF selon le type de document
-        if (doc.name.toLowerCase().includes('dc1')) {
+        // Generate the PDF based on document id
+        if (doc.id === 'dc1') {
           const companyInfo = {
             name: '',
             siret: '',
@@ -294,7 +360,7 @@ export function TenderResponseWizard({
           const tenderInfo = {
             reference: analysis.reference,
             title: analysis.title,
-            buyer: analysis.buyer?.name || 'Acheteur public',
+            buyer: analysis.buyer?.name || 'Public buyer',
             deadline: analysis.dates.submissionDeadline,
           };
           
@@ -306,7 +372,7 @@ export function TenderResponseWizard({
               d.id === doc.id ? { ...d, status: 'ready' as const, downloadUrl: URL.createObjectURL(blob) } : d
             ),
           }));
-        } else if (doc.name.toLowerCase().includes('mémoire') || doc.name.toLowerCase().includes('technique')) {
+        } else if (doc.id === 'memoire_technique') {
           const companyInfo = {
             name: '',
             siret: '',
@@ -321,19 +387,19 @@ export function TenderResponseWizard({
           const tenderInfo = {
             reference: analysis.reference,
             title: analysis.title,
-            buyer: analysis.buyer?.name || 'Acheteur public',
+            buyer: analysis.buyer?.name || 'Public buyer',
             deadline: analysis.dates.submissionDeadline,
           };
 
           const analysisData = {
-            summary: analysis.summary || 'Résumé de l\'appel d\'offres',
+            summary: analysis.summary || 'Tender summary',
             requirements: [
               ...(analysis.requirements?.technical || []),
               ...(analysis.requirements?.administrative || []),
               ...(analysis.requirements?.financial || []),
               ...(analysis.requirements?.certifications || []),
             ],
-            methodology: 'Méthodologie de réponse',
+            methodology: 'Response methodology',
           };
 
           const references: { clientName: string; projectTitle: string; year: number; value: number; description: string }[] = [];
@@ -346,7 +412,7 @@ export function TenderResponseWizard({
             ),
           }));
         } else {
-          // Pour les autres documents, simuler la génération
+          // For other documents, simulate generation
           await new Promise(resolve => setTimeout(resolve, 1500));
           setDocuments(prev => ({
             ...prev,
@@ -356,7 +422,7 @@ export function TenderResponseWizard({
           }));
         }
       } catch (error) {
-        console.error('Erreur génération document:', error);
+        console.error('Document generation error:', error);
         setDocuments(prev => ({
           ...prev,
           [currentStep.id]: prev[currentStep.id].map(d => 
@@ -371,7 +437,7 @@ export function TenderResponseWizard({
     setIsGenerating(false);
   };
 
-  // Télécharger un document généré
+  // Download a generated document
   const downloadDocument = (doc: DocumentItem) => {
     if (doc.downloadUrl) {
       const link = document.createElement('a');
@@ -381,7 +447,7 @@ export function TenderResponseWizard({
     }
   };
 
-  // Uploader un document
+  // Upload a document
   const handleFileUpload = (docId: string, file: File) => {
     setDocuments(prev => ({
       ...prev,
@@ -391,10 +457,10 @@ export function TenderResponseWizard({
     }));
   };
 
-  // Télécharger le dossier complet
+  // Download the complete file
   const downloadCompleteDossier = () => {
     // Simulation du téléchargement
-    console.log('Téléchargement du dossier complet');
+    console.log('Downloading the complete file');
     onComplete({
       tenderId,
       documents: Object.values(documents).flat().filter(d => d.status === 'ready' || d.status === 'uploaded'),
@@ -417,7 +483,7 @@ export function TenderResponseWizard({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-xl font-bold text-surface-900">
-                Réponse à l'appel d'offres
+                {t('tenderResponseWizard.header.title')}
               </h1>
               <p className="text-sm text-surface-500">{analysis.reference} - {analysis.title}</p>
             </div>
@@ -426,11 +492,13 @@ export function TenderResponseWizard({
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="w-4 h-4 text-orange-500" />
                 <span className="text-surface-600">
-                  Date limite: {new Date(analysis.dates.submissionDeadline).toLocaleDateString('fr-FR')}
+                  {t('tenderResponseWizard.header.deadline', {
+                    date: new Date(analysis.dates.submissionDeadline).toLocaleDateString(locale),
+                  })}
                 </span>
               </div>
               <Button variant="outline" size="sm" onClick={() => { saveNow(); onCancel(); }}>
-                Sauvegarder & Quitter
+                {t('tenderResponseWizard.action.saveAndExit')}
               </Button>
             </div>
           </div>
@@ -438,7 +506,7 @@ export function TenderResponseWizard({
           {/* Barre de progression */}
           <div className="mb-2">
             <div className="flex items-center justify-between text-sm mb-1">
-              <span className="text-surface-600">Progression du dossier</span>
+              <span className="text-surface-600">{t('tenderResponseWizard.progress.label')}</span>
               <span className="font-semibold text-primary-600">{calculateOverallProgress()}%</span>
             </div>
             <Progress value={calculateOverallProgress()} className="h-2" />
@@ -522,12 +590,12 @@ export function TenderResponseWizard({
                           {isGenerating ? (
                             <>
                               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Génération... {generationProgress}%
+                              {t('tenderResponseWizard.action.generatingWithProgress', { progress: generationProgress })}
                             </>
                           ) : (
                             <>
                               <Sparkles className="w-4 h-4 mr-2" />
-                              Générer avec l'IA
+                              {t('tenderResponseWizard.action.generateWithAi')}
                             </>
                           )}
                         </Button>
@@ -564,10 +632,10 @@ export function TenderResponseWizard({
                             <div className="flex items-center gap-2">
                               <p className="font-medium text-surface-900">{doc.name}</p>
                               {doc.type === 'required' && (
-                                <Badge variant="danger" size="sm">Obligatoire</Badge>
+                                <Badge variant="danger" size="sm">{t('tenderResponseWizard.doc.required')}</Badge>
                               )}
                               {doc.type === 'optional' && (
-                                <Badge variant="secondary" size="sm">Optionnel</Badge>
+                                <Badge variant="secondary" size="sm">{t('tenderResponseWizard.doc.optional')}</Badge>
                               )}
                               {doc.aiGenerated && (
                                 <Badge variant="warning" size="sm" className="flex items-center gap-1">
@@ -577,7 +645,7 @@ export function TenderResponseWizard({
                               )}
                             </div>
                             {doc.status === 'generating' && (
-                              <p className="text-sm text-yellow-600 mt-1">Génération en cours...</p>
+                              <p className="text-sm text-yellow-600 mt-1">{t('tenderResponseWizard.doc.generating')}</p>
                             )}
                           </div>
 
@@ -591,7 +659,7 @@ export function TenderResponseWizard({
                                 />
                                 <Button type="button" variant="outline" size="sm">
                                   <Upload className="w-4 h-4 mr-1" />
-                                  Uploader
+                                  {t('tenderResponseWizard.doc.upload')}
                                 </Button>
                               </label>
                             )}
@@ -604,7 +672,7 @@ export function TenderResponseWizard({
                                   variant="ghost" 
                                   size="sm"
                                   onClick={() => downloadDocument(doc)}
-                                  title="Télécharger le document"
+                                  title={t('tenderResponseWizard.doc.download')}
                                 >
                                   <Download className="w-4 h-4" />
                                 </Button>
@@ -620,12 +688,12 @@ export function TenderResponseWizard({
                   <Card className="p-6">
                     <h3 className="font-semibold text-surface-900 mb-4 flex items-center gap-2">
                       <MessageSquare className="w-5 h-5 text-surface-400" />
-                      Notes pour cette étape
+                      {t('tenderResponseWizard.notes.title')}
                     </h3>
                     <Textarea
                       value={notes[currentStep.id] || ''}
                       onChange={(e) => handleNotesChange(currentStep.id, e.target.value)}
-                      placeholder="Ajoutez vos notes, remarques ou points d'attention..."
+                      placeholder={t('tenderResponseWizard.notes.placeholder')}
                       rows={4}
                     />
                   </Card>
@@ -636,14 +704,15 @@ export function TenderResponseWizard({
                   <Card className="p-6 bg-primary-50 border-primary-200">
                     <h3 className="font-semibold text-primary-900 mb-3 flex items-center gap-2">
                       <Sparkles className="w-5 h-5 text-primary-600" />
-                      Conseils IA
+                      {t('tenderResponseWizard.aiTips.title')}
                     </h3>
                     <div className="space-y-3 text-sm text-primary-800">
                       <p>
-                        Pour cette étape, notre IA peut générer automatiquement les documents marqués avec <Badge variant="warning" size="sm"><Sparkles className="w-3 h-3" /></Badge>
+                        {t('tenderResponseWizard.aiTips.line1')}{' '}
+                        <Badge variant="warning" size="sm"><Sparkles className="w-3 h-3" /></Badge>
                       </p>
                       <p>
-                        Les documents générés sont personnalisés selon votre profil d'entreprise et les exigences de l'appel d'offres.
+                        {t('tenderResponseWizard.aiTips.line2')}
                       </p>
                     </div>
                   </Card>
@@ -651,18 +720,18 @@ export function TenderResponseWizard({
                   <Card className="p-6">
                     <h3 className="font-semibold text-surface-900 mb-3 flex items-center gap-2">
                       <AlertCircle className="w-5 h-5 text-orange-500" />
-                      Points d'attention
+                      {t('tenderResponseWizard.attention.title')}
                     </h3>
                     <ul className="space-y-2 text-sm text-surface-600">
                       {currentStep.id === 'administrative' && (
                         <>
                           <li className="flex items-start gap-2">
                             <span className="text-orange-500">•</span>
-                            Vérifiez que le KBIS date de moins de 3 mois
+                            {t('tenderResponseWizard.attention.admin.1')}
                           </li>
                           <li className="flex items-start gap-2">
                             <span className="text-orange-500">•</span>
-                            L'attestation fiscale doit être à jour
+                            {t('tenderResponseWizard.attention.admin.2')}
                           </li>
                         </>
                       )}
@@ -670,11 +739,11 @@ export function TenderResponseWizard({
                         <>
                           <li className="flex items-start gap-2">
                             <span className="text-orange-500">•</span>
-                            Le mémoire technique pèse 40% de la note finale
+                            {t('tenderResponseWizard.attention.tech.1')}
                           </li>
                           <li className="flex items-start gap-2">
                             <span className="text-orange-500">•</span>
-                            Incluez des références similaires récentes
+                            {t('tenderResponseWizard.attention.tech.2')}
                           </li>
                         </>
                       )}
@@ -682,7 +751,7 @@ export function TenderResponseWizard({
                         <>
                           <li className="flex items-start gap-2">
                             <span className="text-orange-500">•</span>
-                            Mettez en avant les certifications pertinentes
+                            {t('tenderResponseWizard.attention.team.1')}
                           </li>
                         </>
                       )}
@@ -690,11 +759,11 @@ export function TenderResponseWizard({
                         <>
                           <li className="flex items-start gap-2">
                             <span className="text-orange-500">•</span>
-                            Le prix représente 60% de la note finale
+                            {t('tenderResponseWizard.attention.fin.1')}
                           </li>
                           <li className="flex items-start gap-2">
                             <span className="text-orange-500">•</span>
-                            Vérifiez que tous les postes sont chiffrés
+                            {t('tenderResponseWizard.attention.fin.2')}
                           </li>
                         </>
                       )}
@@ -740,9 +809,9 @@ export function TenderResponseWizard({
                     <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                       <Eye className="w-8 h-8 text-primary-600" />
                     </div>
-                    <h2 className="text-2xl font-bold text-surface-900">Vérification finale</h2>
+                    <h2 className="text-2xl font-bold text-surface-900">{t('tenderResponseWizard.review.title')}</h2>
                     <p className="text-surface-500 mt-2">
-                      Contrôlez que votre dossier est complet avant de le finaliser
+                      {t('tenderResponseWizard.review.subtitle')}
                     </p>
                   </div>
 
@@ -768,7 +837,10 @@ export function TenderResponseWizard({
                               <div>
                                 <p className="font-semibold text-surface-900">{step?.title}</p>
                                 <p className="text-sm text-surface-500">
-                                  {completedRequired}/{requiredDocs.length} documents obligatoires
+                                  {t('tenderResponseWizard.review.requiredDocs', {
+                                    done: completedRequired,
+                                    total: requiredDocs.length,
+                                  })}
                                 </p>
                               </div>
                             </div>
@@ -778,7 +850,7 @@ export function TenderResponseWizard({
                                 size="sm"
                                 onClick={() => setCurrentStepIndex(WIZARD_STEPS.findIndex(s => s.id === stepId))}
                               >
-                                Compléter
+                                {t('tenderResponseWizard.review.action.complete')}
                               </Button>
                             )}
                           </div>
@@ -789,13 +861,13 @@ export function TenderResponseWizard({
 
                   {/* Checklist finale */}
                   <div className="mt-8 pt-6 border-t border-surface-200">
-                    <h3 className="font-semibold text-surface-900 mb-4">Checklist finale</h3>
+                    <h3 className="font-semibold text-surface-900 mb-4">{t('tenderResponseWizard.review.checklist.title')}</h3>
                     <div className="space-y-3">
                       {[
-                        'J\'ai vérifié que tous les documents sont signés',
-                        'Les montants financiers sont corrects',
-                        'Le dossier respecte le format demandé',
-                        'J\'ai relu le mémoire technique',
+                        t('tenderResponseWizard.review.checklist.1'),
+                        t('tenderResponseWizard.review.checklist.2'),
+                        t('tenderResponseWizard.review.checklist.3'),
+                        t('tenderResponseWizard.review.checklist.4'),
                       ].map((item, idx) => (
                         <label key={idx} className="flex items-center gap-3 cursor-pointer">
                           <Checkbox
@@ -825,10 +897,10 @@ export function TenderResponseWizard({
                       <Package className="w-10 h-10 text-green-600" />
                     </div>
                     <h2 className="text-2xl font-bold text-surface-900">
-                      Votre dossier est prêt !
+                      {t('tenderResponseWizard.submit.title')}
                     </h2>
                     <p className="text-surface-500 mt-2 max-w-md mx-auto">
-                      Tous les documents ont été générés et assemblés. Vous pouvez télécharger le dossier complet.
+                      {t('tenderResponseWizard.submit.subtitle')}
                     </p>
                   </motion.div>
 
@@ -838,21 +910,21 @@ export function TenderResponseWizard({
                       <p className="font-semibold text-surface-900">
                         {Object.values(documents).flat().filter(d => d.status === 'ready' || d.status === 'uploaded').length}
                       </p>
-                      <p className="text-sm text-surface-500">Documents</p>
+                      <p className="text-sm text-surface-500">{t('tenderResponseWizard.submit.stats.documents')}</p>
                     </div>
                     <div className="p-4 bg-surface-50 rounded-xl">
                       <Award className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
                       <p className="font-semibold text-surface-900">
                         {analysis.matchScore || 0}%
                       </p>
-                      <p className="text-sm text-surface-500">Compatibilité</p>
+                      <p className="text-sm text-surface-500">{t('tenderResponseWizard.submit.stats.compatibility')}</p>
                     </div>
                     <div className="p-4 bg-surface-50 rounded-xl">
                       <CalendarCheck className="w-8 h-8 text-green-500 mx-auto mb-2" />
                       <p className="font-semibold text-surface-900">
-                        Dans les temps
+                        {t('tenderResponseWizard.submit.stats.onTime')}
                       </p>
-                      <p className="text-sm text-surface-500">Statut</p>
+                      <p className="text-sm text-surface-500">{t('tenderResponseWizard.submit.stats.status')}</p>
                     </div>
                   </div>
 
@@ -864,12 +936,12 @@ export function TenderResponseWizard({
                       className="px-12 shadow-lg shadow-primary-500/25"
                     >
                       <Download className="w-5 h-5 mr-2" />
-                      Télécharger le dossier complet
+                      {t('tenderResponseWizard.submit.action.downloadFull')}
                     </Button>
                     
                     <div className="flex items-center gap-2 text-sm text-surface-500">
                       <Lock className="w-4 h-4" />
-                      <span>Fichier ZIP sécurisé • Prêt pour dépôt</span>
+                      <span>{t('tenderResponseWizard.submit.zipNote')}</span>
                     </div>
                   </div>
                 </Card>
@@ -888,7 +960,7 @@ export function TenderResponseWizard({
             disabled={currentStepIndex === 0}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Précédent
+            {t('tenderResponseWizard.nav.previous')}
           </Button>
           
           {currentStep.id !== 'submit' && (
@@ -897,7 +969,9 @@ export function TenderResponseWizard({
               onClick={nextStep}
               disabled={['administrative', 'technical', 'team', 'financial'].includes(currentStep.id) && !canProceed()}
             >
-              {currentStep.id === 'review' ? 'Finaliser' : 'Suivant'}
+              {currentStep.id === 'review'
+                ? t('tenderResponseWizard.nav.finalize')
+                : t('tenderResponseWizard.nav.next')}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           )}

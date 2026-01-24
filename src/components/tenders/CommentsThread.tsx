@@ -4,7 +4,29 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Send, Edit2, Trash2, Reply, AtSign } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { enUS, fr } from 'date-fns/locale';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
+
+const entries = {
+  'commentsThread.replyingTo': 'Replying to a comment',
+  'commentsThread.cancel': 'Cancel',
+  'commentsThread.placeholder.addComment': 'Add a comment…',
+  'commentsThread.mention': 'Mention',
+  'commentsThread.send': 'Send',
+  'commentsThread.empty.title': 'No comments yet',
+  'commentsThread.empty.subtitle': 'Be the first to comment!',
+  'commentsThread.edited': '(edited)',
+  'commentsThread.actions.edit': 'Edit',
+  'commentsThread.actions.delete': 'Delete',
+  'commentsThread.actions.save': 'Save',
+  'commentsThread.actions.reply': 'Reply',
+  'commentsThread.confirmDelete': 'Delete this comment?',
+  'commentsThread.errors.fetch': 'Unable to fetch comments',
+  'commentsThread.errors.create': 'Unable to create the comment',
+  'commentsThread.errors.update': 'Unable to update the comment',
+  'commentsThread.errors.delete': 'Unable to delete the comment',
+} as const;
 
 interface Comment {
   id: string;
@@ -26,6 +48,10 @@ interface CommentsThreadProps {
 }
 
 export function CommentsThread({ tenderId, currentUserId }: CommentsThreadProps) {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+  const distanceLocale = locale.startsWith('fr') ? fr : enUS;
+
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -38,7 +64,7 @@ export function CommentsThread({ tenderId, currentUserId }: CommentsThreadProps)
   const fetchComments = useCallback(async () => {
     try {
       const response = await fetch(`/api/tenders/comments?tenderId=${tenderId}`);
-      if (!response.ok) throw new Error('Erreur fetch');
+      if (!response.ok) throw new Error(t('commentsThread.errors.fetch'));
 
       const data = await response.json();
       setComments(data.comments);
@@ -47,7 +73,7 @@ export function CommentsThread({ tenderId, currentUserId }: CommentsThreadProps)
     } finally {
       setLoading(false);
     }
-  }, [tenderId]);
+  }, [tenderId, t]);
 
   useEffect(() => {
     fetchComments();
@@ -103,7 +129,7 @@ export function CommentsThread({ tenderId, currentUserId }: CommentsThreadProps)
   };
 
   const handleDelete = async (commentId: string) => {
-    if (!confirm('Supprimer ce commentaire ?')) return;
+    if (!confirm(t('commentsThread.confirmDelete'))) return;
 
     try {
       const response = await fetch(`/api/tenders/comments?id=${commentId}`, {
@@ -143,13 +169,13 @@ export function CommentsThread({ tenderId, currentUserId }: CommentsThreadProps)
         {replyingTo && (
           <div className="flex items-center gap-2 text-sm text-blue-600">
             <Reply className="h-4 w-4" />
-            <span>Répondre à un commentaire</span>
+            <span>{t('commentsThread.replyingTo')}</span>
             <button
               type="button"
               onClick={() => setReplyingTo(null)}
               className="ml-auto text-gray-500 hover:text-gray-700"
             >
-              Annuler
+              {t('commentsThread.cancel')}
             </button>
           </div>
         )}
@@ -162,7 +188,7 @@ export function CommentsThread({ tenderId, currentUserId }: CommentsThreadProps)
               ref={textareaRef}
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Ajouter un commentaire..."
+              placeholder={t('commentsThread.placeholder.addComment')}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               rows={3}
             />
@@ -172,7 +198,7 @@ export function CommentsThread({ tenderId, currentUserId }: CommentsThreadProps)
                 className="text-sm text-gray-600 hover:text-blue-600 flex items-center gap-1"
               >
                 <AtSign className="h-4 w-4" />
-                Mentionner
+                {t('commentsThread.mention')}
               </button>
               <button
                 type="submit"
@@ -184,7 +210,7 @@ export function CommentsThread({ tenderId, currentUserId }: CommentsThreadProps)
                 ) : (
                   <>
                     <Send className="h-4 w-4" />
-                    Envoyer
+                    {t('commentsThread.send')}
                   </>
                 )}
               </button>
@@ -198,8 +224,8 @@ export function CommentsThread({ tenderId, currentUserId }: CommentsThreadProps)
         {comments.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-            <p>Aucun commentaire pour le moment</p>
-            <p className="text-sm mt-1">Soyez le premier à commenter !</p>
+            <p>{t('commentsThread.empty.title')}</p>
+            <p className="text-sm mt-1">{t('commentsThread.empty.subtitle')}</p>
           </div>
         ) : (
           <AnimatePresence>
@@ -216,6 +242,8 @@ export function CommentsThread({ tenderId, currentUserId }: CommentsThreadProps)
                 setEditContent={setEditContent}
                 handleEdit={handleEdit}
                 setEditingId={setEditingId}
+                t={t}
+                distanceLocale={distanceLocale}
               />
             ))}
           </AnimatePresence>
@@ -237,6 +265,8 @@ interface CommentItemProps {
   setEditContent: (content: string) => void;
   handleEdit: (id: string) => void;
   setEditingId: (id: string | null) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  distanceLocale: Locale;
   depth?: number;
 }
 
@@ -251,6 +281,8 @@ function CommentItem({
   setEditContent,
   handleEdit,
   setEditingId,
+  t,
+  distanceLocale,
   depth = 0,
 }: CommentItemProps) {
   const isOwner = comment.user.id === currentUserId;
@@ -275,9 +307,9 @@ function CommentItem({
               <div className="text-xs text-gray-500">
                 {formatDistanceToNow(new Date(comment.created_at), {
                   addSuffix: true,
-                  locale: fr,
+                  locale: distanceLocale,
                 })}
-                {comment.edited && <span className="ml-1">(modifié)</span>}
+                {comment.edited && <span className="ml-1">{t('commentsThread.edited')}</span>}
               </div>
             </div>
 
@@ -286,14 +318,14 @@ function CommentItem({
                 <button
                   onClick={() => onEdit(comment)}
                   className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-                  title="Modifier"
+                  title={t('commentsThread.actions.edit')}
                 >
                   <Edit2 className="h-3.5 w-3.5 text-gray-600" />
                 </button>
                 <button
                   onClick={() => onDelete(comment.id)}
                   className="p-1.5 hover:bg-red-100 rounded transition-colors"
-                  title="Supprimer"
+                  title={t('commentsThread.actions.delete')}
                 >
                   <Trash2 className="h-3.5 w-3.5 text-red-600" />
                 </button>
@@ -314,13 +346,13 @@ function CommentItem({
                   onClick={() => handleEdit(comment.id)}
                   className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
                 >
-                  Sauvegarder
+                  {t('commentsThread.actions.save')}
                 </button>
                 <button
                   onClick={() => setEditingId(null)}
                   className="px-3 py-1.5 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300"
                 >
-                  Annuler
+                  {t('commentsThread.cancel')}
                 </button>
               </div>
             </div>
@@ -333,7 +365,7 @@ function CommentItem({
                   className="mt-2 text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
                 >
                   <Reply className="h-3.5 w-3.5" />
-                  Répondre
+                  {t('commentsThread.actions.reply')}
                 </button>
               )}
             </>
@@ -357,6 +389,8 @@ function CommentItem({
               setEditContent={setEditContent}
               handleEdit={handleEdit}
               setEditingId={setEditingId}
+              t={t}
+              distanceLocale={distanceLocale}
               depth={depth + 1}
             />
           ))}

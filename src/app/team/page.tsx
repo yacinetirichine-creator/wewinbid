@@ -17,6 +17,22 @@ import {
 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/Sidebar';
 import { Card, Button, Badge } from '@/components/ui';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
+
+const entries = {
+  'teamPage.title': 'Team management',
+  'teamPage.description': 'Manage members and invitations',
+  'teamPage.actions.invite': 'Invite a member',
+  'teamPage.stats.activeMembers': 'Active members',
+  'teamPage.stats.pendingInvites': 'Pending invitations',
+  'teamPage.stats.admins': 'Administrators',
+  'teamPage.members.title': 'Team members',
+  'teamPage.members.empty': 'No members yet',
+  'teamPage.invites.title': 'Pending invitations',
+  'teamPage.invites.invitedOn': 'Invited on {date}',
+  'teamPage.invites.expiresOn': 'Expires on {date}',
+} as const;
 
 interface TeamMember {
   id: string;
@@ -41,6 +57,9 @@ interface Invitation {
 }
 
 export default function TeamPage() {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -113,10 +132,10 @@ export default function TeamPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <PageHeader
-        title="Gestion de l'équipe"
-        description="Gérez les membres et les invitations"
+        title={t('teamPage.title')}
+        description={t('teamPage.description')}
         action={{
-          label: 'Inviter un membre',
+          label: t('teamPage.actions.invite'),
           href: '#',
         }}
       />
@@ -131,7 +150,7 @@ export default function TeamPage() {
               </div>
               <div>
                 <div className="text-2xl font-bold">{members.length}</div>
-                <div className="text-sm text-gray-600">Membres actifs</div>
+                <div className="text-sm text-gray-600">{t('teamPage.stats.activeMembers')}</div>
               </div>
             </div>
           </Card>
@@ -143,7 +162,7 @@ export default function TeamPage() {
               </div>
               <div>
                 <div className="text-2xl font-bold">{invitations.length}</div>
-                <div className="text-sm text-gray-600">Invitations en attente</div>
+                <div className="text-sm text-gray-600">{t('teamPage.stats.pendingInvites')}</div>
               </div>
             </div>
           </Card>
@@ -157,7 +176,7 @@ export default function TeamPage() {
                 <div className="text-2xl font-bold">
                   {members.filter((m) => m.role === 'admin').length}
                 </div>
-                <div className="text-sm text-gray-600">Administrateurs</div>
+                <div className="text-sm text-gray-600">{t('teamPage.stats.admins')}</div>
               </div>
             </div>
           </Card>
@@ -167,13 +186,13 @@ export default function TeamPage() {
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Users className="h-5 w-5 text-blue-600" />
-            Membres de l'équipe
+            {t('teamPage.members.title')}
           </h3>
 
           {members.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-              <p>Aucun membre pour le moment</p>
+              <p>{t('teamPage.members.empty')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -220,7 +239,7 @@ export default function TeamPage() {
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <Mail className="h-5 w-5 text-yellow-600" />
-              Invitations en attente
+              {t('teamPage.invites.title')}
             </h3>
 
             <div className="space-y-3">
@@ -236,8 +255,9 @@ export default function TeamPage() {
                     <div>
                       <div className="font-medium">{invitation.email}</div>
                       <div className="text-sm text-gray-600">
-                        Invité le {new Date(invitation.created_at).toLocaleDateString('fr-FR')} • Expire
-                        le {new Date(invitation.expires_at).toLocaleDateString('fr-FR')}
+                        {t('teamPage.invites.invitedOn', { date: new Date(invitation.created_at).toLocaleDateString(locale) })}
+                        {' • '}
+                        {t('teamPage.invites.expiresOn', { date: new Date(invitation.expires_at).toLocaleDateString(locale) })}
                       </div>
                     </div>
                   </div>

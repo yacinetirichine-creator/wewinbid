@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -29,26 +29,158 @@ import { Button, Card, Badge, Modal, Select, Alert, Skeleton, ScoreGauge, EmptyS
 import { AppLayout, PageHeader } from '@/components/layout/Sidebar';
 import { CommentsThread } from '@/components/tenders/CommentsThread';
 import { HistoryTimeline } from '@/components/tenders/HistoryTimeline';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate, getDaysRemaining, getScoreColor } from '@/lib/utils';
 import { getCountryConfig, getRequiredDocuments } from '@/lib/countries';
 import type { Tender, TenderStatus, Document as TenderDocument } from '@/types/database';
 import toast from 'react-hot-toast';
 
-const STATUS_CONFIG: Record<TenderStatus, { label: string; color: string; icon: typeof CheckCircleIcon }> = {
-  DRAFT: { label: 'Brouillon', color: 'bg-slate-100 text-slate-700', icon: DocumentTextIcon },
-  ANALYSIS: { label: 'Analyse', color: 'bg-blue-100 text-blue-700', icon: ChartBarIcon },
-  IN_PROGRESS: { label: 'En cours', color: 'bg-amber-100 text-amber-700', icon: ClockIcon },
-  REVIEW: { label: 'Révision', color: 'bg-purple-100 text-purple-700', icon: ArrowPathIcon },
-  SUBMITTED: { label: 'Soumis', color: 'bg-cyan-100 text-cyan-700', icon: CheckCircleIcon },
-  WON: { label: 'Gagné', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircleIcon },
-  LOST: { label: 'Perdu', color: 'bg-rose-100 text-rose-700', icon: XCircleIcon },
-  ABANDONED: { label: 'Abandonné', color: 'bg-slate-100 text-slate-500', icon: XCircleIcon },
+const STATUS_CONFIG: Record<
+  TenderStatus,
+  { labelKey: string; color: string; icon: typeof CheckCircleIcon }
+> = {
+  DRAFT: { labelKey: 'tenders.detail.status.draft', color: 'bg-slate-100 text-slate-700', icon: DocumentTextIcon },
+  ANALYSIS: { labelKey: 'tenders.detail.status.analysis', color: 'bg-blue-100 text-blue-700', icon: ChartBarIcon },
+  IN_PROGRESS: { labelKey: 'tenders.detail.status.inProgress', color: 'bg-amber-100 text-amber-700', icon: ClockIcon },
+  REVIEW: { labelKey: 'tenders.detail.status.review', color: 'bg-purple-100 text-purple-700', icon: ArrowPathIcon },
+  SUBMITTED: { labelKey: 'tenders.detail.status.submitted', color: 'bg-cyan-100 text-cyan-700', icon: CheckCircleIcon },
+  WON: { labelKey: 'tenders.detail.status.won', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircleIcon },
+  LOST: { labelKey: 'tenders.detail.status.lost', color: 'bg-rose-100 text-rose-700', icon: XCircleIcon },
+  ABANDONED: { labelKey: 'tenders.detail.status.abandoned', color: 'bg-slate-100 text-slate-500', icon: XCircleIcon },
 };
 
 export default function TenderDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { locale } = useLocale();
+
+  const entries = useMemo(
+    () => ({
+      'tenders.detail.status.draft': 'Draft',
+      'tenders.detail.status.analysis': 'Analysis',
+      'tenders.detail.status.inProgress': 'In progress',
+      'tenders.detail.status.review': 'Review',
+      'tenders.detail.status.submitted': 'Submitted',
+      'tenders.detail.status.won': 'Won',
+      'tenders.detail.status.lost': 'Lost',
+      'tenders.detail.status.abandoned': 'Abandoned',
+
+      'tenders.detail.toast.mustBeLoggedIn': 'You must be signed in',
+      'tenders.detail.toast.companyNotFound': 'Company not found',
+      'tenders.detail.toast.tenderNotFoundOrDenied': 'Tender not found or access denied',
+      'tenders.detail.toast.loadError': 'Error while loading',
+      'tenders.detail.toast.loadTranslationsError': 'Error while loading translations',
+      'tenders.detail.toast.translationCreated': 'Translation to {language} created successfully',
+      'tenders.detail.toast.translationError': 'Error while translating',
+      'tenders.detail.toast.translationUpdated': 'Translation updated successfully',
+      'tenders.detail.toast.updateError': 'Error while updating',
+      'tenders.detail.toast.statusUpdated': 'Status updated',
+      'tenders.detail.toast.aiScoreCalculated': 'AI score calculated: {score}%',
+      'tenders.detail.toast.aiScoreError': 'Error while calculating',
+      'tenders.detail.toast.tenderDeleted': 'Tender deleted',
+      'tenders.detail.toast.deleteError': 'Error while deleting',
+
+      'tenders.detail.language.fr': 'French',
+      'tenders.detail.language.en': 'English',
+      'tenders.detail.language.de': 'German',
+      'tenders.detail.language.es': 'Spanish',
+      'tenders.detail.language.it': 'Italian',
+      'tenders.detail.language.pt': 'Portuguese',
+      'tenders.detail.language.nl': 'Dutch',
+      'tenders.detail.language.arMA': 'Darija (Morocco)',
+
+      'tenders.detail.quality.excellent': 'Excellent',
+      'tenders.detail.quality.good': 'Good',
+      'tenders.detail.quality.average': 'Average',
+      'tenders.detail.quality.low': 'Low',
+
+      'tenders.detail.empty.title': 'Tender not found',
+      'tenders.detail.empty.description': 'This tender does not exist or has been deleted.',
+      'tenders.detail.empty.back': 'Back to tenders',
+
+      'tenders.detail.reference': 'Reference: {reference}',
+      'tenders.detail.actions.continueResponse': 'Continue response',
+      'tenders.detail.actions.edit': 'Edit',
+
+      'tenders.detail.tabs.details': 'Details',
+      'tenders.detail.tabs.translations': 'Translations',
+      'tenders.detail.tabs.comments': 'Comments',
+      'tenders.detail.tabs.history': 'History',
+
+      'tenders.detail.type.public': 'Public procurement',
+      'tenders.detail.type.private': 'Private procurement',
+      'tenders.detail.source': 'Source',
+
+      'tenders.detail.fields.buyer': 'Buyer',
+      'tenders.detail.fields.estimatedValue': 'Estimated value',
+      'tenders.detail.fields.deadline': 'Deadline',
+      'tenders.detail.fields.daysRemaining': 'Days remaining',
+      'tenders.detail.deadline.expired': 'Expired',
+      'tenders.detail.deadline.dMinus': 'D-{days}',
+
+      'tenders.detail.documents.title': 'Documents',
+      'tenders.detail.documents.add': 'Add',
+      'tenders.detail.documents.empty': 'No documents for this tender',
+      'tenders.detail.documents.addOne': 'Add a document',
+      'tenders.detail.documents.required': 'Required documents ({type})',
+
+      'tenders.detail.translations.cardTitle': 'Translate this tender',
+      'tenders.detail.translations.cardSubtitle':
+        'Generate an automatic AI translation or create a manual translation.',
+      'tenders.detail.translations.targetLanguage': 'Target language',
+      'tenders.detail.translations.aiModel': 'AI model',
+      'tenders.detail.translations.model.gpt4': 'GPT-4 (High quality)',
+      'tenders.detail.translations.model.gpt35': 'GPT-3.5 Turbo (Fast)',
+      'tenders.detail.translations.model.claude3': 'Claude 3 (Accurate)',
+      'tenders.detail.translations.inProgress': 'Translation in progress…',
+      'tenders.detail.translations.translateWithAi': 'Translate with AI',
+      'tenders.detail.translations.alreadyExists': 'A translation already exists for this language',
+      'tenders.detail.translations.available': 'Available translations ({count})',
+      'tenders.detail.translations.none.title': 'No translations',
+      'tenders.detail.translations.none.desc': 'Create your first translation to expand the reach of this tender',
+      'tenders.detail.translations.method.ai': 'AI',
+      'tenders.detail.translations.method.manual': 'Manual',
+      'tenders.detail.translations.method.hybrid': 'Hybrid',
+      'tenders.detail.translations.form.translatedTitle': 'Translated title',
+      'tenders.detail.translations.form.translatedTitle.placeholder': 'Enter the translated title…',
+      'tenders.detail.translations.form.translatedDescription': 'Translated description',
+      'tenders.detail.translations.form.translatedDescription.placeholder': 'Enter the translated description…',
+      'tenders.detail.translations.form.qualityScore': 'Quality score: {score}%',
+      'tenders.detail.translations.form.save': 'Save',
+      'tenders.detail.translations.form.cancel': 'Cancel',
+      'tenders.detail.translations.view.title': 'Title',
+      'tenders.detail.translations.view.description': 'Description',
+      'tenders.detail.translations.view.reviewed': 'Reviewed',
+      'tenders.detail.translations.view.review': 'Review',
+
+      'tenders.detail.aiScore.title': 'AI score',
+      'tenders.detail.aiScore.calculate': 'Calculate',
+      'tenders.detail.aiScore.recalculate': 'Recalculate',
+      'tenders.detail.aiScore.estimated': 'Estimated probability of success',
+      'tenders.detail.aiScore.recommendations': 'Recommendations',
+      'tenders.detail.aiScore.empty': 'Calculate your AI compatibility score',
+      'tenders.detail.aiScore.analyze': 'Analyze',
+      'tenders.detail.aiScore.reco1': 'Strengthen the references section',
+      'tenders.detail.aiScore.reco2': 'Add quality certifications',
+      'tenders.detail.aiScore.reco3': 'Detail the proposed methodology',
+
+      'tenders.detail.buyerContact.title': 'Buyer contact',
+      'tenders.detail.notes.title': 'Notes',
+
+      'tenders.detail.modal.status.title': 'Change status',
+      'tenders.detail.modal.delete.title': 'Delete tender',
+      'tenders.detail.modal.delete.body':
+        'Are you sure you want to delete this tender? This action cannot be undone.',
+      'tenders.detail.modal.delete.cancel': 'Cancel',
+      'tenders.detail.modal.delete.confirm': 'Delete',
+    }),
+    []
+  );
+
+  const { t } = useUiTranslations(locale, entries);
+
   const [tender, setTender] = useState<Tender | null>(null);
   const [documents, setDocuments] = useState<TenderDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,7 +226,7 @@ export default function TenderDetailPage() {
       // Vérifier l'accès de l'utilisateur
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast.error('Vous devez être connecté');
+        toast.error(t('tenders.detail.toast.mustBeLoggedIn'));
         router.push('/auth/login');
         return;
       }
@@ -107,7 +239,7 @@ export default function TenderDetailPage() {
         .single();
 
       if (!memberData?.company_id) {
-        toast.error('Entreprise non trouvée');
+        toast.error(t('tenders.detail.toast.companyNotFound'));
         router.push('/tenders');
         return;
       }
@@ -122,7 +254,7 @@ export default function TenderDetailPage() {
 
       if (error) {
         if (error.code === 'PGRST116') {
-          toast.error('Appel d\'offres non trouvé ou accès refusé');
+          toast.error(t('tenders.detail.toast.tenderNotFoundOrDenied'));
           router.push('/tenders');
           return;
         }
@@ -132,11 +264,11 @@ export default function TenderDetailPage() {
       setTender(data);
     } catch (error) {
       console.error('Error fetching tender:', error);
-      toast.error('Erreur lors du chargement');
+      toast.error(t('tenders.detail.toast.loadError'));
     } finally {
       setLoading(false);
     }
-  }, [getSupabase, router, tenderId]);
+  }, [getSupabase, router, t, tenderId]);
 
   const fetchDocuments = useCallback(async () => {
     try {
@@ -164,11 +296,11 @@ export default function TenderDetailPage() {
       setTranslations(data.translations || []);
     } catch (error) {
       console.error('Error fetching translations:', error);
-      toast.error('Erreur lors du chargement des traductions');
+      toast.error(t('tenders.detail.toast.loadTranslationsError'));
     } finally {
       setLoadingTranslations(false);
     }
-  }, [tenderId]);
+  }, [t, tenderId]);
 
   useEffect(() => {
     fetchUser();
@@ -203,11 +335,11 @@ export default function TenderDetailPage() {
       }
 
       const data = await response.json();
-      toast.success(`Traduction en ${getLanguageName(selectedTargetLang)} créée avec succès`);
+      toast.success(t('tenders.detail.toast.translationCreated', { language: getLanguageName(selectedTargetLang) }));
       await fetchTranslations();
     } catch (error: any) {
       console.error('Error creating translation:', error);
-      toast.error(error.message || 'Erreur lors de la traduction');
+      toast.error(error.message || t('tenders.detail.toast.translationError'));
     } finally {
       setIsTranslating(false);
     }
@@ -230,13 +362,13 @@ export default function TenderDetailPage() {
 
       if (!response.ok) throw new Error('Failed to update translation');
 
-      toast.success('Traduction mise à jour avec succès');
+      toast.success(t('tenders.detail.toast.translationUpdated'));
       setEditingTranslation(null);
       setReviewForm({ title: '', description: '', quality_score: 0 });
       await fetchTranslations();
     } catch (error) {
       console.error('Error updating translation:', error);
-      toast.error('Erreur lors de la mise à jour');
+      toast.error(t('tenders.detail.toast.updateError'));
     }
   }
 
@@ -251,16 +383,17 @@ export default function TenderDetailPage() {
 
   function getLanguageName(code: string): string {
     const languages: Record<string, string> = {
-      'fr': 'Français',
-      'en': 'Anglais',
-      'de': 'Allemand',
-      'es': 'Espagnol',
-      'it': 'Italien',
-      'pt': 'Portugais',
-      'nl': 'Néerlandais',
-      'ar-MA': 'Darija (Maroc)',
+      fr: 'tenders.detail.language.fr',
+      en: 'tenders.detail.language.en',
+      de: 'tenders.detail.language.de',
+      es: 'tenders.detail.language.es',
+      it: 'tenders.detail.language.it',
+      pt: 'tenders.detail.language.pt',
+      nl: 'tenders.detail.language.nl',
+      'ar-MA': 'tenders.detail.language.arMA',
     };
-    return languages[code] || code.toUpperCase();
+    const key = languages[code];
+    return key ? t(key) : code.toUpperCase();
   }
 
   function getLanguageFlag(code: string): string {
@@ -285,10 +418,10 @@ export default function TenderDetailPage() {
   }
 
   function getQualityLabel(score: number): string {
-    if (score >= 90) return 'Excellente';
-    if (score >= 75) return 'Bonne';
-    if (score >= 60) return 'Moyenne';
-    return 'Faible';
+    if (score >= 90) return t('tenders.detail.quality.excellent');
+    if (score >= 75) return t('tenders.detail.quality.good');
+    if (score >= 60) return t('tenders.detail.quality.average');
+    return t('tenders.detail.quality.low');
   }
 
   async function updateStatus(newStatus: TenderStatus) {
@@ -309,10 +442,10 @@ export default function TenderDetailPage() {
 
       setTender({ ...tender, status: newStatus });
       setShowStatusModal(false);
-      toast.success('Statut mis à jour');
+      toast.success(t('tenders.detail.toast.statusUpdated'));
     } catch (error) {
       console.error('Error updating status:', error);
-      toast.error('Erreur lors de la mise à jour');
+      toast.error(t('tenders.detail.toast.updateError'));
     }
   }
 
@@ -325,9 +458,9 @@ export default function TenderDetailPage() {
       
       const score = Math.floor(Math.random() * 40) + 60; // Score entre 60 et 100
       const recommendations = [
-        'Renforcer la section références',
-        'Ajouter des certifications qualité',
-        'Détailler la méthodologie proposée',
+        t('tenders.detail.aiScore.reco1'),
+        t('tenders.detail.aiScore.reco2'),
+        t('tenders.detail.aiScore.reco3'),
       ];
 
       const { error } = await (supabase as any)
@@ -347,10 +480,10 @@ export default function TenderDetailPage() {
         ai_recommendations: recommendations,
       } : null);
 
-      toast.success(`Score IA calculé : ${score}%`);
+      toast.success(t('tenders.detail.toast.aiScoreCalculated', { score }));
     } catch (error) {
       console.error('Error calculating score:', error);
-      toast.error('Erreur lors du calcul');
+      toast.error(t('tenders.detail.toast.aiScoreError'));
     } finally {
       setIsCalculatingScore(false);
     }
@@ -366,11 +499,11 @@ export default function TenderDetailPage() {
 
       if (error) throw error;
 
-      toast.success('Appel d\'offres supprimé');
+      toast.success(t('tenders.detail.toast.tenderDeleted'));
       router.push('/tenders');
     } catch (error) {
       console.error('Error deleting tender:', error);
-      toast.error('Erreur lors de la suppression');
+      toast.error(t('tenders.detail.toast.deleteError'));
     }
   }
 
@@ -399,11 +532,11 @@ export default function TenderDetailPage() {
       <AppLayout>
         <EmptyState
           icon={<DocumentTextIcon className="w-12 h-12" />}
-          title="AO non trouvé"
-          description="Cet appel d'offres n'existe pas ou a été supprimé."
+          title={t('tenders.detail.empty.title')}
+          description={t('tenders.detail.empty.description')}
           action={
             <Link href="/tenders">
-              <Button>Retour aux AO</Button>
+              <Button>{t('tenders.detail.empty.back')}</Button>
             </Link>
           }
         />
@@ -423,7 +556,7 @@ export default function TenderDetailPage() {
     <AppLayout>
       <PageHeader
         title={tender.title}
-        description={`Référence: ${tender.reference}`}
+        description={t('tenders.detail.reference', { reference: tender.reference })}
         actions={
           <div className="flex items-center gap-2">
             {/* Bouton Continuer la réponse pour les AO en cours */}
@@ -431,20 +564,20 @@ export default function TenderDetailPage() {
               <Link href={`/tenders/${tenderId}/respond`}>
                 <Button size="sm">
                   <SparklesIcon className="w-4 h-4 mr-2" />
-                  Continuer la réponse
+                  {t('tenders.detail.actions.continueResponse')}
                 </Button>
               </Link>
             )}
             <Button variant="ghost" size="sm" onClick={() => setShowStatusModal(true)}>
               <div className={`flex items-center gap-2 px-2 py-1 rounded-full ${statusConfig.color}`}>
                 <StatusIcon className="w-4 h-4" />
-                {statusConfig.label}
+                {t(statusConfig.labelKey)}
               </div>
             </Button>
             <Link href={`/tenders/${tenderId}/edit`}>
               <Button variant="secondary" size="sm">
                 <PencilIcon className="w-4 h-4 mr-2" />
-                Modifier
+                {t('tenders.detail.actions.edit')}
               </Button>
             </Link>
             <Button variant="danger" size="sm" onClick={() => setShowDeleteModal(true)}>
@@ -469,7 +602,7 @@ export default function TenderDetailPage() {
                       : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  Détails
+                  {t('tenders.detail.tabs.details')}
                 </button>
                 <button
                   onClick={() => setActiveTab('translations')}
@@ -480,7 +613,7 @@ export default function TenderDetailPage() {
                   }`}
                 >
                   <LanguageIcon className="w-4 h-4" />
-                  Traductions
+                  {t('tenders.detail.tabs.translations')}
                   {translations.length > 0 && (
                     <Badge variant="primary" className="ml-1">{translations.length}</Badge>
                   )}
@@ -493,7 +626,7 @@ export default function TenderDetailPage() {
                       : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  Commentaires
+                  {t('tenders.detail.tabs.comments')}
                 </button>
                 <button
                   onClick={() => setActiveTab('history')}
@@ -503,7 +636,7 @@ export default function TenderDetailPage() {
                       : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  Historique
+                  {t('tenders.detail.tabs.history')}
                 </button>
               </div>
             </div>
@@ -516,7 +649,9 @@ export default function TenderDetailPage() {
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <Badge variant={tender.type === 'PUBLIC' ? 'info' : 'secondary'}>
-                          {tender.type === 'PUBLIC' ? 'Marché Public' : 'Marché Privé'}
+                          {tender.type === 'PUBLIC'
+                            ? t('tenders.detail.type.public')
+                            : t('tenders.detail.type.private')}
                         </Badge>
                         {tender.sector && (
                           <Badge variant="secondary">{tender.sector}</Badge>
@@ -530,7 +665,7 @@ export default function TenderDetailPage() {
                           className="text-primary-600 hover:text-primary-700 flex items-center gap-1 text-sm"
                         >
                           <LinkIcon className="w-4 h-4" />
-                          Source
+                          {t('tenders.detail.source')}
                         </a>
                       )}
                     </div>
@@ -541,14 +676,14 @@ export default function TenderDetailPage() {
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div>
-                        <p className="text-xs text-slate-500 mb-1">Acheteur</p>
+                        <p className="text-xs text-slate-500 mb-1">{t('tenders.detail.fields.buyer')}</p>
                         <div className="flex items-center gap-2">
                           <BuildingOfficeIcon className="w-4 h-4 text-slate-400" />
                           <span className="font-medium text-slate-900">{tender.buyer_name || '-'}</span>
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 mb-1">Valeur estimée</p>
+                        <p className="text-xs text-slate-500 mb-1">{t('tenders.detail.fields.estimatedValue')}</p>
                         <div className="flex items-center gap-2">
                           <CurrencyEuroIcon className="w-4 h-4 text-slate-400" />
                           <span className="font-medium text-slate-900">
@@ -557,7 +692,7 @@ export default function TenderDetailPage() {
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 mb-1">Date limite</p>
+                        <p className="text-xs text-slate-500 mb-1">{t('tenders.detail.fields.deadline')}</p>
                         <div className={`flex items-center gap-2 ${
                           isOverdue ? 'text-red-600' : isUrgent ? 'text-amber-600' : ''
                         }`}>
@@ -568,14 +703,16 @@ export default function TenderDetailPage() {
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 mb-1">Jours restants</p>
+                        <p className="text-xs text-slate-500 mb-1">{t('tenders.detail.fields.daysRemaining')}</p>
                         <div className={`flex items-center gap-2 ${
                           isOverdue ? 'text-red-600' : isUrgent ? 'text-amber-600' : 'text-slate-900'
                         }`}>
                           <ClockIcon className="w-4 h-4" />
                           <span className="font-medium">
                             {daysRemaining !== null ? (
-                              isOverdue ? 'Expiré' : `J-${daysRemaining}`
+                              isOverdue
+                                ? t('tenders.detail.deadline.expired')
+                                : t('tenders.detail.deadline.dMinus', { days: daysRemaining })
                             ) : '-'}
                           </span>
                         </div>
@@ -586,20 +723,20 @@ export default function TenderDetailPage() {
                   {/* Documents */}
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-slate-900">Documents</h3>
+                      <h3 className="text-lg font-semibold text-slate-900">{t('tenders.detail.documents.title')}</h3>
                       <Button variant="secondary" size="sm">
                         <PlusIcon className="w-4 h-4 mr-2" />
-                        Ajouter
+                        {t('tenders.detail.documents.add')}
                       </Button>
                     </div>
 
                     {documents.length === 0 ? (
                       <div className="text-center py-8">
                         <DocumentTextIcon className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                        <p className="text-slate-500 mb-4">Aucun document pour cet AO</p>
+                        <p className="text-slate-500 mb-4">{t('tenders.detail.documents.empty')}</p>
                         <Button variant="secondary" size="sm">
                           <PlusIcon className="w-4 h-4 mr-2" />
-                          Ajouter un document
+                          {t('tenders.detail.documents.addOne')}
                         </Button>
                       </div>
                     ) : (
@@ -629,7 +766,9 @@ export default function TenderDetailPage() {
 
                     {/* Checklist des documents requis */}
                     <div className="mt-6 pt-6 border-t border-slate-200">
-                      <h4 className="font-medium text-slate-700 mb-3">Documents requis ({tender.type})</h4>
+                      <h4 className="font-medium text-slate-700 mb-3">
+                        {t('tenders.detail.documents.required', { type: tender.type })}
+                      </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         {requiredDocs.filter(d => d.mandatory).slice(0, 8).map((doc) => {
                           const hasDoc = documents.some(d => d.type === doc.type);
@@ -664,15 +803,15 @@ export default function TenderDetailPage() {
                         <LanguageIcon className="w-6 h-6 text-white" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-slate-900 mb-2">Traduire cet appel d'offres</h3>
+                        <h3 className="font-semibold text-slate-900 mb-2">{t('tenders.detail.translations.cardTitle')}</h3>
                         <p className="text-sm text-slate-600 mb-4">
-                          Générez une traduction automatique avec IA ou créez une traduction manuelle
+                          {t('tenders.detail.translations.cardSubtitle')}
                         </p>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">
-                              Langue cible
+                              {t('tenders.detail.translations.targetLanguage')}
                             </label>
                             <select
                               value={selectedTargetLang}
@@ -680,19 +819,19 @@ export default function TenderDetailPage() {
                               className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                               disabled={isTranslating}
                             >
-                              <option value="en">🇬🇧 Anglais</option>
-                              <option value="de">🇩🇪 Allemand</option>
-                              <option value="es">🇪🇸 Espagnol</option>
-                              <option value="it">🇮🇹 Italien</option>
-                              <option value="pt">🇵🇹 Portugais</option>
-                              <option value="nl">🇳🇱 Néerlandais</option>
-                              <option value="ar-MA">🇲🇦 Darija (Maroc)</option>
+                              <option value="en">🇬🇧 {t('tenders.detail.language.en')}</option>
+                              <option value="de">🇩🇪 {t('tenders.detail.language.de')}</option>
+                              <option value="es">🇪🇸 {t('tenders.detail.language.es')}</option>
+                              <option value="it">🇮🇹 {t('tenders.detail.language.it')}</option>
+                              <option value="pt">🇵🇹 {t('tenders.detail.language.pt')}</option>
+                              <option value="nl">🇳🇱 {t('tenders.detail.language.nl')}</option>
+                              <option value="ar-MA">🇲🇦 {t('tenders.detail.language.arMA')}</option>
                             </select>
                           </div>
                           
                           <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">
-                              Modèle IA
+                              {t('tenders.detail.translations.aiModel')}
                             </label>
                             <select
                               value={selectedAiModel}
@@ -700,9 +839,9 @@ export default function TenderDetailPage() {
                               className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                               disabled={isTranslating}
                             >
-                              <option value="gpt-4">GPT-4 (Haute qualité)</option>
-                              <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Rapide)</option>
-                              <option value="claude-3">Claude 3 (Précis)</option>
+                              <option value="gpt-4">{t('tenders.detail.translations.model.gpt4')}</option>
+                              <option value="gpt-3.5-turbo">{t('tenders.detail.translations.model.gpt35')}</option>
+                              <option value="claude-3">{t('tenders.detail.translations.model.claude3')}</option>
                             </select>
                           </div>
                         </div>
@@ -715,12 +854,12 @@ export default function TenderDetailPage() {
                           {isTranslating ? (
                             <>
                               <ArrowPathIcon className="w-4 h-4 mr-2 animate-spin" />
-                              Traduction en cours...
+                              {t('tenders.detail.translations.inProgress')}
                             </>
                           ) : (
                             <>
                               <SparklesIcon className="w-4 h-4 mr-2" />
-                              Traduire avec IA
+                              {t('tenders.detail.translations.translateWithAi')}
                             </>
                           )}
                         </Button>
@@ -728,7 +867,7 @@ export default function TenderDetailPage() {
                         {translations.some(t => t.target_lang === selectedTargetLang) && (
                           <p className="text-sm text-amber-600 mt-2 flex items-center gap-2">
                             <ExclamationTriangleIcon className="w-4 h-4" />
-                            Une traduction existe déjà pour cette langue
+                            {t('tenders.detail.translations.alreadyExists')}
                           </p>
                         )}
                       </div>
@@ -739,7 +878,7 @@ export default function TenderDetailPage() {
                   <div>
                     <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
                       <LanguageIcon className="w-5 h-5 text-indigo-600" />
-                      Traductions disponibles ({translations.length})
+                      {t('tenders.detail.translations.available', { count: translations.length })}
                     </h3>
 
                     {loadingTranslations ? (
@@ -751,9 +890,9 @@ export default function TenderDetailPage() {
                     ) : translations.length === 0 ? (
                       <div className="text-center py-12 bg-slate-50 rounded-lg border-2 border-dashed border-slate-300">
                         <LanguageIcon className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                        <h4 className="font-medium text-slate-900 mb-2">Aucune traduction</h4>
+                        <h4 className="font-medium text-slate-900 mb-2">{t('tenders.detail.translations.none.title')}</h4>
                         <p className="text-sm text-slate-500">
-                          Créez votre première traduction pour étendre la portée de cet AO
+                          {t('tenders.detail.translations.none.desc')}
                         </p>
                       </div>
                     ) : (
@@ -789,17 +928,17 @@ export default function TenderDetailPage() {
                                   {translation.translation_method === 'AI' ? (
                                     <span className="flex items-center gap-1">
                                       <SparklesIcon className="w-3 h-3" />
-                                      IA
+                                      {t('tenders.detail.translations.method.ai')}
                                     </span>
                                   ) : translation.translation_method === 'MANUAL' ? (
                                     <span className="flex items-center gap-1">
                                       <PencilIcon className="w-3 h-3" />
-                                      Manuelle
+                                      {t('tenders.detail.translations.method.manual')}
                                     </span>
                                   ) : (
                                     <span className="flex items-center gap-1">
                                       <CheckIcon className="w-3 h-3" />
-                                      Hybride
+                                      {t('tenders.detail.translations.method.hybrid')}
                                     </span>
                                   )}
                                 </Badge>
@@ -820,33 +959,33 @@ export default function TenderDetailPage() {
                                 <div className="space-y-4">
                                   <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                                      Titre traduit
+                                      {t('tenders.detail.translations.form.translatedTitle')}
                                     </label>
                                     <input
                                       type="text"
                                       value={reviewForm.title}
                                       onChange={(e) => setReviewForm({ ...reviewForm, title: e.target.value })}
                                       className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                      placeholder="Entrez le titre traduit..."
+                                      placeholder={t('tenders.detail.translations.form.translatedTitle.placeholder')}
                                     />
                                   </div>
 
                                   <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                                      Description traduite
+                                      {t('tenders.detail.translations.form.translatedDescription')}
                                     </label>
                                     <textarea
                                       value={reviewForm.description}
                                       onChange={(e) => setReviewForm({ ...reviewForm, description: e.target.value })}
                                       rows={6}
                                       className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
-                                      placeholder="Entrez la description traduite..."
+                                      placeholder={t('tenders.detail.translations.form.translatedDescription.placeholder')}
                                     />
                                   </div>
 
                                   <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                                      Score de qualité: {reviewForm.quality_score}%
+                                      {t('tenders.detail.translations.form.qualityScore', { score: reviewForm.quality_score })}
                                     </label>
                                     <input
                                       type="range"
@@ -867,7 +1006,7 @@ export default function TenderDetailPage() {
                                   <div className="flex gap-2 pt-2">
                                     <Button onClick={updateTranslation} variant="primary" size="sm">
                                       <CheckIcon className="w-4 h-4 mr-2" />
-                                      Enregistrer
+                                      {t('tenders.detail.translations.form.save')}
                                     </Button>
                                     <Button 
                                       onClick={() => {
@@ -877,7 +1016,7 @@ export default function TenderDetailPage() {
                                       variant="ghost" 
                                       size="sm"
                                     >
-                                      Annuler
+                                      {t('tenders.detail.translations.form.cancel')}
                                     </Button>
                                   </div>
                                 </div>
@@ -885,7 +1024,7 @@ export default function TenderDetailPage() {
                                 // View Mode
                                 <div className="space-y-3">
                                   <div>
-                                    <p className="text-xs text-slate-500 mb-1">Titre</p>
+                                    <p className="text-xs text-slate-500 mb-1">{t('tenders.detail.translations.view.title')}</p>
                                     <p className="font-medium text-slate-900">
                                       {translation.title_translated || tender.title}
                                     </p>
@@ -893,7 +1032,7 @@ export default function TenderDetailPage() {
 
                                   {translation.description_translated && (
                                     <div>
-                                      <p className="text-xs text-slate-500 mb-1">Description</p>
+                                      <p className="text-xs text-slate-500 mb-1">{t('tenders.detail.translations.view.description')}</p>
                                       <p className="text-sm text-slate-700 line-clamp-3">
                                         {translation.description_translated}
                                       </p>
@@ -911,7 +1050,7 @@ export default function TenderDetailPage() {
                                       {translation.reviewed_by && (
                                         <span className="flex items-center gap-1">
                                           <CheckCircleIcon className="w-3 h-3 text-emerald-500" />
-                                          Révisé
+                                          {t('tenders.detail.translations.view.reviewed')}
                                         </span>
                                       )}
                                       <span>{formatDate(translation.created_at)}</span>
@@ -923,7 +1062,7 @@ export default function TenderDetailPage() {
                                       size="sm"
                                     >
                                       <PencilIcon className="w-4 h-4 mr-2" />
-                                      Réviser
+                                      {t('tenders.detail.translations.view.review')}
                                     </Button>
                                   </div>
                                 </div>
@@ -953,7 +1092,7 @@ export default function TenderDetailPage() {
           {/* Score IA */}
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-slate-900">Score IA</h3>
+              <h3 className="font-semibold text-slate-900">{t('tenders.detail.aiScore.title')}</h3>
               <Button 
                 variant="ghost" 
                 size="sm"
@@ -961,7 +1100,7 @@ export default function TenderDetailPage() {
                 loading={isCalculatingScore}
               >
                 <SparklesIcon className="w-4 h-4 mr-1" />
-                {tender.ai_score ? 'Recalculer' : 'Calculer'}
+                {tender.ai_score ? t('tenders.detail.aiScore.recalculate') : t('tenders.detail.aiScore.calculate')}
               </Button>
             </div>
 
@@ -969,13 +1108,13 @@ export default function TenderDetailPage() {
               <div className="text-center">
                 <ScoreGauge score={tender.ai_score} size="lg" />
                 <p className="text-sm text-slate-500 mt-2">
-                  Probabilité de succès estimée
+                  {t('tenders.detail.aiScore.estimated')}
                 </p>
 
                 {tender.ai_recommendations && tender.ai_recommendations.length > 0 && (
                   <div className="mt-4 pt-4 border-t border-slate-200 text-left">
                     <h4 className="text-sm font-medium text-slate-700 mb-2">
-                      Recommandations
+                      {t('tenders.detail.aiScore.recommendations')}
                     </h4>
                     <ul className="space-y-2">
                       {tender.ai_recommendations.map((rec, i) => (
@@ -992,7 +1131,7 @@ export default function TenderDetailPage() {
               <div className="text-center py-6">
                 <SparklesIcon className="w-10 h-10 text-slate-300 mx-auto mb-3" />
                 <p className="text-sm text-slate-500 mb-4">
-                  Calculez votre score de compatibilité IA
+                  {t('tenders.detail.aiScore.empty')}
                 </p>
                 <Button 
                   onClick={calculateAIScore}
@@ -1000,7 +1139,7 @@ export default function TenderDetailPage() {
                   className="bg-gradient-to-r from-primary-600 to-secondary-600"
                 >
                   <SparklesIcon className="w-4 h-4 mr-2" />
-                  Analyser
+                  {t('tenders.detail.aiScore.analyze')}
                 </Button>
               </div>
             )}
@@ -1009,7 +1148,7 @@ export default function TenderDetailPage() {
           {/* Contact acheteur */}
           {(tender.buyer_contact || tender.buyer_email || tender.buyer_phone) && (
             <Card className="p-6">
-              <h3 className="font-semibold text-slate-900 mb-4">Contact acheteur</h3>
+              <h3 className="font-semibold text-slate-900 mb-4">{t('tenders.detail.buyerContact.title')}</h3>
               <div className="space-y-3">
                 {tender.buyer_contact && (
                   <div className="flex items-center gap-3">
@@ -1036,7 +1175,7 @@ export default function TenderDetailPage() {
           {/* Notes */}
           {tender.notes && (
             <Card className="p-6">
-              <h3 className="font-semibold text-slate-900 mb-4">Notes</h3>
+              <h3 className="font-semibold text-slate-900 mb-4">{t('tenders.detail.notes.title')}</h3>
               <p className="text-sm text-slate-600 whitespace-pre-wrap">{tender.notes}</p>
             </Card>
           )}
@@ -1047,7 +1186,7 @@ export default function TenderDetailPage() {
       <Modal
         isOpen={showStatusModal}
         onClose={() => setShowStatusModal(false)}
-        title="Changer le statut"
+        title={t('tenders.detail.modal.status.title')}
       >
         <div className="space-y-3">
           {Object.entries(STATUS_CONFIG).map(([status, config]) => {
@@ -1065,7 +1204,7 @@ export default function TenderDetailPage() {
                 <div className={`p-2 rounded-lg ${config.color}`}>
                   <Icon className="w-4 h-4" />
                 </div>
-                <span className="font-medium text-slate-900">{config.label}</span>
+                <span className="font-medium text-slate-900">{t(config.labelKey)}</span>
                 {tender.status === status && (
                   <CheckCircleIcon className="w-5 h-5 text-primary-600 ml-auto" />
                 )}
@@ -1079,17 +1218,17 @@ export default function TenderDetailPage() {
       <Modal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        title="Supprimer l'appel d'offres"
+        title={t('tenders.detail.modal.delete.title')}
       >
         <p className="text-slate-600 mb-6">
-          Êtes-vous sûr de vouloir supprimer cet appel d'offres ? Cette action est irréversible.
+          {t('tenders.detail.modal.delete.body')}
         </p>
         <div className="flex justify-end gap-3">
           <Button variant="ghost" onClick={() => setShowDeleteModal(false)}>
-            Annuler
+            {t('tenders.detail.modal.delete.cancel')}
           </Button>
           <Button variant="danger" onClick={deleteTender}>
-            Supprimer
+            {t('tenders.detail.modal.delete.confirm')}
           </Button>
         </div>
       </Modal>

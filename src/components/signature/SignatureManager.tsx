@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardHeader, CardContent } from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
-import SignaturePad from '@/components/signature/SignaturePad';
 import {
   FileSignature,
   Plus,
@@ -24,6 +23,57 @@ import {
   Calendar,
   AlertTriangle,
 } from 'lucide-react';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
+
+const entries = {
+  'signatureManager.title': 'Electronic signatures',
+  'signatureManager.subtitle': 'Manage signature requests for your documents',
+  'signatureManager.actions.newRequest': 'New request',
+  'signatureManager.empty.title': 'No signature requests',
+  'signatureManager.empty.subtitle': 'Create your first signature request for your documents',
+  'signatureManager.empty.actions.create': 'Create a request',
+  'signatureManager.signersCount': '{signed}/{total} signers',
+  'signatureManager.expiresOn': 'Expires on {date}',
+
+  'signatureManager.status.draft': 'Draft',
+  'signatureManager.status.pending': 'Pending',
+  'signatureManager.status.partially_signed': 'Partially signed',
+  'signatureManager.status.completed': 'Completed',
+  'signatureManager.status.cancelled': 'Cancelled',
+  'signatureManager.status.expired': 'Expired',
+
+  'signatureManager.signerStatus.pending': 'Pending',
+  'signatureManager.signerStatus.notified': 'Notified',
+  'signatureManager.signerStatus.viewed': 'Viewed',
+  'signatureManager.signerStatus.signed': 'Signed',
+  'signatureManager.signerStatus.declined': 'Declined',
+  'signatureManager.signerStatus.expired': 'Expired',
+
+  'signatureManager.createModal.title': 'New signature request',
+  'signatureManager.createModal.fields.title.label': 'Request title',
+  'signatureManager.createModal.fields.title.placeholder': 'e.g., Service contract',
+  'signatureManager.createModal.fields.description.label': 'Description (optional)',
+  'signatureManager.createModal.fields.description.placeholder': 'Request description…',
+  'signatureManager.createModal.fields.signers.label': 'Signers',
+  'signatureManager.createModal.fields.signer.email.placeholder': 'Email',
+  'signatureManager.createModal.fields.signer.name.placeholder': 'Full name',
+  'signatureManager.createModal.actions.addSigner': 'Add a signer',
+  'signatureManager.createModal.fields.sendImmediately': 'Send immediately to signers',
+  'signatureManager.createModal.actions.cancel': 'Cancel',
+  'signatureManager.createModal.actions.createAndSend': 'Create and send',
+  'signatureManager.createModal.actions.createDraft': 'Create draft',
+
+  'signatureManager.detail.status.title': 'Status',
+  'signatureManager.detail.createdOn': 'Created on',
+  'signatureManager.detail.expiresOn': 'Expires on',
+  'signatureManager.detail.signers.title': 'Signers ({count})',
+  'signatureManager.detail.actions.remind': 'Send reminder',
+  'signatureManager.detail.actions.downloadSigned': 'Download signed document',
+  'signatureManager.detail.actions.close': 'Close',
+} as const;
+
+type TFunction = (key: keyof typeof entries, vars?: Record<string, any>) => string;
 
 interface Signer {
   id?: string;
@@ -52,6 +102,9 @@ interface SignatureManagerProps {
 }
 
 export function SignatureManager({ tenderId, onRequestCreated }: SignatureManagerProps) {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+
   const [requests, setRequests] = useState<SignatureRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -82,32 +135,32 @@ export function SignatureManager({ tenderId, onRequestCreated }: SignatureManage
   const getStatusConfig = (status: SignatureRequest['status']) => {
     const configs = {
       draft: {
-        label: 'Brouillon',
+        label: t('signatureManager.status.draft'),
         color: 'bg-surface-100 text-surface-700 dark:bg-surface-700 dark:text-surface-300',
         icon: FileText,
       },
       pending: {
-        label: 'En attente',
+        label: t('signatureManager.status.pending'),
         color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
         icon: Clock,
       },
       partially_signed: {
-        label: 'Partiellement signé',
+        label: t('signatureManager.status.partially_signed'),
         color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
         icon: Users,
       },
       completed: {
-        label: 'Complété',
+        label: t('signatureManager.status.completed'),
         color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300',
         icon: CheckCircle,
       },
       cancelled: {
-        label: 'Annulé',
+        label: t('signatureManager.status.cancelled'),
         color: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
         icon: XCircle,
       },
       expired: {
-        label: 'Expiré',
+        label: t('signatureManager.status.expired'),
         color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300',
         icon: AlertTriangle,
       },
@@ -117,12 +170,12 @@ export function SignatureManager({ tenderId, onRequestCreated }: SignatureManage
 
   const getSignerStatusBadge = (status: Signer['status']) => {
     const configs = {
-      pending: { label: 'En attente', variant: 'default' as const },
-      notified: { label: 'Notifié', variant: 'info' as const },
-      viewed: { label: 'Consulté', variant: 'warning' as const },
-      signed: { label: 'Signé', variant: 'success' as const },
-      declined: { label: 'Refusé', variant: 'danger' as const },
-      expired: { label: 'Expiré', variant: 'default' as const },
+      pending: { label: t('signatureManager.signerStatus.pending'), variant: 'default' as const },
+      notified: { label: t('signatureManager.signerStatus.notified'), variant: 'info' as const },
+      viewed: { label: t('signatureManager.signerStatus.viewed'), variant: 'warning' as const },
+      signed: { label: t('signatureManager.signerStatus.signed'), variant: 'success' as const },
+      declined: { label: t('signatureManager.signerStatus.declined'), variant: 'danger' as const },
+      expired: { label: t('signatureManager.signerStatus.expired'), variant: 'default' as const },
     };
     return configs[status || 'pending'];
   };
@@ -191,15 +244,15 @@ export function SignatureManager({ tenderId, onRequestCreated }: SignatureManage
         <div>
           <h2 className="text-lg font-semibold text-surface-900 dark:text-surface-100 flex items-center gap-2">
             <FileSignature className="h-5 w-5 text-primary-500" />
-            Signatures électroniques
+            {t('signatureManager.title')}
           </h2>
           <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
-            Gérez les demandes de signature pour vos documents
+            {t('signatureManager.subtitle')}
           </p>
         </div>
         <Button onClick={() => setShowCreateModal(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nouvelle demande
+          {t('signatureManager.actions.newRequest')}
         </Button>
       </div>
 
@@ -208,14 +261,14 @@ export function SignatureManager({ tenderId, onRequestCreated }: SignatureManage
         <Card className="p-8 text-center">
           <FileSignature className="h-12 w-12 mx-auto text-surface-300 dark:text-surface-600 mb-4" />
           <h3 className="text-lg font-medium text-surface-900 dark:text-surface-100 mb-2">
-            Aucune demande de signature
+            {t('signatureManager.empty.title')}
           </h3>
           <p className="text-surface-500 dark:text-surface-400 mb-4">
-            Créez votre première demande de signature pour vos documents
+            {t('signatureManager.empty.subtitle')}
           </p>
           <Button onClick={() => setShowCreateModal(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Créer une demande
+            {t('signatureManager.empty.actions.create')}
           </Button>
         </Card>
       ) : (
@@ -253,7 +306,7 @@ export function SignatureManager({ tenderId, onRequestCreated }: SignatureManage
                       <div className="flex items-center gap-4 text-xs text-surface-400 dark:text-surface-500">
                         <span className="flex items-center gap-1">
                           <Users className="h-3.5 w-3.5" />
-                          {signedCount}/{request.signers.length} signataires
+                          {t('signatureManager.signersCount', { signed: signedCount, total: request.signers.length })}
                         </span>
                         {request.document_name && (
                           <span className="flex items-center gap-1">
@@ -264,7 +317,7 @@ export function SignatureManager({ tenderId, onRequestCreated }: SignatureManage
                         {request.expires_at && (
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3.5 w-3.5" />
-                            Expire le {new Date(request.expires_at).toLocaleDateString('fr-FR')}
+                            {t('signatureManager.expiresOn', { date: new Date(request.expires_at).toLocaleDateString(locale) })}
                           </span>
                         )}
                       </div>
@@ -318,6 +371,7 @@ export function SignatureManager({ tenderId, onRequestCreated }: SignatureManage
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreateRequest}
+        t={t}
       />
 
       {/* Modal de détail */}
@@ -328,6 +382,9 @@ export function SignatureManager({ tenderId, onRequestCreated }: SignatureManage
           onClose={() => setSelectedRequest(null)}
           onRemind={sendReminder}
           onRefresh={fetchRequests}
+          t={t}
+          locale={locale}
+          getStatusConfig={getStatusConfig}
         />
       )}
     </div>
@@ -346,9 +403,10 @@ interface CreateSignatureModalProps {
     document_name?: string;
     send_immediately: boolean;
   }) => void;
+  t: TFunction;
 }
 
-function CreateSignatureModal({ isOpen, onClose, onSubmit }: CreateSignatureModalProps) {
+function CreateSignatureModal({ isOpen, onClose, onSubmit, t }: CreateSignatureModalProps) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -395,46 +453,46 @@ function CreateSignatureModal({ isOpen, onClose, onSubmit }: CreateSignatureModa
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Nouvelle demande de signature" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('signatureManager.createModal.title')} size="lg">
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
-          label="Titre de la demande"
+          label={t('signatureManager.createModal.fields.title.label')}
           value={formData.title}
           onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-          placeholder="Ex: Contrat de prestation"
+          placeholder={t('signatureManager.createModal.fields.title.placeholder')}
           required
         />
 
         <div>
           <label className="block text-sm font-medium text-surface-700 dark:text-surface-200 mb-1.5">
-            Description (optionnel)
+            {t('signatureManager.createModal.fields.description.label')}
           </label>
           <textarea
             value={formData.description}
             onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
             rows={2}
             className="w-full px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 resize-none"
-            placeholder="Description de la demande..."
+            placeholder={t('signatureManager.createModal.fields.description.placeholder')}
           />
         </div>
 
         {/* Signataires */}
         <div>
           <label className="block text-sm font-medium text-surface-700 dark:text-surface-200 mb-2">
-            Signataires
+            {t('signatureManager.createModal.fields.signers.label')}
           </label>
           <div className="space-y-3">
             {signers.map((signer, index) => (
               <div key={index} className="flex items-center gap-2">
                 <Input
-                  placeholder="Email"
+                  placeholder={t('signatureManager.createModal.fields.signer.email.placeholder')}
                   type="email"
                   value={signer.email}
                   onChange={(e) => updateSigner(index, 'email', e.target.value)}
                   className="flex-1"
                 />
                 <Input
-                  placeholder="Nom complet"
+                  placeholder={t('signatureManager.createModal.fields.signer.name.placeholder')}
                   value={signer.name}
                   onChange={(e) => updateSigner(index, 'name', e.target.value)}
                   className="flex-1"
@@ -460,7 +518,7 @@ function CreateSignatureModal({ isOpen, onClose, onSubmit }: CreateSignatureModa
             className="mt-2"
           >
             <Plus className="h-4 w-4 mr-1" />
-            Ajouter un signataire
+            {t('signatureManager.createModal.actions.addSigner')}
           </Button>
         </div>
 
@@ -472,17 +530,19 @@ function CreateSignatureModal({ isOpen, onClose, onSubmit }: CreateSignatureModa
             className="w-4 h-4 rounded border-surface-300 text-primary-600 focus:ring-primary-500"
           />
           <span className="text-sm text-surface-700 dark:text-surface-200">
-            Envoyer immédiatement aux signataires
+            {t('signatureManager.createModal.fields.sendImmediately')}
           </span>
         </label>
 
         <div className="flex justify-end gap-2 pt-4 border-t border-surface-200 dark:border-surface-700">
           <Button type="button" variant="ghost" onClick={onClose}>
-            Annuler
+            {t('signatureManager.createModal.actions.cancel')}
           </Button>
           <Button type="submit" isLoading={saving}>
             <Send className="h-4 w-4 mr-2" />
-            {formData.send_immediately ? 'Créer et envoyer' : 'Créer le brouillon'}
+            {formData.send_immediately
+              ? t('signatureManager.createModal.actions.createAndSend')
+              : t('signatureManager.createModal.actions.createDraft')}
           </Button>
         </div>
       </form>
@@ -497,6 +557,9 @@ interface SignatureDetailModalProps {
   onClose: () => void;
   onRemind: (requestId: string, signerId: string) => void;
   onRefresh: () => void;
+  t: TFunction;
+  locale: string;
+  getStatusConfig: (status: SignatureRequest['status']) => { label: string; color: string; icon: any };
 }
 
 function SignatureDetailModal({
@@ -505,7 +568,12 @@ function SignatureDetailModal({
   onClose,
   onRemind,
   onRefresh,
+  t,
+  locale,
+  getStatusConfig,
 }: SignatureDetailModalProps) {
+  const statusConfig = getStatusConfig(request.status);
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={request.title} size="lg">
       <div className="space-y-6">
@@ -519,22 +587,22 @@ function SignatureDetailModal({
         <div className="p-4 bg-surface-50 dark:bg-surface-800 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-sm text-surface-500 dark:text-surface-400">Statut</span>
+              <span className="text-sm text-surface-500 dark:text-surface-400">{t('signatureManager.detail.status.title')}</span>
               <p className="font-medium text-surface-900 dark:text-surface-100 capitalize">
-                {request.status.replace('_', ' ')}
+                {statusConfig.label}
               </p>
             </div>
             <div>
-              <span className="text-sm text-surface-500 dark:text-surface-400">Créé le</span>
+              <span className="text-sm text-surface-500 dark:text-surface-400">{t('signatureManager.detail.createdOn')}</span>
               <p className="font-medium text-surface-900 dark:text-surface-100">
-                {new Date(request.created_at).toLocaleDateString('fr-FR')}
+                {new Date(request.created_at).toLocaleDateString(locale)}
               </p>
             </div>
             {request.expires_at && (
               <div>
-                <span className="text-sm text-surface-500 dark:text-surface-400">Expire le</span>
+                <span className="text-sm text-surface-500 dark:text-surface-400">{t('signatureManager.detail.expiresOn')}</span>
                 <p className="font-medium text-surface-900 dark:text-surface-100">
-                  {new Date(request.expires_at).toLocaleDateString('fr-FR')}
+                  {new Date(request.expires_at).toLocaleDateString(locale)}
                 </p>
               </div>
             )}
@@ -544,17 +612,17 @@ function SignatureDetailModal({
         {/* Liste des signataires */}
         <div>
           <h4 className="text-sm font-medium text-surface-700 dark:text-surface-200 mb-3">
-            Signataires ({request.signers.length})
+            {t('signatureManager.detail.signers.title', { count: request.signers.length })}
           </h4>
           <div className="space-y-3">
             {request.signers.map((signer) => {
               const statusBadge = {
-                pending: { label: 'En attente', variant: 'default' as const, icon: Clock },
-                notified: { label: 'Notifié', variant: 'info' as const, icon: Mail },
-                viewed: { label: 'Consulté', variant: 'warning' as const, icon: Eye },
-                signed: { label: 'Signé', variant: 'success' as const, icon: CheckCircle },
-                declined: { label: 'Refusé', variant: 'danger' as const, icon: XCircle },
-                expired: { label: 'Expiré', variant: 'default' as const, icon: AlertTriangle },
+                pending: { label: t('signatureManager.signerStatus.pending'), variant: 'default' as const, icon: Clock },
+                notified: { label: t('signatureManager.signerStatus.notified'), variant: 'info' as const, icon: Mail },
+                viewed: { label: t('signatureManager.signerStatus.viewed'), variant: 'warning' as const, icon: Eye },
+                signed: { label: t('signatureManager.signerStatus.signed'), variant: 'success' as const, icon: CheckCircle },
+                declined: { label: t('signatureManager.signerStatus.declined'), variant: 'danger' as const, icon: XCircle },
+                expired: { label: t('signatureManager.signerStatus.expired'), variant: 'default' as const, icon: AlertTriangle },
               }[signer.status || 'pending'];
               const StatusIcon = statusBadge.icon;
 
@@ -588,7 +656,7 @@ function SignatureDetailModal({
                         variant="ghost"
                         size="sm"
                         onClick={() => onRemind(request.id, signer.id!)}
-                        title="Envoyer un rappel"
+                        title={t('signatureManager.detail.actions.remind')}
                       >
                         <RefreshCw className="h-4 w-4" />
                       </Button>
@@ -605,11 +673,11 @@ function SignatureDetailModal({
           {request.status === 'completed' && (
             <Button variant="outline">
               <Download className="h-4 w-4 mr-2" />
-              Télécharger le document signé
+              {t('signatureManager.detail.actions.downloadSigned')}
             </Button>
           )}
           <Button variant="ghost" onClick={onClose}>
-            Fermer
+            {t('signatureManager.detail.actions.close')}
           </Button>
         </div>
       </div>

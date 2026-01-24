@@ -6,6 +6,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { NewSidebar } from './NewSidebar';
 import { NewTopBar } from './NewTopBar';
 import { createClient } from '@/lib/supabase/client';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
+
+const entries = {
+  'layout.footer.productOf': 'Product of {company}',
+  'layout.footer.support': 'Support',
+  'layout.footer.privacy': 'Privacy',
+  'layout.footer.terms': 'Terms',
+} as const;
 
 interface User {
   name: string;
@@ -37,6 +46,9 @@ export function NewAppLayout({
   headerActions,
   noPadding = false 
 }: NewAppLayoutProps) {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
   
   const getSupabase = useCallback(() => {
@@ -140,12 +152,12 @@ export function NewAppLayout({
           <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
              <span>© {new Date().getFullYear()} WeWinBid</span>
              <span className="w-1 h-1 rounded-full bg-slate-300" />
-             <span>Product of JARVIS SAS</span>
+             <span>{t('layout.footer.productOf', { company: 'JARVIS SAS' })}</span>
           </div>
           <div className="flex gap-4 text-xs font-medium text-slate-500">
-             <a href="#" className="hover:text-primary-600 transition-colors">Support</a>
-             <a href="#" className="hover:text-primary-600 transition-colors">Privacy</a>
-             <a href="#" className="hover:text-primary-600 transition-colors">Terms</a>
+             <a href="#" className="hover:text-primary-600 transition-colors">{t('layout.footer.support')}</a>
+             <a href="#" className="hover:text-primary-600 transition-colors">{t('layout.footer.privacy')}</a>
+             <a href="#" className="hover:text-primary-600 transition-colors">{t('layout.footer.terms')}</a>
           </div>
         </div>
       </footer>

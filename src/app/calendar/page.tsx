@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import CalendarView from '@/components/CalendarView';
 import { NewAppLayout as AppLayout } from '@/components/layout/NewAppLayout';
 import { Download, Settings, Calendar, X } from 'lucide-react';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 type CalendarEvent = {
   id: string;
@@ -22,7 +24,63 @@ type CalendarEvent = {
   is_team_event: boolean;
 };
 
+type UiT = (key: string, vars?: Record<string, any>) => string;
+
 export default function CalendarPage() {
+  const { locale } = useLocale();
+  const entries = useMemo(
+    () => ({
+      'calendar.pageTitle': 'Calendar',
+      'calendar.header.title': 'Calendar',
+      'calendar.header.subtitle': 'Manage your deadlines, meetings and reminders',
+
+      'calendar.export.error': 'Error exporting calendar',
+
+      'calendar.event.teamBadge': 'Team event',
+      'calendar.event.descriptionLabel': 'Description',
+      'calendar.event.dateTimeLabel': 'Date & time',
+      'calendar.event.associatedTenderLabel': 'Associated tender',
+      'calendar.event.deleteConfirm': 'Are you sure you want to delete this event?',
+      'calendar.event.deleteError': 'Error while deleting',
+      'calendar.event.deleting': 'Deleting…',
+      'calendar.event.delete': 'Delete',
+
+      'calendar.create.title': 'New event',
+      'calendar.create.field.title': 'Title *',
+      'calendar.create.field.description': 'Description',
+      'calendar.create.field.type': 'Event type *',
+      'calendar.create.field.start': 'Start date *',
+      'calendar.create.field.end': 'End date',
+      'calendar.create.field.allDay': 'All-day event',
+      'calendar.create.field.teamEvent': 'Team event',
+      'calendar.create.field.color': 'Color',
+      'calendar.create.cancel': 'Cancel',
+      'calendar.create.creating': 'Creating…',
+      'calendar.create.create': 'Create',
+      'calendar.create.error': 'Error while creating',
+
+      'calendar.eventType.deadline': 'Deadline',
+      'calendar.eventType.meeting': 'Meeting',
+      'calendar.eventType.reminder': 'Reminder',
+      'calendar.eventType.milestone': 'Milestone',
+      'calendar.eventType.custom': 'Custom',
+
+      'calendar.settings.title': 'Calendar settings',
+      'calendar.settings.google.title': 'Google Calendar',
+      'calendar.settings.google.subtitle': 'Sync your events with Google Calendar',
+      'calendar.settings.google.connect': 'Connect Google Calendar',
+      'calendar.settings.google.connectError': 'Error connecting to Google Calendar',
+      'calendar.settings.google.syncing': 'Syncing…',
+      'calendar.settings.google.syncNow': 'Sync now',
+      'calendar.settings.google.syncError': 'Error while syncing',
+      'calendar.settings.google.syncSuccess': 'Sync successful!\nImported: {imported}\nExported: {exported}',
+
+      'calendar.common.close': 'Close',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
+
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -53,7 +111,7 @@ export default function CalendarPage() {
       document.body.removeChild(a);
     } catch (error) {
       console.error('Export error:', error);
-      alert('Erreur lors de l\'exportation du calendrier');
+      alert(t('calendar.export.error'));
     }
   };
 
@@ -62,7 +120,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <AppLayout pageTitle="Calendrier">
+    <AppLayout pageTitle={t('calendar.pageTitle')}>
     <div className="bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b rounded-xl mb-6">
@@ -71,9 +129,9 @@ export default function CalendarPage() {
             <div className="flex items-center gap-3">
               <Calendar className="w-8 h-8 text-blue-600" />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Calendrier</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{t('calendar.header.title')}</h1>
                 <p className="text-sm text-gray-500 mt-1">
-                  Gérez vos deadlines, réunions et rappels
+                  {t('calendar.header.subtitle')}
                 </p>
               </div>
             </div>
@@ -95,6 +153,8 @@ export default function CalendarPage() {
       {showEventModal && selectedEvent && (
         <EventDetailsModal
           event={selectedEvent}
+          locale={locale}
+          t={t}
           onClose={() => {
             setShowEventModal(false);
             setSelectedEvent(null);
@@ -106,6 +166,7 @@ export default function CalendarPage() {
       {showCreateModal && (
         <CreateEventModal
           initialDate={createDate || new Date()}
+          t={t}
           onClose={() => {
             setShowCreateModal(false);
             setCreateDate(null);
@@ -121,6 +182,7 @@ export default function CalendarPage() {
       {/* Settings Modal */}
       {showSettingsModal && (
         <SettingsModal
+          t={t}
           onClose={() => setShowSettingsModal(false)}
         />
       )}
@@ -130,11 +192,21 @@ export default function CalendarPage() {
 }
 
 // Event Details Modal
-function EventDetailsModal({ event, onClose }: { event: CalendarEvent; onClose: () => void }) {
+function EventDetailsModal({
+  event,
+  locale,
+  t,
+  onClose,
+}: {
+  event: CalendarEvent;
+  locale: string;
+  t: UiT;
+  onClose: () => void;
+}) {
   const [deleting, setDeleting] = useState(false);
 
   const handleDelete = async () => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) return;
+    if (!confirm(t('calendar.event.deleteConfirm'))) return;
 
     setDeleting(true);
     try {
@@ -145,11 +217,11 @@ function EventDetailsModal({ event, onClose }: { event: CalendarEvent; onClose: 
       if (response.ok) {
         window.location.reload();
       } else {
-        alert('Erreur lors de la suppression');
+        alert(t('calendar.event.deleteError'));
       }
     } catch (error) {
       console.error('Delete error:', error);
-      alert('Erreur lors de la suppression');
+      alert(t('calendar.event.deleteError'));
     } finally {
       setDeleting(false);
     }
@@ -182,7 +254,7 @@ function EventDetailsModal({ event, onClose }: { event: CalendarEvent; onClose: 
             </span>
             {event.is_team_event && (
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-                Événement d'équipe
+                {t('calendar.event.teamBadge')}
               </span>
             )}
           </div>
@@ -190,16 +262,16 @@ function EventDetailsModal({ event, onClose }: { event: CalendarEvent; onClose: 
           {/* Description */}
           {event.description && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-700 mb-1">Description</h3>
+              <h3 className="text-sm font-semibold text-gray-700 mb-1">{t('calendar.event.descriptionLabel')}</h3>
               <p className="text-gray-600">{event.description}</p>
             </div>
           )}
 
           {/* Date & Time */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-1">Date et heure</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-1">{t('calendar.event.dateTimeLabel')}</h3>
             <p className="text-gray-600">
-              {new Date(event.start_date).toLocaleString('fr-FR', {
+              {new Date(event.start_date).toLocaleString(locale, {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -210,7 +282,7 @@ function EventDetailsModal({ event, onClose }: { event: CalendarEvent; onClose: 
               {event.end_date && (
                 <>
                   {' → '}
-                  {new Date(event.end_date).toLocaleString('fr-FR', {
+                  {new Date(event.end_date).toLocaleString(locale, {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
@@ -226,7 +298,7 @@ function EventDetailsModal({ event, onClose }: { event: CalendarEvent; onClose: 
           {/* Tender Link */}
           {event.tender && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-700 mb-1">Tender associé</h3>
+              <h3 className="text-sm font-semibold text-gray-700 mb-1">{t('calendar.event.associatedTenderLabel')}</h3>
               <a
                 href={`/tenders/${event.tender.id}`}
                 className="text-blue-600 hover:underline"
@@ -244,13 +316,13 @@ function EventDetailsModal({ event, onClose }: { event: CalendarEvent; onClose: 
             disabled={deleting}
             className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-md disabled:opacity-50"
           >
-            {deleting ? 'Suppression...' : 'Supprimer'}
+            {deleting ? t('calendar.event.deleting') : t('calendar.event.delete')}
           </button>
           <button
             onClick={onClose}
             className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
           >
-            Fermer
+            {t('calendar.common.close')}
           </button>
         </div>
       </div>
@@ -261,10 +333,12 @@ function EventDetailsModal({ event, onClose }: { event: CalendarEvent; onClose: 
 // Create Event Modal
 function CreateEventModal({
   initialDate,
+  t,
   onClose,
   onSuccess,
 }: {
   initialDate: Date;
+  t: UiT;
   onClose: () => void;
   onSuccess: () => void;
 }) {
@@ -306,11 +380,11 @@ function CreateEventModal({
         onSuccess();
       } else {
         const data = await response.json();
-        alert(data.error || 'Erreur lors de la création');
+        alert(data.error || t('calendar.create.error'));
       }
     } catch (error) {
       console.error('Create error:', error);
-      alert('Erreur lors de la création');
+      alert(t('calendar.create.error'));
     } finally {
       setSubmitting(false);
     }
@@ -320,7 +394,7 @@ function CreateEventModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Nouvel événement</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{t('calendar.create.title')}</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-md">
             <X className="w-5 h-5" />
           </button>
@@ -330,7 +404,7 @@ function CreateEventModal({
           {/* Title */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Titre *
+              {t('calendar.create.field.title')}
             </label>
             <input
               type="text"
@@ -344,7 +418,7 @@ function CreateEventModal({
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
+              {t('calendar.create.field.description')}
             </label>
             <textarea
               value={formData.description}
@@ -357,7 +431,7 @@ function CreateEventModal({
           {/* Event Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Type d'événement *
+              {t('calendar.create.field.type')}
             </label>
             <select
               required
@@ -365,18 +439,18 @@ function CreateEventModal({
               onChange={(e) => setFormData({ ...formData, eventType: e.target.value as any })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
             >
-              <option value="deadline">Deadline</option>
-              <option value="meeting">Réunion</option>
-              <option value="reminder">Rappel</option>
-              <option value="milestone">Jalon</option>
-              <option value="custom">Personnalisé</option>
+              <option value="deadline">{t('calendar.eventType.deadline')}</option>
+              <option value="meeting">{t('calendar.eventType.meeting')}</option>
+              <option value="reminder">{t('calendar.eventType.reminder')}</option>
+              <option value="milestone">{t('calendar.eventType.milestone')}</option>
+              <option value="custom">{t('calendar.eventType.custom')}</option>
             </select>
           </div>
 
           {/* Start Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date de début *
+              {t('calendar.create.field.start')}
             </label>
             <input
               type="datetime-local"
@@ -390,7 +464,7 @@ function CreateEventModal({
           {/* End Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date de fin
+              {t('calendar.create.field.end')}
             </label>
             <input
               type="datetime-local"
@@ -410,7 +484,7 @@ function CreateEventModal({
               className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <label htmlFor="allDay" className="text-sm text-gray-700">
-              Événement toute la journée
+              {t('calendar.create.field.allDay')}
             </label>
           </div>
 
@@ -424,14 +498,14 @@ function CreateEventModal({
               className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <label htmlFor="teamEvent" className="text-sm text-gray-700">
-              Événement d'équipe
+              {t('calendar.create.field.teamEvent')}
             </label>
           </div>
 
           {/* Color */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Couleur
+              {t('calendar.create.field.color')}
             </label>
             <input
               type="color"
@@ -448,14 +522,14 @@ function CreateEventModal({
               onClick={onClose}
               className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
             >
-              Annuler
+              {t('calendar.create.cancel')}
             </button>
             <button
               type="submit"
               disabled={submitting}
               className="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
             >
-              {submitting ? 'Création...' : 'Créer'}
+              {submitting ? t('calendar.create.creating') : t('calendar.create.create')}
             </button>
           </div>
         </form>
@@ -465,7 +539,7 @@ function CreateEventModal({
 }
 
 // Settings Modal
-function SettingsModal({ onClose }: { onClose: () => void }) {
+function SettingsModal({ t, onClose }: { t: UiT; onClose: () => void }) {
   const [syncing, setSyncing] = useState(false);
   const [googleConnected, setGoogleConnected] = useState(false);
 
@@ -479,7 +553,7 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
       }
     } catch (error) {
       console.error('Google connect error:', error);
-      alert('Erreur lors de la connexion à Google Calendar');
+      alert(t('calendar.settings.google.connectError'));
     }
   };
 
@@ -495,14 +569,14 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
       const data = await response.json();
       
       if (data.success) {
-        alert(`Synchronisation réussie !\nImportés: ${data.imported}\nExportés: ${data.exported}`);
+        alert(t('calendar.settings.google.syncSuccess', { imported: data.imported, exported: data.exported }));
         window.location.reload();
       } else {
-        alert(data.error || 'Erreur lors de la synchronisation');
+        alert(data.error || t('calendar.settings.google.syncError'));
       }
     } catch (error) {
       console.error('Sync error:', error);
-      alert('Erreur lors de la synchronisation');
+      alert(t('calendar.settings.google.syncError'));
     } finally {
       setSyncing(false);
     }
@@ -512,7 +586,7 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-2xl w-full">
         <div className="p-6 border-b flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Paramètres du calendrier</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{t('calendar.settings.title')}</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-md">
             <X className="w-5 h-5" />
           </button>
@@ -522,18 +596,18 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
           {/* Google Calendar */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-3">
-              Google Calendar
+              {t('calendar.settings.google.title')}
             </h3>
             <div className="space-y-3">
               <p className="text-sm text-gray-600">
-                Synchronisez vos événements avec Google Calendar
+                {t('calendar.settings.google.subtitle')}
               </p>
               {!googleConnected ? (
                 <button
                   onClick={handleConnectGoogle}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                 >
-                  Connecter Google Calendar
+                  {t('calendar.settings.google.connect')}
                 </button>
               ) : (
                 <button
@@ -541,7 +615,7 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
                   disabled={syncing}
                   className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
                 >
-                  {syncing ? 'Synchronisation...' : 'Synchroniser maintenant'}
+                  {syncing ? t('calendar.settings.google.syncing') : t('calendar.settings.google.syncNow')}
                 </button>
               )}
             </div>
@@ -553,7 +627,7 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
             onClick={onClose}
             className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
           >
-            Fermer
+            {t('calendar.common.close')}
           </button>
         </div>
       </div>

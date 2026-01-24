@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -8,9 +8,50 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, Building2, Chrome } from 
 import { createClient } from '@/lib/supabase/client';
 import { Button, Input, Alert } from '@/components/ui';
 import Logo, { LogoAuth } from '@/components/ui/Logo';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { locale } = useLocale();
+
+  const entries = useMemo(
+    () => ({
+      'auth.login.left.title': 'Win more tenders with AI',
+      'auth.login.left.subtitle': 'Join hundreds of companies that transformed their commercial approach with WeWinBid.',
+      'auth.login.left.feature1': 'AI compatibility score for every tender',
+      'auth.login.left.feature2': 'Competitor analysis and price history',
+      'auth.login.left.feature3': 'Automatic document generation',
+
+      'auth.login.header.title': 'Welcome back!',
+      'auth.login.header.subtitle': 'Sign in to your account',
+
+      'auth.login.form.email.label': 'Email',
+      'auth.login.form.email.placeholder': 'you@company.com',
+      'auth.login.form.password.label': 'Password',
+      'auth.login.form.password.placeholder': '••••••••',
+      'auth.login.form.rememberMe': 'Remember me',
+      'auth.login.form.forgotPassword': 'Forgot password?',
+
+      'auth.login.actions.signingIn': 'Signing in...',
+      'auth.login.actions.signIn': 'Sign in',
+      'auth.login.actions.orContinueWith': 'or continue with',
+
+      'auth.login.footer.noAccount': "Don't have an account?",
+      'auth.login.footer.createAccount': 'Create an account',
+
+      'auth.login.legal.prefix': 'By signing in, you agree to our',
+      'auth.login.legal.terms': 'Terms of Service',
+      'auth.login.legal.and': 'and our',
+      'auth.login.legal.privacy': 'Privacy Policy',
+
+      'auth.login.errors.invalidCredentials': 'Incorrect email or password',
+      'auth.login.errors.generic': 'Something went wrong. Please try again.',
+      'auth.login.errors.googleGeneric': 'Something went wrong with Google. Please try again.',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
 
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
   const getSupabase = useCallback(() => {
@@ -41,7 +82,7 @@ export default function LoginPage() {
 
       if (error) {
         if (error.message === 'Invalid login credentials') {
-          setError('Email ou mot de passe incorrect');
+          setError(t('auth.login.errors.invalidCredentials'));
         } else {
           setError(error.message);
         }
@@ -83,7 +124,7 @@ export default function LoginPage() {
       }
       router.refresh();
     } catch (err) {
-      setError('Une erreur est survenue. Veuillez réessayer.');
+      setError(t('auth.login.errors.generic'));
     } finally {
       setLoading(false);
     }
@@ -107,7 +148,7 @@ export default function LoginPage() {
         setGoogleLoading(false);
       }
     } catch (err) {
-      setError('Une erreur est survenue avec Google. Veuillez réessayer.');
+      setError(t('auth.login.errors.googleGeneric'));
       setGoogleLoading(false);
     }
   };
@@ -130,18 +171,18 @@ export default function LoginPage() {
             </Link>
 
             <h1 className="text-4xl font-bold text-white mb-6">
-              Remportez plus d'appels d'offres grâce à l'IA
+              {t('auth.login.left.title')}
             </h1>
             
             <p className="text-xl text-slate-300 mb-8">
-              Rejoignez des centaines d'entreprises qui ont transformé leur approche commerciale avec WeWinBid.
+              {t('auth.login.left.subtitle')}
             </p>
 
             <div className="space-y-4">
               {[
-                'Score de compatibilité IA pour chaque appel d\'offres',
-                'Analyse des concurrents et historique des prix',
-                'Génération automatique de documents',
+                t('auth.login.left.feature1'),
+                t('auth.login.left.feature2'),
+                t('auth.login.left.feature3'),
               ].map((feature, idx) => (
                 <motion.div
                   key={idx}
@@ -184,8 +225,8 @@ export default function LoginPage() {
 
           <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-white mb-2">Bon retour !</h2>
-              <p className="text-slate-400">Connectez-vous à votre compte</p>
+              <h2 className="text-2xl font-bold text-white mb-2">{t('auth.login.header.title')}</h2>
+              <p className="text-slate-400">{t('auth.login.header.subtitle')}</p>
             </div>
 
             {error && (
@@ -196,11 +237,11 @@ export default function LoginPage() {
 
             <form onSubmit={handleLogin} className="space-y-5">
               <Input
-                label="Email"
+                label={t('auth.login.form.email.label')}
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="vous@entreprise.com"
+                placeholder={t('auth.login.form.email.placeholder')}
                 leftIcon={<Mail className="w-5 h-5" />}
                 required
                 className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
@@ -208,11 +249,11 @@ export default function LoginPage() {
 
               <div className="relative">
                 <Input
-                  label="Mot de passe"
+                  label={t('auth.login.form.password.label')}
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder={t('auth.login.form.password.placeholder')}
                   leftIcon={<Lock className="w-5 h-5" />}
                   required
                   className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
@@ -229,10 +270,10 @@ export default function LoginPage() {
               <div className="flex items-center justify-between text-sm">
                 <label className="flex items-center gap-2 text-slate-400 cursor-pointer">
                   <input type="checkbox" className="w-4 h-4 rounded border-white/20 bg-white/5 text-indigo-500 focus:ring-indigo-500/20" />
-                  Se souvenir de moi
+                  {t('auth.login.form.rememberMe')}
                 </label>
                 <Link href="/auth/forgot-password" className="text-indigo-400 hover:text-indigo-300 transition-colors">
-                  Mot de passe oublié ?
+                  {t('auth.login.form.forgotPassword')}
                 </Link>
               </div>
 
@@ -243,7 +284,7 @@ export default function LoginPage() {
                 loading={loading}
                 className="w-full"
               >
-                {loading ? 'Connexion...' : 'Se connecter'}
+                {loading ? t('auth.login.actions.signingIn') : t('auth.login.actions.signIn')}
                 {!loading && <ArrowRight className="w-5 h-5 ml-2" />}
               </Button>
             </form>
@@ -253,7 +294,7 @@ export default function LoginPage() {
                 <div className="w-full border-t border-white/10" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-transparent text-slate-500">ou continuer avec</span>
+                <span className="px-4 bg-transparent text-slate-500">{t('auth.login.actions.orContinueWith')}</span>
               </div>
             </div>
 
@@ -276,21 +317,21 @@ export default function LoginPage() {
             </Button>
 
             <p className="mt-8 text-center text-slate-400">
-              Pas encore de compte ?{' '}
+              {t('auth.login.footer.noAccount')}{' '}
               <Link href="/auth/register" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
-                Créer un compte
+                {t('auth.login.footer.createAccount')}
               </Link>
             </p>
           </div>
 
           <p className="mt-6 text-center text-sm text-slate-500">
-            En vous connectant, vous acceptez nos{' '}
+            {t('auth.login.legal.prefix')}{' '}
             <Link href="/legal/terms" className="text-slate-400 hover:text-white transition-colors">
-              CGU
+              {t('auth.login.legal.terms')}
             </Link>{' '}
-            et notre{' '}
+            {t('auth.login.legal.and')}{' '}
             <Link href="/legal/privacy" className="text-slate-400 hover:text-white transition-colors">
-              Politique de confidentialité
+              {t('auth.login.legal.privacy')}
             </Link>
           </p>
         </motion.div>

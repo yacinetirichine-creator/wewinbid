@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     // Validation
     if (!name || !email || !message) {
       return NextResponse.json(
-        { error: 'Champs requis manquants' },
+        { error: 'Missing required fields' },
         { status: 400 }
       );
     }
@@ -18,45 +18,45 @@ export async function POST(request: NextRequest) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json(
-        { error: 'Email invalide' },
+        { error: 'Invalid email' },
         { status: 400 }
       );
     }
 
-    // Envoyer l'email à commercial@wewinbid.com
+    // Send the email to commercial@wewinbid.com
     const emailContent = `
-Nouvelle demande de contact depuis WeWinBid
+  New contact request from WeWinBid
 
-Nom: ${name}
-Email: ${email}
-Entreprise: ${company || 'Non renseignée'}
-Téléphone: ${phone || 'Non renseigné'}
-Sujet: ${subject || 'Contact général'}
+  Name: ${name}
+  Email: ${email}
+  Company: ${company || 'Not provided'}
+  Phone: ${phone || 'Not provided'}
+  Subject: ${subject || 'General inquiry'}
 
-Message:
+  Message:
 ${message}
 
 ---
-Envoyé depuis le formulaire de contact WeWinBid
-Date: ${new Date().toLocaleString('fr-FR')}
+  Sent from the WeWinBid contact form
+  Date: ${new Date().toLocaleString('en-US')}
     `.trim();
 
     await sendEmail({
       to: 'commercial@wewinbid.com',
-      subject: `[WeWinBid] ${subject || 'Nouvelle demande de contact'} - ${name}`,
+      subject: `[WeWinBid] ${subject || 'New contact request'} - ${name}`,
       text: emailContent,
       html: `
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
   <h2 style="color: #2563eb; border-bottom: 3px solid #2563eb; padding-bottom: 10px;">
-    Nouvelle demande de contact
+    New contact request
   </h2>
   
   <div style="margin: 20px 0; padding: 20px; background-color: #f8fafc; border-radius: 8px;">
-    <p style="margin: 10px 0;"><strong>Nom:</strong> ${name}</p>
+    <p style="margin: 10px 0;"><strong>Name:</strong> ${name}</p>
     <p style="margin: 10px 0;"><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
-    <p style="margin: 10px 0;"><strong>Entreprise:</strong> ${company || 'Non renseignée'}</p>
-    <p style="margin: 10px 0;"><strong>Téléphone:</strong> ${phone || 'Non renseigné'}</p>
-    <p style="margin: 10px 0;"><strong>Sujet:</strong> ${subject || 'Contact général'}</p>
+    <p style="margin: 10px 0;"><strong>Company:</strong> ${company || 'Not provided'}</p>
+    <p style="margin: 10px 0;"><strong>Phone:</strong> ${phone || 'Not provided'}</p>
+    <p style="margin: 10px 0;"><strong>Subject:</strong> ${subject || 'General inquiry'}</p>
   </div>
 
   <div style="margin: 20px 0;">
@@ -67,17 +67,17 @@ ${message}
   </div>
 
   <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280;">
-    <p>Envoyé depuis le formulaire de contact WeWinBid</p>
-    <p>Date: ${new Date().toLocaleString('fr-FR')}</p>
+    <p>Sent from the WeWinBid contact form</p>
+    <p>Date: ${new Date().toLocaleString('en-US')}</p>
   </div>
 </div>
       `.trim(),
     });
 
-    // Envoyer un email de confirmation au demandeur
+    // Send a confirmation email to the requester
     await sendEmail({
       to: email,
-      subject: 'Nous avons bien reçu votre message - WeWinBid',
+      subject: 'We received your message - WeWinBid',
       html: `
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
   <div style="background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -85,32 +85,32 @@ ${message}
   </div>
 
   <div style="padding: 30px; background-color: #ffffff;">
-    <h2 style="color: #1f2937; margin-top: 0;">Bonjour ${name},</h2>
+    <h2 style="color: #1f2937; margin-top: 0;">Hello ${name},</h2>
     
     <p style="color: #374151; line-height: 1.6;">
-      Merci pour votre message. Notre équipe commerciale l'a bien reçu et vous répondra dans les plus brefs délais.
+      Thanks for your message. Our sales team has received it and will get back to you as soon as possible.
     </p>
 
     <div style="margin: 25px 0; padding: 20px; background-color: #f0fdf4; border-left: 4px solid #16a34a; border-radius: 4px;">
       <p style="margin: 0; color: #166534;">
-        <strong>💡 Besoin d'une réponse rapide ?</strong><br/>
-        Prenez rendez-vous directement avec notre équipe: 
+        <strong>💡 Need a quick reply?</strong><br/>
+        Book a meeting directly with our team:
         <a href="https://calendly.com/commercial-wewinbid/30min" style="color: #16a34a; text-decoration: underline;">
-          Réserver un créneau
+          Book a slot
         </a>
       </p>
     </div>
 
     <p style="color: #374151; line-height: 1.6;">
-      À très bientôt,<br/>
-      <strong>L'équipe WeWinBid</strong>
+      Talk soon,<br/>
+      <strong>The WeWinBid team</strong>
     </p>
   </div>
 
   <div style="padding: 20px; background-color: #f9fafb; text-align: center; border-radius: 0 0 8px 8px;">
     <p style="margin: 0; font-size: 12px; color: #6b7280;">
       JARVIS SAS - WeWinBid<br/>
-      © ${new Date().getFullYear()} Tous droits réservés
+      © ${new Date().getFullYear()} All rights reserved
     </p>
   </div>
 </div>
@@ -121,7 +121,7 @@ ${message}
   } catch (error) {
     console.error('Contact form error:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de l\'envoi du message' },
+      { error: 'Error sending message' },
       { status: 500 }
     );
   }

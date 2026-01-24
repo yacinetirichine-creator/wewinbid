@@ -33,9 +33,9 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
  * 
  * @example
  * ```tsx
- * <Input label="Email" type="email" placeholder="user@example.com" />
- * <Input label="SIRET" error="Invalid SIRET format" />
- * <Input label="Budget" leftIcon={<EuroIcon />} type="number" />
+ * <Input label={'Email'} type="email" placeholder="user@example.com" />
+ * <Input label={'SIRET'} error={'Invalid SIRET format'} />
+ * <Input label={'Budget'} leftIcon={<EuroIcon />} type="number" />
  * ```
  */
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
@@ -62,6 +62,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const inputId = id ?? generatedId;
     const helperTextId = `${inputId}-helper`;
     const errorId = `${inputId}-error`;
+    const requiredAriaLabel = 'required';
 
     const hasError = !!error;
 
@@ -76,7 +77,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             )}
           >
             {label}
-            {required && <span className="ml-1 text-rose-500" aria-label="required">*</span>}
+            {required && <span className="ml-1 text-rose-500" aria-label={requiredAriaLabel}>*</span>}
           </label>
         )}
 

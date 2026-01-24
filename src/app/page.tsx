@@ -70,10 +70,10 @@ const features = [
 ];
 
 const stats = [
-  { value: '233 Mds €', labelKey: 'landing.stats.market', icon: Building2 },
-  { value: '+45%', labelKey: 'landing.stats.success', icon: TrendingUp },
-  { value: '-60%', labelKey: 'landing.stats.time', icon: Clock },
-  { value: '15+', labelKey: 'landing.stats.sectors', icon: Target },
+  { valueKey: 'landing.stats.market.value', labelKey: 'landing.stats.market', icon: Building2 },
+  { valueKey: 'landing.stats.success.value', labelKey: 'landing.stats.success', icon: TrendingUp },
+  { valueKey: 'landing.stats.time.value', labelKey: 'landing.stats.time', icon: Clock },
+  { valueKey: 'landing.stats.sectors.value', labelKey: 'landing.stats.sectors', icon: Target },
 ];
 
 const testimonials = [
@@ -251,7 +251,7 @@ export default function LandingPage() {
           <div className="flex items-center justify-between h-20">
             <Link href="/" className="flex items-center gap-2 group">
               <div className="bg-slate-900 text-white w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg shadow-sm group-hover:shadow-md transition-all">W</div>
-              <span className="font-display font-bold text-xl text-slate-900 tracking-tight">WeWinBid</span>
+              <span className="font-display font-bold text-xl text-slate-900 tracking-tight">{t('landing.brand')}</span>
             </Link>
             <div className="hidden md:flex items-center gap-10">
               <a 
@@ -273,10 +273,26 @@ export default function LandingPage() {
                 onClick={(e) => handleSmoothScroll(e, 'roi')}
                 className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors cursor-pointer tracking-wide"
               >
-                ROI & Performances
+                {t('landing.nav.roi')}
               </a>
             </div>
             <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2 bg-white/70 px-3 py-2 rounded-lg border border-slate-200 shadow-sm hover:border-slate-300 transition-colors">
+                <Globe className="w-4 h-4 text-slate-400" />
+                <span className="sr-only">{t('landing.nav.language')}</span>
+                <select
+                  aria-label={t('landing.nav.language')}
+                  className="bg-transparent text-slate-600 text-sm font-medium border-none focus:ring-0 cursor-pointer outline-none pr-6 py-0 pl-1"
+                  value={locale}
+                  onChange={(event) => handleLocaleChange(event.target.value as Locale)}
+                >
+                  {LOCALES.map((option) => (
+                    <option key={option} value={option}>
+                      {LOCALE_FLAGS[option]} {LOCALE_NAMES[option]}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <Link href="/auth/login">
                 <Button variant="ghost" className="font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg">{t('landing.nav.login')}</Button>
               </Link>
@@ -319,7 +335,7 @@ export default function LandingPage() {
                 transition={{ delay: 0.2 }}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 border border-surface-200 shadow-sm backdrop-blur-sm mb-8"
               >
-                <Badge variant="primary" className="rounded-full px-3 py-0.5 text-xs shadow-none">NEW</Badge>
+                <Badge variant="primary" className="rounded-full px-3 py-0.5 text-xs shadow-none">{t('landing.hero.newLabel')}</Badge>
                 <span className="text-sm font-medium text-surface-600 flex items-center gap-1">
                   <Sparkles className="w-3.5 h-3.5 text-primary-500" />
                   {t('landing.hero.badge')}
@@ -451,7 +467,7 @@ export default function LandingPage() {
                                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
                                    <Search className="w-4 h-4" />
                                  </div>
-                                 <Badge variant="success" className="text-[9px] px-1.5 h-5">+5%</Badge>
+                                 <Badge variant="success" className="text-[9px] px-1.5 h-5">{t('landing.mock.kpi.searchIncrease')}</Badge>
                               </div>
                               <div className="h-5 w-12 bg-slate-800 rounded mb-1" />
                               <div className="h-2 w-20 bg-slate-100 rounded" />
@@ -461,7 +477,7 @@ export default function LandingPage() {
                                  <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center text-violet-500">
                                    <Sparkles className="w-4 h-4" />
                                  </div>
-                                 <Badge variant="success" className="text-[9px] px-1.5 h-5">92%</Badge>
+                                 <Badge variant="success" className="text-[9px] px-1.5 h-5">{t('landing.mock.kpi.matchScore')}</Badge>
                               </div>
                               <div className="h-5 w-10 bg-slate-800 rounded mb-1" />
                               <div className="h-2 w-24 bg-slate-100 rounded" />
@@ -508,7 +524,7 @@ export default function LandingPage() {
                         {/* Floating "Smart" Badge over the UI */}
                         <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur border border-slate-200 shadow-lg rounded-full px-4 py-2 flex items-center gap-2 animate-bounce">
                            <Sparkles className="w-4 h-4 text-amber-500" />
-                           <span className="text-xs font-semibold text-slate-700">AI Powered</span>
+                          <span className="text-xs font-semibold text-slate-700">{t('landing.mock.smartBadge')}</span>
                         </div>
 
                       </div>
@@ -528,8 +544,8 @@ export default function LandingPage() {
                     <TrendingUp className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="text-xs text-surface-500">Success Rate</div>
-                    <div className="text-lg font-bold text-surface-900">+45%</div>
+                    <div className="text-xs text-surface-500">{t('landing.mock.floating.success.label')}</div>
+                    <div className="text-lg font-bold text-surface-900">{t('landing.mock.floating.success.value')}</div>
                   </div>
                 </div>
               </motion.div>
@@ -544,8 +560,8 @@ export default function LandingPage() {
                     <Bot className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="text-xs text-surface-500">AI Analysis</div>
-                    <div className="text-lg font-bold text-surface-900">Ready</div>
+                    <div className="text-xs text-surface-500">{t('landing.mock.floating.analysis.label')}</div>
+                    <div className="text-lg font-bold text-surface-900">{t('landing.mock.floating.analysis.value')}</div>
                   </div>
                 </div>
               </motion.div>
@@ -571,7 +587,7 @@ export default function LandingPage() {
                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary-50 text-primary-600 mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm">
                     <stat.icon className="w-6 h-6" />
                   </div>
-                  <div className="text-3xl font-display font-bold text-slate-900 mb-1 tracking-tight">{stat.value}</div>
+                  <div className="text-3xl font-display font-bold text-slate-900 mb-1 tracking-tight">{t(stat.valueKey)}</div>
                   <div className="text-sm font-medium text-slate-500 uppercase tracking-wide">{t(stat.labelKey)}</div>
                 </motion.div>
               ))}
@@ -659,7 +675,7 @@ export default function LandingPage() {
               </div>
               <div className="mb-8">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold text-slate-900 tracking-tight">0€</span>
+                  <span className="text-4xl font-bold text-slate-900 tracking-tight">{t('landing.pricing.free.price')}</span>
                   <span className="text-slate-500 font-medium">{t('landing.pricing.perMonth')}</span>
                 </div>
               </div>
@@ -702,7 +718,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="mb-6">
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Pro</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">{t('landing.pricing.pro.name')}</h3>
                 <p className="text-sm text-slate-500">{t('landing.pricing.pro.description')}</p>
               </div>
               <div className="mb-8">
@@ -873,12 +889,12 @@ export default function LandingPage() {
       <section id="roi" className="py-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-surface-50 to-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
-            <Badge variant="secondary" className="mb-4">ROI & Performances</Badge>
+            <Badge variant="secondary" className="mb-4">{t('landing.roi.badge')}</Badge>
             <h2 className="text-4xl sm:text-5xl font-display font-bold text-surface-900 mb-6">
-              Maximisez votre retour sur investissement
+              {t('landing.roi.title')}
             </h2>
             <p className="text-xl text-surface-600 max-w-2xl mx-auto">
-              Des résultats mesurables qui transforment votre approche des marchés publics
+              {t('landing.roi.subtitle')}
             </p>
           </div>
 
@@ -893,9 +909,9 @@ export default function LandingPage() {
               <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary-500 flex items-center justify-center">
                 <TrendingUp className="w-8 h-8 text-white" />
               </div>
-              <div className="text-5xl font-bold text-primary-600 mb-2">+45%</div>
-              <p className="text-surface-700 font-medium">Taux de réussite moyen</p>
-              <p className="text-sm text-surface-500 mt-2">vs. méthodes traditionnelles</p>
+              <div className="text-5xl font-bold text-primary-600 mb-2">{t('landing.roi.stat1.value')}</div>
+              <p className="text-surface-700 font-medium">{t('landing.roi.stat1.label')}</p>
+              <p className="text-sm text-surface-500 mt-2">{t('landing.roi.stat1.note')}</p>
             </motion.div>
 
             <motion.div
@@ -908,9 +924,9 @@ export default function LandingPage() {
               <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-success-500 flex items-center justify-center">
                 <Clock className="w-8 h-8 text-white" />
               </div>
-              <div className="text-5xl font-bold text-success-600 mb-2">-60%</div>
-              <p className="text-surface-700 font-medium">Temps de préparation</p>
-              <p className="text-sm text-surface-500 mt-2">Génération IA automatique</p>
+              <div className="text-5xl font-bold text-success-600 mb-2">{t('landing.roi.stat2.value')}</div>
+              <p className="text-surface-700 font-medium">{t('landing.roi.stat2.label')}</p>
+              <p className="text-sm text-surface-500 mt-2">{t('landing.roi.stat2.note')}</p>
             </motion.div>
 
             <motion.div
@@ -923,9 +939,9 @@ export default function LandingPage() {
               <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-secondary-500 flex items-center justify-center">
                 <Target className="w-8 h-8 text-white" />
               </div>
-              <div className="text-5xl font-bold text-secondary-600 mb-2">3x</div>
-              <p className="text-surface-700 font-medium">Plus d'AO traités</p>
-              <p className="text-sm text-surface-500 mt-2">À effort équivalent</p>
+              <div className="text-5xl font-bold text-secondary-600 mb-2">{t('landing.roi.stat3.value')}</div>
+              <p className="text-surface-700 font-medium">{t('landing.roi.stat3.label')}</p>
+              <p className="text-sm text-surface-500 mt-2">{t('landing.roi.stat3.note')}</p>
             </motion.div>
 
             <motion.div
@@ -938,9 +954,9 @@ export default function LandingPage() {
               <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-500 flex items-center justify-center">
                 <Award className="w-8 h-8 text-white" />
               </div>
-              <div className="text-5xl font-bold text-amber-600 mb-2">233 Mds€</div>
-              <p className="text-surface-700 font-medium">Marchés accessibles</p>
-              <p className="text-sm text-surface-500 mt-2">France + Europe</p>
+              <div className="text-5xl font-bold text-amber-600 mb-2">{t('landing.roi.stat4.value')}</div>
+              <p className="text-surface-700 font-medium">{t('landing.roi.stat4.label')}</p>
+              <p className="text-sm text-surface-500 mt-2">{t('landing.roi.stat4.note')}</p>
             </motion.div>
           </div>
 
@@ -1083,7 +1099,7 @@ export default function LandingPage() {
                 <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                   W
                 </div>
-                <span className="font-display font-bold text-xl text-slate-900 tracking-tight">WeWinBid</span>
+                <span className="font-display font-bold text-xl text-slate-900 tracking-tight">{t('landing.brand')}</span>
               </div>
               <p className="text-slate-500 leading-relaxed mb-6 text-sm">
                 {t('landing.footer.about')}
@@ -1101,7 +1117,7 @@ export default function LandingPage() {
               <ul className="space-y-3 text-slate-500 text-sm font-medium">
                 <li><a href="#features" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.features')}</a></li>
                 <li><a href="#pricing" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.pricing')}</a></li>
-                <li><a href="#roi" className="hover:text-primary-600 transition-colors">ROI & Performances</a></li>
+                <li><a href="#roi" className="hover:text-primary-600 transition-colors">{t('landing.nav.roi')}</a></li>
               </ul>
             </div>
             
@@ -1109,8 +1125,8 @@ export default function LandingPage() {
               <h4 className="font-bold text-slate-900 mb-6 text-sm uppercase tracking-wider">{t('landing.footer.company')}</h4>
               <ul className="space-y-3 text-slate-500 text-sm font-medium">
                 <li><Link href="/contact" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.contact')}</Link></li>
-                <li><a href="https://calendly.com/commercial-wewinbid/30min" target="_blank" rel="noopener noreferrer" className="hover:text-primary-600 transition-colors">Prendre rendez-vous</a></li>
-                <li><a href="mailto:commercial@wewinbid.com" className="hover:text-primary-600 transition-colors">commercial@wewinbid.com</a></li>
+                <li><a href="https://calendly.com/commercial-wewinbid/30min" target="_blank" rel="noopener noreferrer" className="hover:text-primary-600 transition-colors">{t('landing.footer.links.bookCall')}</a></li>
+                <li><a href="mailto:commercial@wewinbid.com" className="hover:text-primary-600 transition-colors">{t('landing.contact.email')}</a></li>
               </ul>
             </div>
             
@@ -1130,23 +1146,6 @@ export default function LandingPage() {
             <p className="text-slate-400 text-sm">
               {t('landing.footer.copyright')}
             </p>
-            <div className="flex items-center gap-3">
-              <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">Langue</span>
-              <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm hover:border-slate-300 transition-colors">
-                <Globe className="w-3.5 h-3.5 text-slate-400" />
-                <select
-                  className="bg-transparent text-slate-600 text-sm font-medium border-none focus:ring-0 cursor-pointer outline-none pr-6 py-0 pl-1"
-                  value={locale}
-                  onChange={(event) => handleLocaleChange(event.target.value as Locale)}
-                >
-                  {LOCALES.map((option) => (
-                    <option key={option} value={option}>
-                      {LOCALE_FLAGS[option]} {LOCALE_NAMES[option]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
           </div>
         </div>
       </footer>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   FileText, TrendingUp, Target, Users, CheckCircle, Clock, AlertTriangle,
@@ -12,6 +12,8 @@ import { TendersTable } from '@/components/dashboard/TendersTable';
 import { Card, Skeleton } from '@/components/ui';
 import { formatCurrency } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 interface ClientMetrics {
   overview: {
@@ -45,16 +47,62 @@ interface ClientMetrics {
 }
 
 export default function ClientDashboard() {
+  const { locale } = useLocale();
+  const entries = useMemo(
+    () => ({
+      'clientDashboard.title': 'Dashboard',
+      'clientDashboard.subtitle': 'Overview of your tenders',
+      'clientDashboard.subtitle.responses': 'Overview of your tender responses',
+      'clientDashboard.action.newTender': 'New tender',
+
+      'clientDashboard.error.loadMetrics': 'Unable to load metrics',
+      'clientDashboard.error.generic': 'Error',
+      'clientDashboard.action.retry': 'Retry',
+
+      'clientDashboard.urgent.title': '{count, plural, one {# urgent tender} other {# urgent tenders}}',
+      'clientDashboard.urgent.subtitle': 'Deadline in less than 7 days',
+      'clientDashboard.urgent.action.view': 'View →',
+
+      'clientDashboard.stats.totalResponses': 'Total responses',
+      'clientDashboard.stats.vsLastMonth': 'vs last month',
+      'clientDashboard.stats.inProgress': '{count} in progress',
+      'clientDashboard.stats.wonTenders': 'Tenders won',
+      'clientDashboard.stats.conversionRate': '{rate}% conversion rate',
+      'clientDashboard.stats.activeClients': 'Active clients',
+      'clientDashboard.stats.uniqueClients': 'Unique clients',
+      'clientDashboard.stats.wonRevenue': 'Revenue won',
+      'clientDashboard.stats.total': '{value} total',
+
+      'clientDashboard.secondary.conversionRate': 'Conversion rate',
+      'clientDashboard.secondary.submittedOfTotal': '{won} / {submitted} submitted',
+      'clientDashboard.secondary.upcomingDeadlines': 'Upcoming deadlines',
+      'clientDashboard.secondary.next30Days': 'In the next 30 days',
+      'clientDashboard.secondary.submittedResponses': 'Submitted responses',
+      'clientDashboard.secondary.pendingResult': 'Pending result',
+
+      'clientDashboard.statusDistribution.title': 'Status distribution',
+      'clientDashboard.status.draft': 'Drafts',
+      'clientDashboard.status.analysis': 'In analysis',
+      'clientDashboard.status.inProgress': 'In progress',
+      'clientDashboard.status.review': 'In review',
+      'clientDashboard.status.submitted': 'Submitted',
+      'clientDashboard.status.won': 'Won',
+      'clientDashboard.status.lost': 'Lost',
+      'clientDashboard.status.abandoned': 'Abandoned',
+
+      'clientDashboard.recentTenders.title': 'Recent tenders',
+      'clientDashboard.recentTenders.action.viewAll': 'View all →',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
+
   const router = useRouter();
   const [metrics, setMetrics] = useState<ClientMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchMetrics();
-  }, []);
-
-  const fetchMetrics = async () => {
+  const fetchMetrics = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/metrics/client');
@@ -67,19 +115,23 @@ export default function ClientDashboard() {
       setMetrics(data);
     } catch (err) {
       console.error('Error fetching metrics:', err);
-      setError('Impossible de charger les métriques');
+      setError(t('clientDashboard.error.loadMetrics'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    fetchMetrics();
+  }, [fetchMetrics]);
 
   if (loading) {
     return (
       <AppLayout>
         <div className="space-y-6">
           <PageHeader
-            title="Tableau de bord"
-            subtitle="Vue d'ensemble de vos appels d'offres"
+            title={t('clientDashboard.title')}
+            subtitle={t('clientDashboard.subtitle')}
           />
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map(i => (
@@ -97,12 +149,12 @@ export default function ClientDashboard() {
         <div className="flex min-h-[400px] items-center justify-center">
           <div className="text-center">
             <AlertTriangle className="mx-auto h-12 w-12 text-red-500" />
-            <p className="mt-4 text-lg font-medium text-gray-900">{error || 'Erreur'}</p>
+            <p className="mt-4 text-lg font-medium text-gray-900">{error || t('clientDashboard.error.generic')}</p>
             <button
               onClick={fetchMetrics}
               className="mt-4 text-blue-600 hover:text-blue-700"
             >
-              Réessayer
+              {t('clientDashboard.action.retry')}
             </button>
           </div>
         </div>
@@ -117,10 +169,10 @@ export default function ClientDashboard() {
       <div className="space-y-6">
         {/* Header */}
         <PageHeader
-          title="Tableau de bord"
-          subtitle="Vue d'ensemble de vos réponses aux appels d'offres"
+          title={t('clientDashboard.title')}
+          subtitle={t('clientDashboard.subtitle.responses')}
           action={{
-            label: 'Nouvel appel d\'offres',
+            label: t('clientDashboard.action.newTender'),
             href: '/tenders/new',
           }}
         />
@@ -138,17 +190,17 @@ export default function ClientDashboard() {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-red-900">
-                    {overview.urgentTenders} appel{overview.urgentTenders > 1 ? 's' : ''} d'offres urgent{overview.urgentTenders > 1 ? 's' : ''}
+                    {t('clientDashboard.urgent.title', { count: overview.urgentTenders })}
                   </h3>
                   <p className="text-sm text-red-700">
-                    Échéance dans moins de 7 jours
+                    {t('clientDashboard.urgent.subtitle')}
                   </p>
                 </div>
                 <button
                   onClick={() => router.push('/tenders')}
                   className="text-sm font-medium text-red-600 hover:text-red-700"
                 >
-                  Voir →
+                  {t('clientDashboard.urgent.action.view')}
                 </button>
               </div>
             </Card>
@@ -163,16 +215,16 @@ export default function ClientDashboard() {
             transition={{ delay: 0.1 }}
           >
             <StatsCard
-              title="Total des réponses"
+              title={t('clientDashboard.stats.totalResponses')}
               value={overview.totalTenders}
               icon={<FileText className="h-6 w-6" />}
               color="blue"
               trend={{
                 value: trends.tendersGrowth,
-                label: 'vs mois dernier',
+                label: t('clientDashboard.stats.vsLastMonth'),
                 isPositive: trends.tendersGrowth >= 0,
               }}
-              subtitle={`${overview.inProgressTenders} en cours`}
+              subtitle={t('clientDashboard.stats.inProgress', { count: overview.inProgressTenders })}
             />
           </motion.div>
 
@@ -182,11 +234,11 @@ export default function ClientDashboard() {
             transition={{ delay: 0.2 }}
           >
             <StatsCard
-              title="Appels d'offres gagnés"
+              title={t('clientDashboard.stats.wonTenders')}
               value={overview.wonTenders}
               icon={<Trophy className="h-6 w-6" />}
               color="green"
-              subtitle={`${overview.conversionRate}% de taux de conversion`}
+              subtitle={t('clientDashboard.stats.conversionRate', { rate: overview.conversionRate })}
             />
           </motion.div>
 
@@ -196,11 +248,11 @@ export default function ClientDashboard() {
             transition={{ delay: 0.3 }}
           >
             <StatsCard
-              title="Clients actifs"
+              title={t('clientDashboard.stats.activeClients')}
               value={overview.totalClients}
               icon={<Users className="h-6 w-6" />}
               color="purple"
-              subtitle="Clients uniques"
+              subtitle={t('clientDashboard.stats.uniqueClients')}
             />
           </motion.div>
 
@@ -210,11 +262,11 @@ export default function ClientDashboard() {
             transition={{ delay: 0.4 }}
           >
             <StatsCard
-              title="Chiffre d'affaires gagné"
-              value={formatCurrency(overview.wonValue)}
+              title={t('clientDashboard.stats.wonRevenue')}
+              value={formatCurrency(overview.wonValue, 'EUR', locale)}
               icon={<Euro className="h-6 w-6" />}
               color="green"
-              subtitle={`${formatCurrency(overview.totalValue)} au total`}
+              subtitle={t('clientDashboard.stats.total', { value: formatCurrency(overview.totalValue, 'EUR', locale) })}
             />
           </motion.div>
         </div>
@@ -229,12 +281,15 @@ export default function ClientDashboard() {
             <Card className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Taux de conversion</p>
+                  <p className="text-sm font-medium text-gray-600">{t('clientDashboard.secondary.conversionRate')}</p>
                   <p className="mt-2 text-3xl font-bold text-gray-900">
                     {overview.conversionRate}%
                   </p>
                   <p className="mt-1 text-sm text-gray-500">
-                    {overview.wonTenders} / {overview.submittedTenders} soumis
+                    {t('clientDashboard.secondary.submittedOfTotal', {
+                      won: overview.wonTenders,
+                      submitted: overview.submittedTenders,
+                    })}
                   </p>
                 </div>
                 <div className="rounded-lg bg-blue-50 p-3">
@@ -252,12 +307,12 @@ export default function ClientDashboard() {
             <Card className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Échéances à venir</p>
+                  <p className="text-sm font-medium text-gray-600">{t('clientDashboard.secondary.upcomingDeadlines')}</p>
                   <p className="mt-2 text-3xl font-bold text-gray-900">
                     {overview.upcomingDeadlines}
                   </p>
                   <p className="mt-1 text-sm text-gray-500">
-                    Dans les 30 prochains jours
+                    {t('clientDashboard.secondary.next30Days')}
                   </p>
                 </div>
                 <div className="rounded-lg bg-yellow-50 p-3">
@@ -275,12 +330,12 @@ export default function ClientDashboard() {
             <Card className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Réponses soumises</p>
+                  <p className="text-sm font-medium text-gray-600">{t('clientDashboard.secondary.submittedResponses')}</p>
                   <p className="mt-2 text-3xl font-bold text-gray-900">
                     {overview.submittedTenders}
                   </p>
                   <p className="mt-1 text-sm text-gray-500">
-                    En attente de résultat
+                    {t('clientDashboard.secondary.pendingResult')}
                   </p>
                 </div>
                 <div className="rounded-lg bg-purple-50 p-3">
@@ -299,53 +354,53 @@ export default function ClientDashboard() {
         >
           <Card className="p-6">
             <h3 className="mb-4 text-lg font-semibold text-gray-900">
-              Répartition par statut
+              {t('clientDashboard.statusDistribution.title')}
             </h3>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <div className="rounded-lg bg-gray-50 p-4">
-                <p className="text-sm text-gray-600">Brouillons</p>
+                <p className="text-sm text-gray-600">{t('clientDashboard.status.draft')}</p>
                 <p className="mt-1 text-2xl font-bold text-gray-900">
                   {statusDistribution.draft}
                 </p>
               </div>
               <div className="rounded-lg bg-blue-50 p-4">
-                <p className="text-sm text-blue-600">En analyse</p>
+                <p className="text-sm text-blue-600">{t('clientDashboard.status.analysis')}</p>
                 <p className="mt-1 text-2xl font-bold text-blue-900">
                   {statusDistribution.analysis}
                 </p>
               </div>
               <div className="rounded-lg bg-yellow-50 p-4">
-                <p className="text-sm text-yellow-600">En cours</p>
+                <p className="text-sm text-yellow-600">{t('clientDashboard.status.inProgress')}</p>
                 <p className="mt-1 text-2xl font-bold text-yellow-900">
                   {statusDistribution.inProgress}
                 </p>
               </div>
               <div className="rounded-lg bg-purple-50 p-4">
-                <p className="text-sm text-purple-600">En révision</p>
+                <p className="text-sm text-purple-600">{t('clientDashboard.status.review')}</p>
                 <p className="mt-1 text-2xl font-bold text-purple-900">
                   {statusDistribution.review}
                 </p>
               </div>
               <div className="rounded-lg bg-blue-50 p-4">
-                <p className="text-sm text-blue-600">Soumis</p>
+                <p className="text-sm text-blue-600">{t('clientDashboard.status.submitted')}</p>
                 <p className="mt-1 text-2xl font-bold text-blue-900">
                   {statusDistribution.submitted}
                 </p>
               </div>
               <div className="rounded-lg bg-green-50 p-4">
-                <p className="text-sm text-green-600">Gagnés</p>
+                <p className="text-sm text-green-600">{t('clientDashboard.status.won')}</p>
                 <p className="mt-1 text-2xl font-bold text-green-900">
                   {statusDistribution.won}
                 </p>
               </div>
               <div className="rounded-lg bg-red-50 p-4">
-                <p className="text-sm text-red-600">Perdus</p>
+                <p className="text-sm text-red-600">{t('clientDashboard.status.lost')}</p>
                 <p className="mt-1 text-2xl font-bold text-red-900">
                   {statusDistribution.lost}
                 </p>
               </div>
               <div className="rounded-lg bg-gray-50 p-4">
-                <p className="text-sm text-gray-600">Abandonnés</p>
+                <p className="text-sm text-gray-600">{t('clientDashboard.status.abandoned')}</p>
                 <p className="mt-1 text-2xl font-bold text-gray-900">
                   {statusDistribution.abandoned}
                 </p>
@@ -362,13 +417,13 @@ export default function ClientDashboard() {
         >
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900">
-              Appels d'offres récents
+              {t('clientDashboard.recentTenders.title')}
             </h2>
             <button
               onClick={() => router.push('/tenders')}
               className="text-sm font-medium text-blue-600 hover:text-blue-700"
             >
-              Voir tout →
+              {t('clientDashboard.recentTenders.action.viewAll')}
             </button>
           </div>
           <TendersTable

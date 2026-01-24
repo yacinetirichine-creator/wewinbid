@@ -28,6 +28,11 @@ const Logo: React.FC<LogoProps> = ({
   showText = true,
   variant = 'full'
 }) => {
+  const brand = 'WeWinBid';
+  const brandWe = 'We';
+  const brandWin = 'Win';
+  const brandBid = 'Bid';
+
   const dimensions = sizeMap[size];
   const finalWidth = width ?? dimensions.width;
   const finalHeight = height ?? dimensions.height;
@@ -43,7 +48,7 @@ const Logo: React.FC<LogoProps> = ({
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className={className}
-        aria-label="WeWinBid"
+        aria-label={brand}
       >
         <defs>
           <linearGradient id="tech-gradient-icon" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -98,7 +103,7 @@ const Logo: React.FC<LogoProps> = ({
           </linearGradient>
         </defs>
         <text x="0" y="35" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="bold" fontSize="24" fill="url(#tech-gradient-text)">
-          We<tspan fontWeight="600">Win</tspan><tspan fontWeight="400">Bid</tspan>
+          {brandWe}<tspan fontWeight="600">{brandWin}</tspan><tspan fontWeight="400">{brandBid}</tspan>
         </text>
       </svg>
     );
@@ -113,7 +118,7 @@ const Logo: React.FC<LogoProps> = ({
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={`${className} ${size === 'auto' ? 'w-full h-auto max-w-[200px]' : ''}`}
-      aria-label="WeWinBid"
+      aria-label={brand}
     >
       {/* Définition du dégradé */}
       <defs>
@@ -150,7 +155,7 @@ const Logo: React.FC<LogoProps> = ({
       {/* Le texte */}
       {showText && (
         <text x="115" y="35" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="bold" fontSize="24" fill="white">
-          We<tspan fontWeight="600">Win</tspan><tspan fontWeight="400">Bid</tspan>
+          {brandWe}<tspan fontWeight="600">{brandWin}</tspan><tspan fontWeight="400">{brandBid}</tspan>
         </text>
       )}
     </svg>

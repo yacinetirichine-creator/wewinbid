@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus,
@@ -19,8 +19,13 @@ import {
   Tag,
   Folder,
 } from 'lucide-react';
+import type { Locale } from 'date-fns';
 import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { enUS, fr } from 'date-fns/locale';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
+
+type TranslateFn = (key: string, params?: Record<string, string | number>) => string;
 
 interface Template {
   id: string;
@@ -42,6 +47,44 @@ interface Template {
 }
 
 export default function LibraryPage() {
+  const { locale } = useLocale();
+  const dateFnsLocale = locale === 'fr' ? fr : enUS;
+  const entries = useMemo(
+    () => ({
+      'library.title': 'Response Library',
+      'library.subtitle': 'Manage your reusable templates and snippets',
+      'library.action.newTemplate': 'New template',
+
+      'library.stats.templates': 'Templates',
+      'library.stats.favorites': 'Favorites',
+      'library.stats.uses': 'Uses',
+      'library.stats.categories': 'Categories',
+
+      'library.search.placeholder': 'Search templates…',
+      'library.categories.all': 'All categories',
+
+      'library.sort.recent': 'Most recent',
+      'library.sort.usage': 'Most used',
+      'library.sort.alphabetical': 'Alphabetical',
+
+      'library.empty.title': 'No templates found',
+      'library.empty.subtitle': 'Create your first template to get started',
+      'library.empty.action.create': 'Create a template',
+
+      'library.action.view': 'View',
+      'library.usage.count': '{count} uses',
+      'library.by': 'By {name}',
+
+      'library.confirm.delete': 'Delete this template?',
+
+      'library.error.fetch': 'Failed to fetch templates',
+      'library.error.update': 'Failed to update template',
+      'library.error.delete': 'Failed to delete template',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
+
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,16 +104,16 @@ export default function LibraryPage() {
       params.set('sort_by', sortBy);
 
       const response = await fetch(`/api/templates?${params}`);
-      if (!response.ok) throw new Error('Erreur fetch');
+      if (!response.ok) throw new Error(t('library.error.fetch'));
 
       const data = await response.json();
       setTemplates(data.templates);
     } catch (error) {
-      console.error('Erreur fetch templates:', error);
+      console.error('Error fetching templates:', error);
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, filterCategory, filterFavorite, sortBy]);
+  }, [searchQuery, filterCategory, filterFavorite, sortBy, t]);
 
   useEffect(() => {
     fetchTemplates();
@@ -84,27 +127,27 @@ export default function LibraryPage() {
         body: JSON.stringify({ is_favorite: !currentState }),
       });
 
-      if (!response.ok) throw new Error('Erreur mise à jour');
+      if (!response.ok) throw new Error(t('library.error.update'));
 
       await fetchTemplates();
     } catch (error) {
-      console.error('Erreur toggle favorite:', error);
+      console.error('Error toggling favorite:', error);
     }
   };
 
   const deleteTemplate = async (templateId: string) => {
-    if (!confirm('Supprimer ce template ?')) return;
+    if (!confirm(t('library.confirm.delete'))) return;
 
     try {
       const response = await fetch(`/api/templates?id=${templateId}`, {
         method: 'DELETE',
       });
 
-      if (!response.ok) throw new Error('Erreur suppression');
+      if (!response.ok) throw new Error(t('library.error.delete'));
 
       await fetchTemplates();
     } catch (error) {
-      console.error('Erreur delete template:', error);
+      console.error('Error deleting template:', error);
     }
   };
 
@@ -123,9 +166,9 @@ export default function LibraryPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Bibliothèque de Réponses</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('library.title')}</h1>
           <p className="text-gray-600 mt-1">
-            Gérez vos templates et snippets réutilisables
+            {t('library.subtitle')}
           </p>
         </div>
         <button
@@ -133,7 +176,7 @@ export default function LibraryPage() {
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
         >
           <Plus className="h-5 w-5" />
-          Nouveau Template
+          {t('library.action.newTemplate')}
         </button>
       </div>
 
@@ -146,7 +189,7 @@ export default function LibraryPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{templates.length}</p>
-              <p className="text-sm text-gray-600">Templates</p>
+              <p className="text-sm text-gray-600">{t('library.stats.templates')}</p>
             </div>
           </div>
         </div>
@@ -160,7 +203,7 @@ export default function LibraryPage() {
               <p className="text-2xl font-bold text-gray-900">
                 {templates.filter((t) => t.is_favorite).length}
               </p>
-              <p className="text-sm text-gray-600">Favoris</p>
+              <p className="text-sm text-gray-600">{t('library.stats.favorites')}</p>
             </div>
           </div>
         </div>
@@ -174,7 +217,7 @@ export default function LibraryPage() {
               <p className="text-2xl font-bold text-gray-900">
                 {templates.reduce((sum, t) => sum + t.usage_count, 0)}
               </p>
-              <p className="text-sm text-gray-600">Utilisations</p>
+              <p className="text-sm text-gray-600">{t('library.stats.uses')}</p>
             </div>
           </div>
         </div>
@@ -186,7 +229,7 @@ export default function LibraryPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{categories.length}</p>
-              <p className="text-sm text-gray-600">Catégories</p>
+              <p className="text-sm text-gray-600">{t('library.stats.categories')}</p>
             </div>
           </div>
         </div>
@@ -203,7 +246,7 @@ export default function LibraryPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Rechercher dans les templates..."
+                placeholder={t('library.search.placeholder')}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -215,7 +258,7 @@ export default function LibraryPage() {
             onChange={(e) => setFilterCategory(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="all">Toutes catégories</option>
+            <option value="all">{t('library.categories.all')}</option>
             {categories.map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
@@ -229,9 +272,9 @@ export default function LibraryPage() {
             onChange={(e) => setSortBy(e.target.value as any)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="recent">Plus récent</option>
-            <option value="usage">Plus utilisé</option>
-            <option value="alphabetical">Alphabétique</option>
+            <option value="recent">{t('library.sort.recent')}</option>
+            <option value="usage">{t('library.sort.usage')}</option>
+            <option value="alphabetical">{t('library.sort.alphabetical')}</option>
           </select>
 
           {/* Favorite filter */}
@@ -272,13 +315,13 @@ export default function LibraryPage() {
       {templates.length === 0 ? (
         <div className="text-center py-12">
           <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 text-lg mb-2">Aucun template trouvé</p>
-          <p className="text-gray-400 mb-6">Créez votre premier template pour commencer</p>
+          <p className="text-gray-500 text-lg mb-2">{t('library.empty.title')}</p>
+          <p className="text-gray-400 mb-6">{t('library.empty.subtitle')}</p>
           <button
             onClick={() => setShowTemplateModal(true)}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            Créer un template
+            {t('library.empty.action.create')}
           </button>
         </div>
       ) : viewMode === 'grid' ? (
@@ -293,6 +336,8 @@ export default function LibraryPage() {
                 setSelectedTemplate(t);
                 setShowTemplateModal(true);
               }}
+              t={t}
+              dateFnsLocale={dateFnsLocale}
             />
           ))}
         </div>
@@ -308,6 +353,8 @@ export default function LibraryPage() {
                 setSelectedTemplate(t);
                 setShowTemplateModal(true);
               }}
+              t={t}
+              dateFnsLocale={dateFnsLocale}
             />
           ))}
         </div>
@@ -322,11 +369,15 @@ function TemplateCard({
   onToggleFavorite,
   onDelete,
   onView,
+  t,
+  dateFnsLocale,
 }: {
   template: Template;
   onToggleFavorite: (id: string, current: boolean) => void;
   onDelete: (id: string) => void;
   onView: (template: Template) => void;
+  t: TranslateFn;
+  dateFnsLocale: Locale;
 }) {
   return (
     <motion.div
@@ -376,7 +427,7 @@ function TemplateCard({
           <span>
             {formatDistanceToNow(new Date(template.updated_at), {
               addSuffix: true,
-              locale: fr,
+              locale: dateFnsLocale,
             })}
           </span>
         </div>
@@ -388,7 +439,7 @@ function TemplateCard({
           className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 flex items-center justify-center gap-2"
         >
           <Eye className="h-4 w-4" />
-          Voir
+          {t('library.action.view')}
         </button>
         <button
           onClick={() => onDelete(template.id)}
@@ -407,11 +458,15 @@ function TemplateListItem({
   onToggleFavorite,
   onDelete,
   onView,
+  t,
+  dateFnsLocale,
 }: {
   template: Template;
   onToggleFavorite: (id: string, current: boolean) => void;
   onDelete: (id: string) => void;
   onView: (template: Template) => void;
+  t: TranslateFn;
+  dateFnsLocale: Locale;
 }) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
@@ -429,16 +484,16 @@ function TemplateListItem({
             <p className="text-sm text-gray-600 mb-2">{template.description}</p>
           )}
           <div className="flex items-center gap-4 text-sm text-gray-500">
-            <span>{template.usage_count} utilisations</span>
+            <span>{t('library.usage.count', { count: template.usage_count })}</span>
             <span>•</span>
             <span>
               {formatDistanceToNow(new Date(template.updated_at), {
                 addSuffix: true,
-                locale: fr,
+                locale: dateFnsLocale,
               })}
             </span>
             <span>•</span>
-            <span>Par {template.creator.full_name}</span>
+            <span>{t('library.by', { name: template.creator.full_name })}</span>
           </div>
         </div>
 
@@ -456,7 +511,7 @@ function TemplateListItem({
             onClick={() => onView(template)}
             className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
           >
-            Voir
+            {t('library.action.view')}
           </button>
           <button
             onClick={() => onDelete(template.id)}

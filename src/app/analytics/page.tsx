@@ -11,7 +11,6 @@ import {
   Skeleton,
 } from '@/components/ui';
 import { NewAppLayout as AppLayout, PageHeader } from '@/components/layout/NewAppLayout';
-import { formatCurrency } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import {
   TrendingUp,
@@ -85,7 +84,7 @@ interface AnalyticsData {
     winRateChange: number;
   };
   byStatus: {
-    status: string;
+    status: 'won' | 'lost' | 'in_progress' | 'draft';
     count: number;
     value: number;
   }[];
@@ -114,8 +113,9 @@ interface AnalyticsData {
   }[];
   recommendations: {
     type: 'success' | 'warning' | 'info';
-    title: string;
-    description: string;
+    titleKey: string;
+    descriptionKey: string;
+    descriptionParams?: Record<string, string | number>;
   }[];
 }
 
@@ -148,7 +148,8 @@ function StatCard({
   change, 
   icon: Icon, 
   prefix = '', 
-  suffix = '' 
+  suffix = '',
+  locale,
 }: { 
   title: string; 
   value: number | string; 
@@ -156,6 +157,7 @@ function StatCard({
   icon: any; 
   prefix?: string;
   suffix?: string;
+  locale: string;
 }) {
   return (
     <Card>
@@ -164,7 +166,7 @@ function StatCard({
           <div>
             <p className="text-sm text-gray-500 mb-1">{title}</p>
             <p className="text-3xl font-bold text-gray-900">
-              {prefix}{typeof value === 'number' ? value.toLocaleString('fr-FR') : value}{suffix}
+              {prefix}{typeof value === 'number' ? value.toLocaleString(locale) : value}{suffix}
             </p>
             {change !== undefined && (
               <div className={`flex items-center gap-1 mt-2 text-sm ${
@@ -175,7 +177,7 @@ function StatCard({
                 ) : (
                   <ArrowDownRight className="w-4 h-4" />
                 )}
-                <span>{Math.abs(change)}% ce mois</span>
+                <span>{Math.abs(change)}%</span>
               </div>
             )}
           </div>
@@ -213,22 +215,59 @@ export default function AnalyticsPage() {
   const { locale } = useLocale();
   const entries = useMemo(
     () => ({
-      'analytics.title': 'Analytiques',
-      'analytics.subtitle': 'Suivez vos performances et optimisez votre taux de réussite',
-      'analytics.period.3m': '3 derniers mois',
-      'analytics.period.6m': '6 derniers mois',
-      'analytics.period.12m': '12 derniers mois',
-      'analytics.period.all': 'Depuis le début',
-      'analytics.export': 'Exporter',
-      'analytics.stat.totalSubmitted': 'Total AO soumis',
-      'analytics.stat.won': 'AO gagnés',
-      'analytics.stat.revenue': "Chiffre d'affaires",
-      'analytics.stat.winRate': 'Taux de réussite',
-      'analytics.chart.monthlyTrend': 'Tendance mensuelle (Interactif)',
-      'analytics.chart.submitted': 'Soumis',
-      'analytics.chart.won': 'Gagnés',
-      'analytics.empty.title': 'Aucune donnée',
-      'analytics.empty.description': 'Commencez par créer vos premiers appels d\'offres pour voir vos statistiques ici.',
+      'analytics.title': 'Analytics',
+      'analytics.subtitle': 'Track performance and improve your win rate',
+      'analytics.period.3m': 'Last 3 months',
+      'analytics.period.6m': 'Last 6 months',
+      'analytics.period.12m': 'Last 12 months',
+      'analytics.period.all': 'All time',
+      'analytics.export': 'Export',
+
+      'analytics.stat.totalSubmitted': 'Total tenders submitted',
+      'analytics.stat.won': 'Tenders won',
+      'analytics.stat.revenue': 'Revenue',
+      'analytics.stat.winRate': 'Win rate',
+
+      'analytics.section.statusDistribution': 'Status distribution',
+      'analytics.section.monthlyRevenue': 'Monthly revenue',
+      'analytics.section.sectorPerformance': 'Performance by sector',
+      'analytics.section.monthlyTrend': 'Monthly trend',
+      'analytics.section.aiRecommendations': 'AI recommendations',
+      'analytics.section.recentWinners': 'Recent winner analysis',
+      'analytics.section.recentWinners.subtitle': 'Compare your prices with winners to optimize future offers',
+
+      'analytics.chart.monthlyTrend': 'Monthly trend (Interactive)',
+      'analytics.chart.submitted': 'Submitted',
+      'analytics.chart.won': 'Won',
+      'analytics.chart.revenue': 'Revenue',
+
+      'analytics.status.won': 'Won',
+      'analytics.status.lost': 'Lost',
+      'analytics.status.in_progress': 'In progress',
+      'analytics.status.draft': 'Drafts',
+
+      'analytics.tooltip.statusCount': '{status}: {count}',
+      'analytics.tooltip.submittedCount': '{count, plural, one {# submitted} other {# submitted}}',
+      'analytics.tooltip.wonCount': '{count, plural, one {# won} other {# won}}',
+      'analytics.sector.wonOfTotal': '{won}/{total} won',
+
+      'analytics.badge.poweredByAi': 'Powered by AI',
+      'analytics.you': 'You',
+      'analytics.result.won': 'Won',
+
+      'analytics.table.tender': 'Tender',
+      'analytics.table.winner': 'Winner',
+      'analytics.table.winningPrice': 'Winning price',
+      'analytics.table.yourPrice': 'Your price',
+      'analytics.table.gap': 'Gap',
+      'analytics.table.date': 'Date',
+
+      'analytics.reco.keepGoing.title': 'Keep it up!',
+      'analytics.reco.keepGoing.description.withWinRate': 'You have {total} tender(s) in progress. Your win rate is {winRate}%.',
+      'analytics.reco.keepGoing.description.goodLuck': 'You have {total} tender(s) in progress. Good luck with your applications!',
+
+      'analytics.empty.title': 'No data yet',
+      'analytics.empty.description': "Create your first tenders to see analytics here.",
     }),
     []
   );
@@ -298,14 +337,14 @@ export default function AnalyticsPage() {
 
         // Stats par statut
         const byStatus = [
-          { status: 'Gagnés', count: wonTenders, value: totalRevenue },
-          { status: 'Perdus', count: lostTenders, value: 0 },
-          { status: 'En cours', count: tenders.filter((t: any) => ['draft', 'in_progress', 'submitted'].includes(t.status)).length, value: 0 },
+          { status: 'won' as const, count: wonTenders, value: totalRevenue },
+          { status: 'lost' as const, count: lostTenders, value: 0 },
+          { status: 'in_progress' as const, count: tenders.filter((t: any) => ['draft', 'in_progress', 'submitted'].includes(t.status)).length, value: 0 },
         ].filter(s => s.count > 0);
 
         // Tendance mensuelle (12 derniers mois)
         const monthlyTrend = [];
-        const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+        const monthFormatter = new Intl.DateTimeFormat(locale, { month: 'short' });
         for (let i = 11; i >= 0; i--) {
           const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
           const nextMonth = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
@@ -315,7 +354,7 @@ export default function AnalyticsPage() {
           });
           const monthWon = monthTenders.filter((t: any) => t.status === 'won');
           monthlyTrend.push({
-            month: monthNames[monthDate.getMonth()],
+            month: monthFormatter.format(monthDate),
             submitted: monthTenders.length,
             won: monthWon.length,
             revenue: monthWon.reduce((sum: number, t: any) => sum + (t.estimated_value || 0), 0),
@@ -343,8 +382,15 @@ export default function AnalyticsPage() {
           recommendations: totalTenders === 0 ? [] : [
             {
               type: 'info',
-              title: 'Continuez ainsi !',
-              description: `Vous avez ${totalTenders} appel(s) d'offres en cours. ${wonTenders > 0 ? `Votre taux de réussite est de ${winRate}%.` : 'Bonne chance pour vos candidatures !'}`,
+              titleKey: 'analytics.reco.keepGoing.title',
+              descriptionKey:
+                wonTenders > 0
+                  ? 'analytics.reco.keepGoing.description.withWinRate'
+                  : 'analytics.reco.keepGoing.description.goodLuck',
+              descriptionParams: {
+                total: totalTenders,
+                winRate,
+              },
             },
           ],
         });
@@ -356,10 +402,10 @@ export default function AnalyticsPage() {
     };
 
     loadAnalytics();
-  }, [period]);
+  }, [locale, period]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-FR', {
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: 'EUR',
       minimumFractionDigits: 0,
@@ -403,18 +449,21 @@ export default function AnalyticsPage() {
             value={data.overview.totalTenders}
             change={data.overview.tendersChange}
             icon={FileText}
+            locale={locale}
           />
           <StatCard
             title={t('analytics.stat.won')}
             value={data.overview.wonTenders}
             change={data.overview.wonChange}
             icon={Trophy}
+            locale={locale}
           />
           <StatCard
             title={t('analytics.stat.revenue')}
             value={formatCurrency(data.overview.totalRevenue)}
             change={data.overview.revenueChange}
             icon={Euro}
+            locale={locale}
           />
           <StatCard
             title={t('analytics.stat.winRate')}
@@ -422,6 +471,7 @@ export default function AnalyticsPage() {
             suffix="%"
             change={data.overview.winRateChange}
             icon={Target}
+            locale={locale}
           />
         </div>
 
@@ -472,7 +522,7 @@ export default function AnalyticsPage() {
                     stroke="#3B82F6" 
                     fillOpacity={1}
                     fill="url(#colorSubmitted)"
-                    name="Soumis"
+                    name={t('analytics.chart.submitted')}
                     strokeWidth={2}
                   />
                   <Area 
@@ -481,7 +531,7 @@ export default function AnalyticsPage() {
                     stroke="#10B981" 
                     fillOpacity={1}
                     fill="url(#colorWon)"
-                    name="Gagnés"
+                    name={t('analytics.chart.won')}
                     strokeWidth={2}
                   />
                 </AreaChart>
@@ -492,7 +542,7 @@ export default function AnalyticsPage() {
           {/* Distribution par statut avec PieChart */}
           <Card>
             <CardContent className="p-6">
-              <h3 className="font-semibold text-gray-900 mb-6">Répartition par statut</h3>
+              <h3 className="font-semibold text-gray-900 mb-6">{t('analytics.section.statusDistribution')}</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <RechartsPieChart>
                   <Pie
@@ -500,7 +550,12 @@ export default function AnalyticsPage() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ status, count }) => `${status}: ${count}`}
+                    label={({ status, count }) =>
+                      t('analytics.tooltip.statusCount', {
+                        status: t(`analytics.status.${status}`),
+                        count,
+                      })
+                    }
                     outerRadius={90}
                     fill="#8884d8"
                     dataKey="count"
@@ -528,7 +583,7 @@ export default function AnalyticsPage() {
           {/* Revenus mensuels */}
           <Card>
             <CardContent className="p-6">
-              <h3 className="font-semibold text-gray-900 mb-6">Revenus mensuels</h3>
+              <h3 className="font-semibold text-gray-900 mb-6">{t('analytics.section.monthlyRevenue')}</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <RechartsBarChart data={data.monthlyTrend}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
@@ -536,7 +591,7 @@ export default function AnalyticsPage() {
                   <YAxis stroke="#6B7280" style={{ fontSize: '12px' }} />
                   <RechartsTooltip 
                     contentStyle={{ backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: '8px' }}
-                    formatter={(value: number) => [`${(value / 1000).toFixed(0)}k €`, 'Revenu']}
+                    formatter={(value: number) => [formatCurrency(value), t('analytics.chart.revenue')]}
                   />
                   <Bar dataKey="revenue" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
                 </RechartsBarChart>
@@ -547,7 +602,7 @@ export default function AnalyticsPage() {
           {/* Taux de réussite par secteur */}
           <Card>
             <CardContent className="p-6">
-              <h3 className="font-semibold text-gray-900 mb-6">Performance par secteur</h3>
+              <h3 className="font-semibold text-gray-900 mb-6">{t('analytics.section.sectorPerformance')}</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <RechartsBarChart data={data.bySector} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
@@ -555,7 +610,7 @@ export default function AnalyticsPage() {
                   <YAxis dataKey="sector" type="category" width={130} stroke="#6B7280" style={{ fontSize: '11px' }} />
                   <RechartsTooltip 
                     contentStyle={{ backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: '8px' }}
-                    formatter={(value: number) => [`${value.toFixed(1)}%`, 'Taux de réussite']}
+                    formatter={(value: number) => [`${value.toFixed(1)}%`, t('analytics.stat.winRate')]}
                   />
                   <Bar dataKey="winRate" fill="#10B981" radius={[0, 8, 8, 0]} />
                 </RechartsBarChart>
@@ -570,15 +625,15 @@ export default function AnalyticsPage() {
           <Card className="col-span-2">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="font-semibold text-gray-900">Tendance mensuelle</h3>
+                <h3 className="font-semibold text-gray-900">{t('analytics.section.monthlyTrend')}</h3>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-primary-500" />
-                    <span className="text-sm text-gray-500">Soumis</span>
+                    <span className="text-sm text-gray-500">{t('analytics.chart.submitted')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-green-500" />
-                    <span className="text-sm text-gray-500">Gagnés</span>
+                    <span className="text-sm text-gray-500">{t('analytics.chart.won')}</span>
                   </div>
                 </div>
               </div>
@@ -589,12 +644,12 @@ export default function AnalyticsPage() {
                       <div 
                         className="w-4 bg-primary-200 rounded-t transition-all duration-300 hover:bg-primary-300"
                         style={{ height: `${(month.submitted / maxMonthlyValue) * 100}%`, marginTop: 'auto' }}
-                        title={`${month.submitted} soumis`}
+                        title={t('analytics.tooltip.submittedCount', { count: month.submitted })}
                       />
                       <div 
                         className="w-4 bg-green-400 rounded-t transition-all duration-300 hover:bg-green-500"
                         style={{ height: `${(month.won / maxMonthlyValue) * 100}%`, marginTop: 'auto' }}
-                        title={`${month.won} gagnés`}
+                        title={t('analytics.tooltip.wonCount', { count: month.won })}
                       />
                     </div>
                     <span className="text-xs text-gray-500">{month.month}</span>
@@ -607,21 +662,21 @@ export default function AnalyticsPage() {
           {/* Répartition par statut */}
           <Card>
             <CardContent className="p-6">
-              <h3 className="font-semibold text-gray-900 mb-6">Répartition par statut</h3>
+              <h3 className="font-semibold text-gray-900 mb-6">{t('analytics.section.statusDistribution')}</h3>
               <div className="space-y-4">
                 {data.byStatus.map((item) => {
                   const total = data.byStatus.reduce((acc, s) => acc + s.count, 0);
                   const percentage = ((item.count / total) * 100).toFixed(1);
                   const colorMap: Record<string, string> = {
-                    'Gagnés': 'green',
-                    'Perdus': 'red',
-                    'En cours': 'primary',
-                    'Brouillons': 'yellow',
+                    won: 'green',
+                    lost: 'red',
+                    in_progress: 'primary',
+                    draft: 'yellow',
                   };
                   return (
                     <div key={item.status}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-600">{item.status}</span>
+                        <span className="text-sm text-gray-600">{t(`analytics.status.${item.status}`)}</span>
                         <span className="text-sm font-medium text-gray-900">
                           {item.count} ({percentage}%)
                         </span>
@@ -640,7 +695,7 @@ export default function AnalyticsPage() {
           {/* Performance par secteur */}
           <Card>
             <CardContent className="p-6">
-              <h3 className="font-semibold text-gray-900 mb-6">Performance par secteur</h3>
+              <h3 className="font-semibold text-gray-900 mb-6">{t('analytics.section.sectorPerformance')}</h3>
               <div className="space-y-4">
                 {data.bySector.map((sector) => (
                   <div key={sector.sector} className="flex items-center gap-4">
@@ -648,7 +703,7 @@ export default function AnalyticsPage() {
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-medium text-gray-900">{sector.sector}</span>
                         <span className="text-sm text-gray-500">
-                          {sector.won}/{sector.total} gagnés
+                          {t('analytics.sector.wonOfTotal', { won: sector.won, total: sector.total })}
                         </span>
                       </div>
                       <ProgressBar 
@@ -674,7 +729,7 @@ export default function AnalyticsPage() {
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-6">
                 <Sparkles className="w-5 h-5 text-primary-500" />
-                <h3 className="font-semibold text-gray-900">Recommandations IA</h3>
+                <h3 className="font-semibold text-gray-900">{t('analytics.section.aiRecommendations')}</h3>
               </div>
               <div className="space-y-4">
                 {data.recommendations.map((rec, index) => {
@@ -694,8 +749,8 @@ export default function AnalyticsPage() {
                       <div className="flex items-start gap-3">
                         <Icon className={`w-5 h-5 mt-0.5 ${colorMap[rec.type].split(' ')[0]}`} />
                         <div>
-                          <p className="font-medium text-gray-900">{rec.title}</p>
-                          <p className="text-sm text-gray-600 mt-1">{rec.description}</p>
+                          <p className="font-medium text-gray-900">{t(rec.titleKey)}</p>
+                          <p className="text-sm text-gray-600 mt-1">{t(rec.descriptionKey, rec.descriptionParams)}</p>
                         </div>
                       </div>
                     </div>
@@ -711,26 +766,26 @@ export default function AnalyticsPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="font-semibold text-gray-900">Analyse des attributaires récents</h3>
+                <h3 className="font-semibold text-gray-900">{t('analytics.section.recentWinners')}</h3>
                 <p className="text-sm text-gray-500 mt-1">
-                  Comparez vos prix avec les gagnants pour optimiser vos futures offres
+                  {t('analytics.section.recentWinners.subtitle')}
                 </p>
               </div>
               <Badge variant="info">
                 <Sparkles className="w-3 h-3 mr-1" />
-                Alimenté par IA
+                {t('analytics.badge.poweredByAi')}
               </Badge>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-100">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Appel d&apos;offres</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Attributaire</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-gray-500">Prix gagnant</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-gray-500">Votre prix</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-gray-500">Écart</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Date</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">{t('analytics.table.tender')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">{t('analytics.table.winner')}</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-gray-500">{t('analytics.table.winningPrice')}</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-gray-500">{t('analytics.table.yourPrice')}</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-gray-500">{t('analytics.table.gap')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">{t('analytics.table.date')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -741,14 +796,7 @@ export default function AnalyticsPage() {
                         <p className="text-xs text-gray-500">{item.buyer}</p>
                       </td>
                       <td className="py-3 px-4">
-                        {item.winner_name === 'Vous' ? (
-                          <Badge variant="success" className="text-xs">
-                            <Trophy className="w-3 h-3 mr-1" />
-                            Vous
-                          </Badge>
-                        ) : (
-                          <span className="text-sm text-gray-900">{item.winner_name}</span>
-                        )}
+                        <span className="text-sm text-gray-900">{item.winner_name}</span>
                       </td>
                       <td className="py-3 px-4 text-right text-sm font-medium text-gray-900">
                         {formatCurrency(item.winning_price)}
@@ -764,11 +812,11 @@ export default function AnalyticsPage() {
                             {item.price_gap > 0 ? '+' : ''}{item.price_gap.toFixed(1)}%
                           </span>
                         ) : (
-                          <Badge variant="success" className="text-xs">Gagné</Badge>
+                          <Badge variant="success" className="text-xs">{t('analytics.result.won')}</Badge>
                         )}
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-500">
-                        {new Date(item.award_date).toLocaleDateString('fr-FR')}
+                        {new Date(item.award_date).toLocaleDateString(locale)}
                       </td>
                     </tr>
                   ))}

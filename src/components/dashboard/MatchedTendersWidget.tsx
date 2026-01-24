@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Target, Trophy, Activity, Sparkles } from 'lucide-react';
-import { Card, Badge, Progress, Button } from '@/components/ui';
-import { formatCurrency, getDaysRemaining } from '@/lib/utils';
+import { Target, Sparkles } from 'lucide-react';
+import { Card, Badge, Button } from '@/components/ui';
+import { getDaysRemaining } from '@/lib/utils';
 import Link from 'next/link';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 interface MatchedTender {
   tender_id: string;
@@ -24,6 +26,35 @@ interface MatchedTendersWidgetProps {
 }
 
 export function MatchedTendersWidget({ minScore = 70, limit = 10 }: MatchedTendersWidgetProps) {
+  const { locale } = useLocale();
+  const entries = useMemo(
+    () => ({
+      'matchedTenders.title.full': 'Recommended tenders',
+      'matchedTenders.title.short': 'Recommended',
+
+      'matchedTenders.empty.title': 'No matching tenders',
+      'matchedTenders.empty.subtitle': 'Try lowering the minimum score or update your preferences',
+      'matchedTenders.empty.cta': 'Configure my preferences',
+
+      'matchedTenders.deadline': 'Deadline: {date}',
+      'matchedTenders.daysRemaining': '({days}d remaining)',
+
+      'matchedTenders.score.excellent': 'Excellent',
+      'matchedTenders.score.good': 'Good',
+      'matchedTenders.score.average': 'Average',
+      'matchedTenders.score.low': 'Low',
+
+      'matchedTenders.reason.sector': 'Sector',
+      'matchedTenders.reason.country': 'Country',
+      'matchedTenders.reason.keywords': 'Keywords',
+      'matchedTenders.reason.partial': 'Partial match',
+
+      'matchedTenders.viewAll': 'View all recommended tenders',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
+
   const [tenders, setTenders] = useState<MatchedTender[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedScore, setSelectedScore] = useState(minScore);
@@ -52,10 +83,10 @@ export function MatchedTendersWidget({ minScore = 70, limit = 10 }: MatchedTende
   };
 
   const getScoreLabel = (score: number) => {
-    if (score >= 90) return 'Excellent';
-    if (score >= 75) return 'Bon';
-    if (score >= 60) return 'Moyen';
-    return 'Faible';
+    if (score >= 90) return t('matchedTenders.score.excellent');
+    if (score >= 75) return t('matchedTenders.score.good');
+    if (score >= 60) return t('matchedTenders.score.average');
+    return t('matchedTenders.score.low');
   };
 
   if (loading) {
@@ -63,7 +94,7 @@ export function MatchedTendersWidget({ minScore = 70, limit = 10 }: MatchedTende
       <Card className="p-6">
         <div className="flex items-center gap-2 mb-4">
           <Sparkles className="w-5 h-5 text-blue-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Appels d'Offres Recommandés</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('matchedTenders.title.full')}</h3>
         </div>
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
@@ -79,7 +110,7 @@ export function MatchedTendersWidget({ minScore = 70, limit = 10 }: MatchedTende
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-blue-600" />
-          <h3 className="text-lg font-semibold text-gray-900">AO Recommandés</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('matchedTenders.title.short')}</h3>
           <Badge variant="primary">{tenders.length}</Badge>
         </div>
         
@@ -105,13 +136,13 @@ export function MatchedTendersWidget({ minScore = 70, limit = 10 }: MatchedTende
         {tenders.length === 0 ? (
           <div className="text-center py-8">
             <Target className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">Aucun AO correspondant</p>
+            <p className="text-gray-500">{t('matchedTenders.empty.title')}</p>
             <p className="text-sm text-gray-400 mt-1">
-              Essayez d'abaisser le score minimum ou configurez vos préférences
+              {t('matchedTenders.empty.subtitle')}
             </p>
             <Link href="/settings?tab=matching">
               <Button variant="secondary" className="mt-3">
-                Configurer mes préférences
+                {t('matchedTenders.empty.cta')}
               </Button>
             </Link>
           </div>
@@ -145,10 +176,14 @@ export function MatchedTendersWidget({ minScore = 70, limit = 10 }: MatchedTende
 
                         {tender.deadline && (
                           <div className="text-xs text-gray-400">
-                            Échéance: {new Date(tender.deadline).toLocaleDateString('fr-FR')}
+                            {t('matchedTenders.deadline', {
+                              date: new Date(tender.deadline).toLocaleDateString(locale),
+                            })}
                             {(() => {
                               const days = getDaysRemaining(tender.deadline);
-                              return days !== null ? ` (${days}j restants)` : '';
+                              return days !== null
+                                ? ` ${t('matchedTenders.daysRemaining', { days })}`
+                                : '';
                             })()}
                           </div>
                         )}
@@ -168,19 +203,19 @@ export function MatchedTendersWidget({ minScore = 70, limit = 10 }: MatchedTende
                     <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
                       {tender.match_score >= 90 && (
                         <>
-                          <Badge variant="success" size="sm">Secteur</Badge>
-                          <Badge variant="success" size="sm">Pays</Badge>
-                          <Badge variant="success" size="sm">Mots-clés</Badge>
+                          <Badge variant="success" size="sm">{t('matchedTenders.reason.sector')}</Badge>
+                          <Badge variant="success" size="sm">{t('matchedTenders.reason.country')}</Badge>
+                          <Badge variant="success" size="sm">{t('matchedTenders.reason.keywords')}</Badge>
                         </>
                       )}
                       {tender.match_score >= 75 && tender.match_score < 90 && (
                         <>
-                          <Badge variant="primary" size="sm">Secteur</Badge>
-                          <Badge variant="primary" size="sm">Pays</Badge>
+                          <Badge variant="primary" size="sm">{t('matchedTenders.reason.sector')}</Badge>
+                          <Badge variant="primary" size="sm">{t('matchedTenders.reason.country')}</Badge>
                         </>
                       )}
                       {tender.match_score < 75 && (
-                        <Badge variant="secondary" size="sm">Correspondance partielle</Badge>
+                        <Badge variant="secondary" size="sm">{t('matchedTenders.reason.partial')}</Badge>
                       )}
                     </div>
                   </div>
@@ -191,7 +226,7 @@ export function MatchedTendersWidget({ minScore = 70, limit = 10 }: MatchedTende
             {tenders.length >= limit && (
               <Link href="/marketplace">
                 <Button variant="secondary" className="w-full mt-3">
-                  Voir tous les AO recommandés
+                  {t('matchedTenders.viewAll')}
                 </Button>
               </Link>
             )}

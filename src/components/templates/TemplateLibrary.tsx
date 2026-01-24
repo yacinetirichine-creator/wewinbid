@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { useDebounce } from '@/hooks';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 import {
   FileText,
   Plus,
@@ -51,19 +53,24 @@ interface Template {
 
 interface TemplateCategory {
   id: string;
-  name: string;
+  nameKey: string;
   color: string;
   icon: string;
   count?: number;
 }
 
 const defaultCategories: TemplateCategory[] = [
-  { id: 'all', name: 'Tous', color: '#64748b', icon: 'folder' },
-  { id: 'technique', name: 'Technique', color: '#3b82f6', icon: 'cog' },
-  { id: 'financier', name: 'Financier', color: '#10b981', icon: 'currency' },
-  { id: 'administratif', name: 'Administratif', color: '#8b5cf6', icon: 'document' },
-  { id: 'commercial', name: 'Commercial', color: '#f59e0b', icon: 'shopping' },
-  { id: 'références', name: 'Références', color: '#ec4899', icon: 'star' },
+  { id: 'all', nameKey: 'templates.library.categories.all', color: '#64748b', icon: 'folder' },
+  { id: 'technique', nameKey: 'templates.library.categories.technique', color: '#3b82f6', icon: 'cog' },
+  { id: 'financier', nameKey: 'templates.library.categories.financier', color: '#10b981', icon: 'currency' },
+  {
+    id: 'administratif',
+    nameKey: 'templates.library.categories.administratif',
+    color: '#8b5cf6',
+    icon: 'document',
+  },
+  { id: 'commercial', nameKey: 'templates.library.categories.commercial', color: '#f59e0b', icon: 'shopping' },
+  { id: 'références', nameKey: 'templates.library.categories.references', color: '#ec4899', icon: 'star' },
 ];
 
 interface TemplateLibraryProps {
@@ -77,6 +84,76 @@ export function TemplateLibrary({
   onInsertTemplate,
   selectionMode = false,
 }: TemplateLibraryProps) {
+  const { locale } = useLocale();
+
+  const entries = useMemo(
+    () => ({
+      'templates.library.title': 'Template library',
+      'templates.library.new': 'New',
+      'templates.library.search.placeholder': 'Search for a template…',
+      'templates.library.favorites': 'Favorites',
+
+      'templates.library.categories.all': 'All',
+      'templates.library.categories.technique': 'Technical',
+      'templates.library.categories.financier': 'Financial',
+      'templates.library.categories.administratif': 'Administrative',
+      'templates.library.categories.commercial': 'Commercial',
+      'templates.library.categories.references': 'References',
+
+      'templates.library.empty.search': 'No template found',
+      'templates.library.empty.noTemplates': 'No template available',
+      'templates.library.empty.createFirst': 'Create your first template',
+
+      'templates.library.preview.fallbackTitle': 'Preview',
+      'templates.library.preview.copy': 'Copy',
+      'templates.library.preview.use': 'Use this template',
+      'templates.library.preview.variablesToFill': '{count, plural, one {# variable to fill} other {# variables to fill}}',
+
+      'templates.library.variables.title': 'Customize template',
+      'templates.library.variables.subtitle': 'Fill in the variables to customize your template:',
+      'templates.library.variables.selectPlaceholder': 'Select…',
+      'templates.library.variables.preview': 'Preview',
+      'templates.library.variables.cancel': 'Cancel',
+      'templates.library.variables.insert': 'Insert template',
+
+      'templates.library.never': 'Never',
+      'templates.library.ellipsis': '…',
+
+      'templates.card.usageCount': '{count, plural, one {# use} other {# uses}}',
+      'templates.card.tooltip.removeFavorite': 'Remove from favorites',
+      'templates.card.tooltip.addFavorite': 'Add to favorites',
+      'templates.card.tooltip.preview': 'Preview',
+      'templates.card.tooltip.copy': 'Copy',
+      'templates.card.action.select': 'Select',
+      'templates.card.action.use': 'Use',
+
+      'templates.create.title': 'Create a template',
+      'templates.create.name.label': 'Template name',
+      'templates.create.name.placeholder': 'e.g. Company overview',
+      'templates.create.category.label': 'Category',
+      'templates.create.description.label': 'Description',
+      'templates.create.description.placeholder': 'Short template description',
+      'templates.create.content.label': 'Content',
+      'templates.create.content.help': '(Use {{variable}} for dynamic fields)',
+      'templates.create.content.placeholder':
+        'Your content here…\n\nExample with a variable:\nOur company {{company_name}} specializes in {{domain}}.',
+      'templates.create.variablesDetected': 'Detected variables ({count})',
+      'templates.create.variable.labelPlaceholder': 'Label',
+      'templates.create.variable.type.text': 'Text',
+      'templates.create.variable.type.textarea': 'Text area',
+      'templates.create.variable.type.number': 'Number',
+      'templates.create.variable.type.date': 'Date',
+      'templates.create.tags.label': 'Tags (comma-separated)',
+      'templates.create.tags.placeholder': 'overview, company, introduction',
+      'templates.create.shareTeam': 'Share with the whole team',
+      'templates.create.cancel': 'Cancel',
+      'templates.create.submit': 'Create template',
+    }),
+    []
+  );
+
+  const { t } = useUiTranslations(locale, entries);
+
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -185,8 +262,8 @@ export function TemplateLibrary({
   };
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Jamais';
-    return new Date(dateString).toLocaleDateString('fr-FR', {
+    if (!dateString) return t('templates.library.never');
+    return new Date(dateString).toLocaleDateString(locale, {
       day: 'numeric',
       month: 'short',
     });
@@ -199,7 +276,7 @@ export function TemplateLibrary({
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-surface-900 dark:text-surface-100 flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary-500" />
-            Bibliothèque de templates
+            {t('templates.library.title')}
           </h2>
           {!selectionMode && (
             <Button
@@ -208,7 +285,7 @@ export function TemplateLibrary({
               className="flex items-center gap-1"
             >
               <Plus className="h-4 w-4" />
-              Nouveau
+              {t('templates.library.new')}
             </Button>
           )}
         </div>
@@ -217,7 +294,7 @@ export function TemplateLibrary({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400" />
           <Input
-            placeholder="Rechercher un template..."
+            placeholder={t('templates.library.search.placeholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -243,7 +320,7 @@ export function TemplateLibrary({
               style={selectedCategory === cat.id ? { backgroundColor: cat.color } : undefined}
             >
               <FolderOpen className="h-3.5 w-3.5" />
-              {cat.name}
+              {t(cat.nameKey)}
             </button>
           ))}
           <button
@@ -258,7 +335,7 @@ export function TemplateLibrary({
             `}
           >
             <Star className="h-3.5 w-3.5" />
-            Favoris
+            {t('templates.library.favorites')}
           </button>
         </div>
       </div>
@@ -277,7 +354,7 @@ export function TemplateLibrary({
           <div className="text-center py-12">
             <FileText className="h-12 w-12 mx-auto text-surface-300 dark:text-surface-600 mb-4" />
             <p className="text-surface-500 dark:text-surface-400">
-              {searchQuery ? 'Aucun template trouvé' : 'Aucun template disponible'}
+              {searchQuery ? t('templates.library.empty.search') : t('templates.library.empty.noTemplates')}
             </p>
             {!selectionMode && !searchQuery && (
               <Button
@@ -286,7 +363,7 @@ export function TemplateLibrary({
                 className="mt-4"
                 onClick={() => setShowCreateModal(true)}
               >
-                Créer votre premier template
+                {t('templates.library.empty.createFirst')}
               </Button>
             )}
           </div>
@@ -304,6 +381,8 @@ export function TemplateLibrary({
                 onToggleFavorite={() => toggleFavorite(template.id, !!template.is_favorite)}
                 onCopy={() => copyToClipboard(template.content)}
                 selectionMode={selectionMode}
+                t={t}
+                locale={locale}
               />
             ))}
           </div>
@@ -317,7 +396,7 @@ export function TemplateLibrary({
           setShowPreviewModal(false);
           setSelectedTemplate(null);
         }}
-        title={selectedTemplate?.name || 'Aperçu'}
+        title={selectedTemplate?.name || t('templates.library.preview.fallbackTitle')}
         size="lg"
       >
         {selectedTemplate && (
@@ -343,7 +422,7 @@ export function TemplateLibrary({
               <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
                 <p className="text-sm font-medium text-amber-800 dark:text-amber-200 flex items-center gap-2">
                   <Variable className="h-4 w-4" />
-                  {selectedTemplate.variables.length} variable(s) à remplir
+                  {t('templates.library.preview.variablesToFill', { count: selectedTemplate.variables.length })}
                 </p>
               </div>
             )}
@@ -360,10 +439,10 @@ export function TemplateLibrary({
                 onClick={() => copyToClipboard(selectedTemplate.content)}
               >
                 <Copy className="h-4 w-4 mr-2" />
-                Copier
+                {t('templates.library.preview.copy')}
               </Button>
               <Button onClick={() => handleUseTemplate(selectedTemplate)}>
-                Utiliser ce template
+                {t('templates.library.preview.use')}
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
@@ -379,13 +458,13 @@ export function TemplateLibrary({
           setSelectedTemplate(null);
           setVariableValues({});
         }}
-        title="Personnaliser le template"
+        title={t('templates.library.variables.title')}
         size="lg"
       >
         {selectedTemplate && (
           <div className="space-y-6">
             <p className="text-surface-600 dark:text-surface-400">
-              Remplissez les variables pour personnaliser votre template :
+              {t('templates.library.variables.subtitle')}
             </p>
 
             <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
@@ -418,7 +497,7 @@ export function TemplateLibrary({
                       }
                       className="w-full px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100"
                     >
-                      <option value="">Sélectionner...</option>
+                      <option value="">{t('templates.library.variables.selectPlaceholder')}</option>
                       {variable.options.map((opt) => (
                         <option key={opt} value={opt}>
                           {opt}
@@ -445,12 +524,12 @@ export function TemplateLibrary({
             {/* Preview du résultat */}
             <div className="border-t border-surface-200 dark:border-surface-700 pt-4">
               <h4 className="text-sm font-medium text-surface-700 dark:text-surface-200 mb-2">
-                Aperçu
+                {t('templates.library.variables.preview')}
               </h4>
               <div className="p-3 bg-surface-100 dark:bg-surface-800 rounded-lg max-h-40 overflow-y-auto">
                 <pre className="text-xs text-surface-600 dark:text-surface-400 whitespace-pre-wrap">
                   {applyVariables(selectedTemplate.content, variableValues).slice(0, 500)}
-                  {applyVariables(selectedTemplate.content, variableValues).length > 500 && '...'}
+                  {applyVariables(selectedTemplate.content, variableValues).length > 500 && t('templates.library.ellipsis')}
                 </pre>
               </div>
             </div>
@@ -464,10 +543,10 @@ export function TemplateLibrary({
                   setVariableValues({});
                 }}
               >
-                Annuler
+                {t('templates.library.variables.cancel')}
               </Button>
               <Button onClick={confirmUseTemplate}>
-                Insérer le template
+                {t('templates.library.variables.insert')}
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
@@ -483,6 +562,7 @@ export function TemplateLibrary({
           setShowCreateModal(false);
           fetchTemplates();
         }}
+        t={t}
       />
     </div>
   );
@@ -496,6 +576,8 @@ interface TemplateCardProps {
   onToggleFavorite: () => void;
   onCopy: () => void;
   selectionMode?: boolean;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  locale: string;
 }
 
 function TemplateCard({
@@ -505,6 +587,8 @@ function TemplateCard({
   onToggleFavorite,
   onCopy,
   selectionMode,
+  t,
+  locale,
 }: TemplateCardProps) {
   const categoryColors: Record<string, string> = {
     technique: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
@@ -544,12 +628,12 @@ function TemplateCard({
             )}
             <span className="flex items-center gap-1">
               <TrendingUp className="h-3 w-3" />
-              {template.usage_count} utilisations
+              {t('templates.card.usageCount', { count: template.usage_count })}
             </span>
             {template.last_used_at && (
               <span className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
-                {new Date(template.last_used_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                {new Date(template.last_used_at).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}
               </span>
             )}
           </div>
@@ -562,7 +646,11 @@ function TemplateCard({
               onToggleFavorite();
             }}
             className="p-1.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
-            title={template.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            title={
+              template.is_favorite
+                ? t('templates.card.tooltip.removeFavorite')
+                : t('templates.card.tooltip.addFavorite')
+            }
           >
             {template.is_favorite ? (
               <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
@@ -576,7 +664,7 @@ function TemplateCard({
               onPreview();
             }}
             className="p-1.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors opacity-0 group-hover:opacity-100"
-            title="Aperçu"
+            title={t('templates.card.tooltip.preview')}
           >
             <Eye className="h-4 w-4 text-surface-400" />
           </button>
@@ -586,7 +674,7 @@ function TemplateCard({
               onCopy();
             }}
             className="p-1.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors opacity-0 group-hover:opacity-100"
-            title="Copier"
+            title={t('templates.card.tooltip.copy')}
           >
             <Copy className="h-4 w-4 text-surface-400" />
           </button>
@@ -596,7 +684,7 @@ function TemplateCard({
       {/* Actions */}
       <div className="flex justify-end mt-3 pt-3 border-t border-surface-100 dark:border-surface-700">
         <Button size="sm" onClick={onUse}>
-          {selectionMode ? 'Sélectionner' : 'Utiliser'}
+          {selectionMode ? t('templates.card.action.select') : t('templates.card.action.use')}
           <ChevronRight className="h-3.5 w-3.5 ml-1" />
         </Button>
       </div>
@@ -609,9 +697,10 @@ interface TemplateCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreated: () => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
-function TemplateCreateModal({ isOpen, onClose, onCreated }: TemplateCreateModalProps) {
+function TemplateCreateModal({ isOpen, onClose, onCreated, t }: TemplateCreateModalProps) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -692,46 +781,46 @@ function TemplateCreateModal({ isOpen, onClose, onCreated }: TemplateCreateModal
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Créer un template" size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('templates.create.title')} size="xl">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <Input
-            label="Nom du template"
+            label={t('templates.create.name.label')}
             value={formData.name}
             onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-            placeholder="Ex: Présentation entreprise"
+            placeholder={t('templates.create.name.placeholder')}
             required
           />
           <div>
             <label className="block text-sm font-medium text-surface-700 dark:text-surface-200 mb-1.5">
-              Catégorie
+              {t('templates.create.category.label')}
             </label>
             <select
               value={formData.category}
               onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
               className="w-full px-3 py-2.5 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100"
             >
-              <option value="technique">Technique</option>
-              <option value="financier">Financier</option>
-              <option value="administratif">Administratif</option>
-              <option value="commercial">Commercial</option>
-              <option value="références">Références</option>
+              <option value="technique">{t('templates.library.categories.technique')}</option>
+              <option value="financier">{t('templates.library.categories.financier')}</option>
+              <option value="administratif">{t('templates.library.categories.administratif')}</option>
+              <option value="commercial">{t('templates.library.categories.commercial')}</option>
+              <option value="références">{t('templates.library.categories.references')}</option>
             </select>
           </div>
         </div>
 
         <Input
-          label="Description"
+          label={t('templates.create.description.label')}
           value={formData.description}
           onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-          placeholder="Description courte du template"
+          placeholder={t('templates.create.description.placeholder')}
         />
 
         <div>
           <label className="block text-sm font-medium text-surface-700 dark:text-surface-200 mb-1.5">
-            Contenu
+            {t('templates.create.content.label')}
             <span className="text-surface-400 dark:text-surface-500 font-normal ml-2">
-              (Utilisez {'{{variable}}'} pour les champs dynamiques)
+              {t('templates.create.content.help')}
             </span>
           </label>
           <textarea
@@ -739,10 +828,7 @@ function TemplateCreateModal({ isOpen, onClose, onCreated }: TemplateCreateModal
             onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
             rows={10}
             className="w-full px-3 py-2.5 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 font-mono text-sm"
-            placeholder="Votre contenu ici...
-
-Exemple avec variable :
-Notre entreprise {{company_name}} est spécialisée dans {{domain}}."
+            placeholder={t('templates.create.content.placeholder')}
             required
           />
         </div>
@@ -752,7 +838,7 @@ Notre entreprise {{company_name}} est spécialisée dans {{domain}}."
           <div className="p-4 bg-surface-100 dark:bg-surface-800 rounded-lg">
             <h4 className="text-sm font-medium text-surface-700 dark:text-surface-200 mb-3 flex items-center gap-2">
               <Variable className="h-4 w-4" />
-              Variables détectées ({variables.length})
+              {t('templates.create.variablesDetected', { count: variables.length })}
             </h4>
             <div className="space-y-3">
               {variables.map((variable, index) => (
@@ -767,7 +853,7 @@ Notre entreprise {{company_name}} est spécialisée dans {{domain}}."
                       newVars[index].label = e.target.value;
                       setVariables(newVars);
                     }}
-                    placeholder="Label"
+                    placeholder={t('templates.create.variable.labelPlaceholder')}
                     className="flex-1"
                   />
                   <select
@@ -779,10 +865,10 @@ Notre entreprise {{company_name}} est spécialisée dans {{domain}}."
                     }}
                     className="px-2 py-1.5 rounded border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-sm"
                   >
-                    <option value="text">Texte</option>
-                    <option value="textarea">Zone de texte</option>
-                    <option value="number">Nombre</option>
-                    <option value="date">Date</option>
+                    <option value="text">{t('templates.create.variable.type.text')}</option>
+                    <option value="textarea">{t('templates.create.variable.type.textarea')}</option>
+                    <option value="number">{t('templates.create.variable.type.number')}</option>
+                    <option value="date">{t('templates.create.variable.type.date')}</option>
                   </select>
                 </div>
               ))}
@@ -791,10 +877,10 @@ Notre entreprise {{company_name}} est spécialisée dans {{domain}}."
         )}
 
         <Input
-          label="Tags (séparés par des virgules)"
+          label={t('templates.create.tags.label')}
           value={formData.tags}
           onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
-          placeholder="présentation, entreprise, introduction"
+          placeholder={t('templates.create.tags.placeholder')}
         />
 
         <label className="flex items-center gap-2 cursor-pointer">
@@ -805,16 +891,16 @@ Notre entreprise {{company_name}} est spécialisée dans {{domain}}."
             className="w-4 h-4 rounded border-surface-300 text-primary-600 focus:ring-primary-500"
           />
           <span className="text-sm text-surface-700 dark:text-surface-200">
-            Partager avec toute l'équipe
+            {t('templates.create.shareTeam')}
           </span>
         </label>
 
         <div className="flex justify-end gap-2 pt-4 border-t border-surface-200 dark:border-surface-700">
           <Button type="button" variant="ghost" onClick={onClose}>
-            Annuler
+            {t('templates.create.cancel')}
           </Button>
           <Button type="submit" isLoading={saving}>
-            Créer le template
+            {t('templates.create.submit')}
           </Button>
         </div>
       </form>

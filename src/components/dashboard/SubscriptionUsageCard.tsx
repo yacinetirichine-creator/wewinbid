@@ -4,6 +4,32 @@ import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui';
 import { AlertTriangle, CheckCircle, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
+
+const entries = {
+  'subscriptionUsage.plan': 'Plan {plan}',
+  'subscriptionUsage.status.active': 'Active',
+  'subscriptionUsage.status.inactive': 'Inactive',
+  'subscriptionUsage.actions.manage': 'Manage',
+  'subscriptionUsage.usage.tenders': 'Tender responses this month',
+  'subscriptionUsage.limit.reached.title': 'Limit reached',
+  'subscriptionUsage.limit.reached.body': 'You have reached your limit of {limit} responses this month.',
+  'subscriptionUsage.limit.reached.cta': 'Upgrade your plan',
+  'subscriptionUsage.limit.reached.suffix': 'to create more responses.',
+  'subscriptionUsage.limit.near.title': 'Near the limit',
+  'subscriptionUsage.limit.near.body': 'You are approaching your monthly limit.',
+  'subscriptionUsage.limit.near.cta': 'Upgrade your plan',
+  'subscriptionUsage.limit.near.suffix': 'for more responses.',
+  'subscriptionUsage.usage.collaborators': 'Collaborators',
+  'subscriptionUsage.usage.storage': 'Storage',
+  'subscriptionUsage.features.title': 'Available features',
+  'subscriptionUsage.features.aiScore': 'AI score',
+  'subscriptionUsage.features.winnerAnalysis': 'Winner analysis',
+  'subscriptionUsage.features.marketplace': 'Marketplace',
+  'subscriptionUsage.features.coEditing': 'Co-editing',
+  'subscriptionUsage.features.api': 'API',
+} as const;
 
 interface UsageStats {
   subscription: {
@@ -38,6 +64,9 @@ interface UsageStats {
 }
 
 export function SubscriptionUsageCard() {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+
   const [stats, setStats] = useState<UsageStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -80,17 +109,21 @@ export function SubscriptionUsageCard() {
       <div className="flex items-start justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-surface-900 mb-1">
-            Plan {subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1)}
+            {t('subscriptionUsage.plan', {
+              plan: subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1),
+            })}
           </h3>
           <p className="text-sm text-surface-500">
-            {subscription.isActive ? 'Actif' : 'Inactif'}
+            {subscription.isActive
+              ? t('subscriptionUsage.status.active')
+              : t('subscriptionUsage.status.inactive')}
           </p>
         </div>
         <Link
           href="/settings?tab=billing"
           className="text-sm text-primary-600 hover:text-primary-700 font-medium"
         >
-          Gérer
+          {t('subscriptionUsage.actions.manage')}
         </Link>
       </div>
 
@@ -99,7 +132,7 @@ export function SubscriptionUsageCard() {
         <div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-surface-700">
-              Réponses aux AO ce mois
+              {t('subscriptionUsage.usage.tenders')}
             </span>
             <span className="text-sm font-medium text-surface-900">
               {usage.tenders.current} / {usage.tenders.limit === Infinity ? '∞' : usage.tenders.limit}
@@ -126,17 +159,19 @@ export function SubscriptionUsageCard() {
                   <AlertTriangle className="w-5 h-5 text-error-600 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-error-900 mb-1">
-                      Limite atteinte
+                      {t('subscriptionUsage.limit.reached.title')}
                     </p>
                     <p className="text-sm text-error-700">
-                      Vous avez atteint votre limite de {usage.tenders.limit} réponses ce mois.{' '}
+                      {t('subscriptionUsage.limit.reached.body', {
+                        limit: usage.tenders.limit === Infinity ? '∞' : String(usage.tenders.limit),
+                      })}{' '}
                       <Link
                         href="/pricing"
                         className="font-medium underline hover:no-underline"
                       >
-                        Passez à un plan supérieur
+                        {t('subscriptionUsage.limit.reached.cta')}
                       </Link>
-                      {' '}pour créer plus de réponses.
+                      {' '}{t('subscriptionUsage.limit.reached.suffix')}
                     </p>
                   </div>
                 </div>
@@ -147,17 +182,17 @@ export function SubscriptionUsageCard() {
                   <TrendingUp className="w-5 h-5 text-warning-600 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-warning-900 mb-1">
-                      Proche de la limite
+                      {t('subscriptionUsage.limit.near.title')}
                     </p>
                     <p className="text-sm text-warning-700">
-                      Vous approchez de votre limite mensuelle.{' '}
+                      {t('subscriptionUsage.limit.near.body')}{' '}
                       <Link
                         href="/pricing"
                         className="font-medium underline hover:no-underline"
                       >
-                        Upgrader votre plan
+                        {t('subscriptionUsage.limit.near.cta')}
                       </Link>
-                      {' '}pour plus de réponses.
+                      {' '}{t('subscriptionUsage.limit.near.suffix')}
                     </p>
                   </div>
                 </div>
@@ -170,7 +205,7 @@ export function SubscriptionUsageCard() {
         <div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-surface-700">
-              Collaborateurs
+              {t('subscriptionUsage.usage.collaborators')}
             </span>
             <span className="text-sm font-medium text-surface-900">
               {usage.collaborators.current} / {usage.collaborators.limit}
@@ -188,10 +223,10 @@ export function SubscriptionUsageCard() {
         <div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-surface-700">
-              Stockage
+              {t('subscriptionUsage.usage.storage')}
             </span>
             <span className="text-sm font-medium text-surface-900">
-              {usage.storage.current.toFixed(1)} GB / {usage.storage.limit} GB
+              {usage.storage.current.toLocaleString(locale, { maximumFractionDigits: 1 })} GB / {usage.storage.limit} GB
             </span>
           </div>
           <div className="w-full bg-surface-200 rounded-full h-2 overflow-hidden">
@@ -206,7 +241,7 @@ export function SubscriptionUsageCard() {
       {/* Fonctionnalités */}
       <div className="mt-6 pt-6 border-t border-surface-200">
         <h4 className="text-sm font-medium text-surface-900 mb-3">
-          Fonctionnalités disponibles
+          {t('subscriptionUsage.features.title')}
         </h4>
         <div className="grid grid-cols-2 gap-2">
           <div className="flex items-center gap-2">
@@ -215,7 +250,7 @@ export function SubscriptionUsageCard() {
                 stats.features.aiScore ? 'text-success-600' : 'text-surface-300'
               }`}
             />
-            <span className="text-sm text-surface-700">Score IA</span>
+            <span className="text-sm text-surface-700">{t('subscriptionUsage.features.aiScore')}</span>
           </div>
           <div className="flex items-center gap-2">
             <CheckCircle
@@ -223,7 +258,7 @@ export function SubscriptionUsageCard() {
                 stats.features.winnerAnalysis ? 'text-success-600' : 'text-surface-300'
               }`}
             />
-            <span className="text-sm text-surface-700">Analyse gagnants</span>
+            <span className="text-sm text-surface-700">{t('subscriptionUsage.features.winnerAnalysis')}</span>
           </div>
           <div className="flex items-center gap-2">
             <CheckCircle
@@ -231,7 +266,7 @@ export function SubscriptionUsageCard() {
                 stats.features.marketplace ? 'text-success-600' : 'text-surface-300'
               }`}
             />
-            <span className="text-sm text-surface-700">Marketplace</span>
+            <span className="text-sm text-surface-700">{t('subscriptionUsage.features.marketplace')}</span>
           </div>
           <div className="flex items-center gap-2">
             <CheckCircle
@@ -239,7 +274,7 @@ export function SubscriptionUsageCard() {
                 stats.features.coEditing ? 'text-success-600' : 'text-surface-300'
               }`}
             />
-            <span className="text-sm text-surface-700">Co-édition</span>
+            <span className="text-sm text-surface-700">{t('subscriptionUsage.features.coEditing')}</span>
           </div>
           <div className="flex items-center gap-2">
             <CheckCircle
@@ -247,7 +282,7 @@ export function SubscriptionUsageCard() {
                 stats.features.api ? 'text-success-600' : 'text-surface-300'
               }`}
             />
-            <span className="text-sm text-surface-700">API</span>
+            <span className="text-sm text-surface-700">{t('subscriptionUsage.features.api')}</span>
           </div>
         </div>
       </div>

@@ -93,6 +93,15 @@ function extractLiteralAttributes(source) {
     const name = m[1];
     const value = (m[3] || '').trim();
     if (looksLikeNoise(value)) continue;
+
+    // Heuristic: ensure we're inside a JSX tag (avoid matching JS like `const label = '...'`).
+    const idx = m.index;
+    const ctxStart = Math.max(0, idx - 250);
+    const ctx = source.slice(ctxStart, idx);
+    const lastOpen = ctx.lastIndexOf('<');
+    const lastClose = ctx.lastIndexOf('>');
+    if (lastOpen === -1 || lastOpen < lastClose) continue;
+
     out.push({ name, value });
   }
   return out;
@@ -115,6 +124,16 @@ function main() {
   const report = [];
 
   for (const file of files) {
+    const rel = path.relative(ROOT, file);
+
+    // Skip Next.js API routes (server-only)
+    if (rel.startsWith(`src${path.sep}app${path.sep}api${path.sep}`)) continue;
+
+    // Skip tests/specs and generated fixtures
+    if (rel.includes(`${path.sep}__tests__${path.sep}`)) continue;
+    if (rel.endsWith('.test.ts') || rel.endsWith('.test.tsx')) continue;
+    if (rel.endsWith('.spec.ts') || rel.endsWith('.spec.tsx')) continue;
+
     const text = fs.readFileSync(file, 'utf8');
 
     // Heuristic skip: ignore translation dictionaries and obvious non-UI files

@@ -26,7 +26,29 @@ import {
 import { Button, Badge, Card, Textarea } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import type { Locale } from 'date-fns';
+import { enUS, fr } from 'date-fns/locale';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
+
+const entries = {
+  'team.presence.onlineCount': '{count} online',
+  'team.channels.title': 'Channels',
+  'team.message.edited': '(edited)',
+  'team.message.actions.like': 'Like',
+  'team.message.actions.reply': 'Reply',
+  'team.message.actions.edit': 'Edit',
+  'team.message.actions.delete': 'Delete',
+  'team.input.placeholder': 'Write a message...',
+  'team.input.replyingTo': 'Replying to',
+  'team.chat.empty.title': 'No messages',
+  'team.chat.empty.subtitle': 'Be the first to write!',
+  'team.chat.me': 'Me',
+  'team.activity.title': 'Recent activity',
+  'team.activity.empty': 'No recent activity',
+} as const;
+
+type TFunction = (key: keyof typeof entries, vars?: Record<string, any>) => string;
 
 // Types
 interface TeamMember {
@@ -100,6 +122,9 @@ export function PresenceIndicator({
   maxVisible = 5,
   className,
 }: PresenceIndicatorProps) {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+
   const onlineMembers = members.filter(m => m.isOnline);
   const visibleMembers = onlineMembers.slice(0, maxVisible);
   const remainingCount = onlineMembers.length - maxVisible;
@@ -148,7 +173,7 @@ export function PresenceIndicator({
       </div>
       
       <span className="text-sm text-surface-500">
-        {onlineMembers.length} en ligne
+        {t('team.presence.onlineCount', { count: onlineMembers.length })}
       </span>
     </div>
   );
@@ -168,6 +193,9 @@ export function ChannelList({
   onSelectChannel: (channelId: string) => void;
   className?: string;
 }) {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+
   const getChannelIcon = (type: Channel['type']) => {
     switch (type) {
       case 'tender':
@@ -182,7 +210,7 @@ export function ChannelList({
   return (
     <div className={cn('space-y-1', className)}>
       <h3 className="px-3 py-2 text-xs font-semibold text-surface-500 uppercase tracking-wider">
-        Canaux
+        {t('team.channels.title')}
       </h3>
       {channels.map((channel) => (
         <button
@@ -220,6 +248,8 @@ function MessageBubble({
   onEdit,
   onDelete,
   onReact,
+  t,
+  distanceLocale,
 }: {
   message: Message;
   isOwn: boolean;
@@ -227,6 +257,8 @@ function MessageBubble({
   onEdit?: () => void;
   onDelete?: () => void;
   onReact?: (emoji: string) => void;
+  t: TFunction;
+  distanceLocale: Locale;
 }) {
   const [showActions, setShowActions] = useState(false);
 
@@ -266,13 +298,13 @@ function MessageBubble({
             {message.author.name}
           </span>
           <span className="text-xs text-surface-400">
-            {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true, locale: fr })}
+            {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true, locale: distanceLocale })}
           </span>
           {message.isPinned && (
             <Pin className="w-3 h-3 text-amber-500" />
           )}
           {message.isEdited && (
-            <span className="text-xs text-surface-400">(modifié)</span>
+            <span className="text-xs text-surface-400">{t('team.message.edited')}</span>
           )}
         </div>
 
@@ -344,14 +376,14 @@ function MessageBubble({
             <button
               onClick={() => onReact?.('👍')}
               className="p-1.5 hover:bg-surface-100 rounded"
-              title="J'aime"
+              title={t('team.message.actions.like')}
             >
               <Smile className="w-4 h-4 text-surface-500" />
             </button>
             <button
               onClick={onReply}
               className="p-1.5 hover:bg-surface-100 rounded"
-              title="Répondre"
+              title={t('team.message.actions.reply')}
             >
               <Reply className="w-4 h-4 text-surface-500" />
             </button>
@@ -360,14 +392,14 @@ function MessageBubble({
                 <button
                   onClick={onEdit}
                   className="p-1.5 hover:bg-surface-100 rounded"
-                  title="Modifier"
+                  title={t('team.message.actions.edit')}
                 >
                   <Edit2 className="w-4 h-4 text-surface-500" />
                 </button>
                 <button
                   onClick={onDelete}
                   className="p-1.5 hover:bg-surface-100 rounded"
-                  title="Supprimer"
+                  title={t('team.message.actions.delete')}
                 >
                   <Trash2 className="w-4 h-4 text-red-500" />
                 </button>
@@ -388,16 +420,19 @@ function MessageInput({
   onAttach,
   replyingTo,
   onCancelReply,
-  placeholder = 'Écrivez un message...',
+  placeholder,
+  t,
 }: {
   onSend: (content: string) => void;
   onAttach?: (files: File[]) => void;
   replyingTo?: Message;
   onCancelReply?: () => void;
   placeholder?: string;
+  t: TFunction;
 }) {
   const [content, setContent] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const effectivePlaceholder = placeholder ?? t('team.input.placeholder');
 
   const handleSubmit = () => {
     if (content.trim()) {
@@ -427,7 +462,7 @@ function MessageInput({
         <div className="flex items-center justify-between mb-2 p-2 bg-surface-50 rounded-lg">
           <div className="flex items-center gap-2 text-sm">
             <Reply className="w-4 h-4 text-surface-400" />
-            <span className="text-surface-500">Répondre à</span>
+            <span className="text-surface-500">{t('team.input.replyingTo')}</span>
             <span className="font-medium text-surface-700">{replyingTo.author.name}</span>
           </div>
           <button onClick={onCancelReply} className="p-1 hover:bg-surface-200 rounded">
@@ -455,7 +490,7 @@ function MessageInput({
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={placeholder}
+            placeholder={effectivePlaceholder}
             rows={1}
             className="resize-none pr-10"
           />
@@ -484,6 +519,10 @@ export function TeamChat({
   onSendMessage,
   className,
 }: TeamChatProps) {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+  const distanceLocale: Locale = locale.startsWith('fr') ? fr : enUS;
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState<Message | undefined>();
@@ -522,7 +561,7 @@ export function TeamChat({
       authorId: currentUserId,
       author: {
         id: currentUserId,
-        name: 'Moi',
+        name: t('team.chat.me'),
         email: '',
         role: 'editor',
         isOnline: true,
@@ -573,8 +612,8 @@ export function TeamChat({
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-surface-500">
             <MessageSquare className="w-12 h-12 mb-2 opacity-50" />
-            <p>Aucun message</p>
-            <p className="text-sm">Soyez le premier à écrire !</p>
+            <p>{t('team.chat.empty.title')}</p>
+            <p className="text-sm">{t('team.chat.empty.subtitle')}</p>
           </div>
         ) : (
           <div className="py-4">
@@ -587,6 +626,8 @@ export function TeamChat({
                 onEdit={() => {/* TODO */}}
                 onDelete={() => {/* TODO */}}
                 onReact={() => {/* TODO */}}
+                t={t}
+                distanceLocale={distanceLocale}
               />
             ))}
             <div ref={messagesEndRef} />
@@ -599,6 +640,7 @@ export function TeamChat({
         onSend={handleSend}
         replyingTo={replyingTo}
         onCancelReply={() => setReplyingTo(undefined)}
+        t={t}
       />
     </Card>
   );
@@ -608,6 +650,10 @@ export function TeamChat({
  * Fil d'activité pour un appel d'offres
  */
 export function ActivityFeed({ tenderId, className }: ActivityFeedProps) {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+  const distanceLocale: Locale = locale.startsWith('fr') ? fr : enUS;
+
   const [activities, setActivities] = useState<Array<{
     id: string;
     type: string;
@@ -652,7 +698,7 @@ export function ActivityFeed({ tenderId, className }: ActivityFeedProps) {
     <Card className={cn('p-4', className)}>
       <h3 className="font-semibold text-surface-900 mb-4 flex items-center gap-2">
         <Clock className="w-5 h-5 text-surface-400" />
-        Activité récente
+        {t('team.activity.title')}
       </h3>
 
       <div className="space-y-4">
@@ -667,7 +713,7 @@ export function ActivityFeed({ tenderId, className }: ActivityFeedProps) {
                 {activity.description}
               </p>
               <p className="text-xs text-surface-400 mt-0.5">
-                {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true, locale: fr })}
+                {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true, locale: distanceLocale })}
               </p>
             </div>
           </div>
@@ -675,7 +721,7 @@ export function ActivityFeed({ tenderId, className }: ActivityFeedProps) {
 
         {activities.length === 0 && (
           <p className="text-sm text-surface-500 text-center py-4">
-            Aucune activité récente
+            {t('team.activity.empty')}
           </p>
         )}
       </div>

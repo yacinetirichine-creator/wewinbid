@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 import {
   CheckCircle,
   XCircle,
@@ -103,6 +105,65 @@ export function ApprovalWorkflowManager({
   onClose,
   onUpdate,
 }: ApprovalWorkflowManagerProps) {
+  const { locale } = useLocale();
+  const entries = useMemo(
+    () => ({
+      'approval.common.back': '← Back',
+      'approval.common.cancel': 'Cancel',
+      'approval.common.confirm': 'Confirm',
+      'approval.common.userFallback': 'User',
+      'approval.common.approverFallback': 'Approver',
+      'approval.common.stepLabel': 'Step: {name}',
+
+      'approval.cancel.confirm': 'Are you sure you want to cancel this request?',
+
+      'approval.request.cancel': 'Cancel request',
+      'approval.request.requester': 'Requester',
+      'approval.request.workflow': 'Workflow',
+      'approval.request.requestedAt': 'Requested on',
+      'approval.request.dueDate': 'Due date',
+
+      'approval.workflowProgress.title': 'Workflow progress',
+      'approval.badge.urgent': 'Urgent',
+      'approval.badge.inProgress': 'In progress',
+
+      'approval.decision.verb.approved': 'approved',
+      'approval.decision.verb.rejected': 'rejected',
+      'approval.decision.verb.requestChanges': 'requested changes',
+
+      'approval.action.approve': 'Approve',
+      'approval.action.requestChanges': 'Request changes',
+      'approval.action.reject': 'Reject',
+
+      'approval.comments.title': 'Comments ({count})',
+      'approval.comments.empty': 'No comments yet',
+      'approval.comments.placeholder': 'Add a comment…',
+
+      'approval.modal.title.approve': 'Confirm approval',
+      'approval.modal.title.reject': 'Confirm rejection',
+      'approval.modal.title.requestChanges': 'Request changes',
+      'approval.modal.placeholder.optional': 'Comment (optional)…',
+      'approval.modal.placeholder.required': 'Please explain your decision…',
+
+      'approval.list.title': 'Approval requests',
+      'approval.filter.all': 'All',
+      'approval.filter.inProgress': 'In progress',
+      'approval.filter.approved': 'Approved',
+      'approval.filter.rejected': 'Rejected',
+
+      'approval.empty.title': 'No requests',
+      'approval.empty.subtitle': 'You have no approval requests for now.',
+
+      'approval.status.pending': 'Pending',
+      'approval.status.in_progress': 'In progress',
+      'approval.status.approved': 'Approved',
+      'approval.status.rejected': 'Rejected',
+      'approval.status.cancelled': 'Cancelled',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
+
   const [requests, setRequests] = useState<ApprovalRequest[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<ApprovalRequest | null>(null);
   const [loading, setLoading] = useState(true);
@@ -194,7 +255,7 @@ export function ApprovalWorkflowManager({
   };
 
   const handleCancel = async () => {
-    if (!selectedRequest || !confirm('Êtes-vous sûr de vouloir annuler cette demande ?')) return;
+    if (!selectedRequest || !confirm(t('approval.cancel.confirm'))) return;
 
     try {
       const response = await fetch(`/api/approvals/${selectedRequest.id}`, {
@@ -236,11 +297,11 @@ export function ApprovalWorkflowManager({
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; variant: 'success' | 'danger' | 'warning' | 'default' }> = {
-      pending: { label: 'En attente', variant: 'warning' },
-      in_progress: { label: 'En cours', variant: 'warning' },
-      approved: { label: 'Approuvé', variant: 'success' },
-      rejected: { label: 'Rejeté', variant: 'danger' },
-      cancelled: { label: 'Annulé', variant: 'default' },
+      pending: { label: t('approval.status.pending'), variant: 'warning' },
+      in_progress: { label: t('approval.status.in_progress'), variant: 'warning' },
+      approved: { label: t('approval.status.approved'), variant: 'success' },
+      rejected: { label: t('approval.status.rejected'), variant: 'danger' },
+      cancelled: { label: t('approval.status.cancelled'), variant: 'default' },
     };
     const config = statusConfig[status] || statusConfig.pending;
     return <Badge variant={config.variant}>{config.label}</Badge>;
@@ -265,12 +326,12 @@ export function ApprovalWorkflowManager({
         {/* Header */}
         <div className="flex items-center justify-between">
           <Button variant="ghost" onClick={() => setView('list')}>
-            ← Retour
+            {t('approval.common.back')}
           </Button>
           <div className="flex items-center gap-2">
             {selectedRequest.status === 'in_progress' && (
               <Button variant="outline" onClick={handleCancel}>
-                Annuler la demande
+                {t('approval.request.cancel')}
               </Button>
             )}
             {onClose && (
@@ -288,7 +349,7 @@ export function ApprovalWorkflowManager({
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   {selectedRequest.is_urgent && (
-                    <Badge variant="danger">Urgent</Badge>
+                    <Badge variant="danger">{t('approval.badge.urgent')}</Badge>
                   )}
                   {getStatusBadge(selectedRequest.status)}
                 </div>
@@ -305,28 +366,28 @@ export function ApprovalWorkflowManager({
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 p-4 bg-surface-50 dark:bg-surface-800 rounded-lg">
               <div>
-                <p className="text-xs text-surface-500 dark:text-surface-400">Demandeur</p>
+                <p className="text-xs text-surface-500 dark:text-surface-400">{t('approval.request.requester')}</p>
                 <p className="font-medium text-surface-900 dark:text-surface-100">
-                  {selectedRequest.requester?.full_name || 'Utilisateur'}
+                  {selectedRequest.requester?.full_name || t('approval.common.userFallback')}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-surface-500 dark:text-surface-400">Workflow</p>
+                <p className="text-xs text-surface-500 dark:text-surface-400">{t('approval.request.workflow')}</p>
                 <p className="font-medium text-surface-900 dark:text-surface-100">
                   {selectedRequest.workflow?.name || '-'}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-surface-500 dark:text-surface-400">Date de demande</p>
+                <p className="text-xs text-surface-500 dark:text-surface-400">{t('approval.request.requestedAt')}</p>
                 <p className="font-medium text-surface-900 dark:text-surface-100">
-                  {new Date(selectedRequest.requested_at).toLocaleDateString('fr-FR')}
+                  {new Date(selectedRequest.requested_at).toLocaleDateString(locale)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-surface-500 dark:text-surface-400">Échéance</p>
+                <p className="text-xs text-surface-500 dark:text-surface-400">{t('approval.request.dueDate')}</p>
                 <p className="font-medium text-surface-900 dark:text-surface-100">
                   {selectedRequest.due_date
-                    ? new Date(selectedRequest.due_date).toLocaleDateString('fr-FR')
+                    ? new Date(selectedRequest.due_date).toLocaleDateString(locale)
                     : '-'}
                 </p>
               </div>
@@ -338,7 +399,7 @@ export function ApprovalWorkflowManager({
         <Card>
           <div className="p-6">
             <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-4">
-              Progression du workflow
+              {t('approval.workflowProgress.title')}
             </h3>
 
             <div className="space-y-4">
@@ -390,7 +451,7 @@ export function ApprovalWorkflowManager({
                             {step.name}
                           </h4>
                           {isCurrentStep && selectedRequest.status === 'in_progress' && (
-                            <Badge variant="warning">En cours</Badge>
+                            <Badge variant="warning">{t('approval.badge.inProgress')}</Badge>
                           )}
                         </div>
                         {step.description && (
@@ -410,16 +471,16 @@ export function ApprovalWorkflowManager({
                                 {getDecisionIcon(decision.decision)}
                                 <div>
                                   <span className="font-medium">
-                                    {decision.approver?.full_name || 'Approbateur'}
+                                    {decision.approver?.full_name || t('approval.common.approverFallback')}
                                   </span>
                                   <span className="text-surface-500 dark:text-surface-400">
                                     {' '}
-                                    a{' '}
+                                    has{' '}
                                     {decision.decision === 'approved'
-                                      ? 'approuvé'
+                                      ? t('approval.decision.verb.approved')
                                       : decision.decision === 'rejected'
-                                      ? 'rejeté'
-                                      : 'demandé des modifications'}
+                                      ? t('approval.decision.verb.rejected')
+                                      : t('approval.decision.verb.requestChanges')}
                                   </span>
                                   {decision.comment && (
                                     <p className="text-surface-500 dark:text-surface-400 mt-1">
@@ -448,7 +509,7 @@ export function ApprovalWorkflowManager({
                   className="flex-1"
                 >
                   <Check className="h-4 w-4 mr-2" />
-                  Approuver
+                  {t('approval.action.approve')}
                 </Button>
                 <Button
                   variant="outline"
@@ -458,7 +519,7 @@ export function ApprovalWorkflowManager({
                   }}
                 >
                   <RotateCcw className="h-4 w-4 mr-2" />
-                  Demander modifications
+                  {t('approval.action.requestChanges')}
                 </Button>
                 <Button
                   variant="danger"
@@ -468,7 +529,7 @@ export function ApprovalWorkflowManager({
                   }}
                 >
                   <X className="h-4 w-4 mr-2" />
-                  Rejeter
+                  {t('approval.action.reject')}
                 </Button>
               </div>
             )}
@@ -479,13 +540,13 @@ export function ApprovalWorkflowManager({
         <Card>
           <div className="p-6">
             <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-4">
-              Commentaires ({selectedRequest.comments.length})
+              {t('approval.comments.title', { count: selectedRequest.comments.length })}
             </h3>
 
             <div className="space-y-4 mb-4">
               {selectedRequest.comments.length === 0 ? (
                 <p className="text-sm text-surface-500 dark:text-surface-400 text-center py-4">
-                  Aucun commentaire pour le moment
+                  {t('approval.comments.empty')}
                 </p>
               ) : (
                 selectedRequest.comments.map((comment) => (
@@ -499,10 +560,10 @@ export function ApprovalWorkflowManager({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-surface-900 dark:text-surface-100">
-                          {comment.author?.full_name || 'Utilisateur'}
+                          {comment.author?.full_name || t('approval.common.userFallback')}
                         </span>
                         <span className="text-xs text-surface-400">
-                          {new Date(comment.created_at).toLocaleString('fr-FR')}
+                          {new Date(comment.created_at).toLocaleString(locale)}
                         </span>
                       </div>
                       <p className="text-sm text-surface-600 dark:text-surface-300 mt-1">
@@ -519,7 +580,7 @@ export function ApprovalWorkflowManager({
               <Textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Ajouter un commentaire..."
+                placeholder={t('approval.comments.placeholder')}
                 rows={2}
                 className="flex-1"
               />
@@ -544,10 +605,10 @@ export function ApprovalWorkflowManager({
               <div className="p-6">
                 <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-4">
                   {decisionType === 'approved'
-                    ? 'Confirmer l\'approbation'
+                    ? t('approval.modal.title.approve')
                     : decisionType === 'rejected'
-                    ? 'Confirmer le rejet'
-                    : 'Demander des modifications'}
+                    ? t('approval.modal.title.reject')
+                    : t('approval.modal.title.requestChanges')}
                 </h3>
 
                 <Textarea
@@ -555,8 +616,8 @@ export function ApprovalWorkflowManager({
                   onChange={(e) => setDecisionComment(e.target.value)}
                   placeholder={
                     decisionType === 'approved'
-                      ? 'Commentaire (optionnel)...'
-                      : 'Veuillez expliquer votre décision...'
+                      ? t('approval.modal.placeholder.optional')
+                      : t('approval.modal.placeholder.required')
                   }
                   rows={4}
                   className="mb-4"
@@ -570,7 +631,7 @@ export function ApprovalWorkflowManager({
                       setDecisionComment('');
                     }}
                   >
-                    Annuler
+                    {t('approval.common.cancel')}
                   </Button>
                   <Button
                     variant={decisionType === 'rejected' ? 'danger' : 'primary'}
@@ -581,7 +642,7 @@ export function ApprovalWorkflowManager({
                       submitting
                     }
                   >
-                    Confirmer
+                    {t('approval.common.confirm')}
                   </Button>
                 </div>
               </div>
@@ -598,7 +659,7 @@ export function ApprovalWorkflowManager({
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-surface-900 dark:text-surface-100">
-          Demandes d'approbation
+          {t('approval.list.title')}
         </h2>
         <div className="flex items-center gap-2">
           <select
@@ -609,10 +670,10 @@ export function ApprovalWorkflowManager({
             }}
             className="px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100"
           >
-            <option value="all">Toutes</option>
-            <option value="pending">En cours</option>
-            <option value="approved">Approuvées</option>
-            <option value="rejected">Rejetées</option>
+            <option value="all">{t('approval.filter.all')}</option>
+            <option value="pending">{t('approval.filter.inProgress')}</option>
+            <option value="approved">{t('approval.filter.approved')}</option>
+            <option value="rejected">{t('approval.filter.rejected')}</option>
           </select>
           <Button variant="outline" onClick={fetchRequests}>
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -630,10 +691,10 @@ export function ApprovalWorkflowManager({
           <div className="p-12 text-center">
             <FileText className="h-12 w-12 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-surface-900 dark:text-surface-100 mb-2">
-              Aucune demande
+              {t('approval.empty.title')}
             </h3>
             <p className="text-sm text-surface-500 dark:text-surface-400">
-              Vous n'avez aucune demande d'approbation pour le moment.
+              {t('approval.empty.subtitle')}
             </p>
           </div>
         </Card>
@@ -669,15 +730,15 @@ export function ApprovalWorkflowManager({
                         )}
                       </div>
                       <div className="flex items-center gap-2 text-sm text-surface-500 dark:text-surface-400">
-                        <span>{request.requester?.full_name || 'Utilisateur'}</span>
+                        <span>{request.requester?.full_name || t('approval.common.userFallback')}</span>
                         <span>•</span>
                         <span>
-                          {new Date(request.requested_at).toLocaleDateString('fr-FR')}
+                          {new Date(request.requested_at).toLocaleDateString(locale)}
                         </span>
                         {request.current_step && (
                           <>
                             <span>•</span>
-                            <span>Étape : {request.current_step.name}</span>
+                            <span>{t('approval.common.stepLabel', { name: request.current_step.name })}</span>
                           </>
                         )}
                       </div>

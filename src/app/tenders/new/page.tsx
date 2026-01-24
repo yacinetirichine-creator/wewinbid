@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -17,6 +17,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { Button, Card, Input, Textarea, Select, Badge, Alert } from '@/components/ui';
 import { AppLayout, PageHeader } from '@/components/layout/Sidebar';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 import { createClient } from '@/lib/supabase/client';
 import { getCountryConfig, getRequiredDocuments, type CountryCode } from '@/lib/countries';
 import type { TenderType, Sector, BuyerType } from '@/types/database';
@@ -73,60 +75,184 @@ const INITIAL_DATA: TenderFormData = {
 };
 
 const STEPS = [
-  { id: 1, title: 'Type & Informations', icon: DocumentTextIcon },
-  { id: 2, title: 'Acheteur', icon: BuildingOfficeIcon },
-  { id: 3, title: 'Budget & Dates', icon: CalendarIcon },
-  { id: 4, title: 'Détails', icon: SparklesIcon },
+  { id: 1, titleKey: 'tenders.new.steps.typeInfo', icon: DocumentTextIcon },
+  { id: 2, titleKey: 'tenders.new.steps.buyer', icon: BuildingOfficeIcon },
+  { id: 3, titleKey: 'tenders.new.steps.budgetDates', icon: CalendarIcon },
+  { id: 4, titleKey: 'tenders.new.steps.details', icon: SparklesIcon },
 ];
 
-const SECTORS: { value: Sector; label: string }[] = [
-  { value: 'SECURITY_PRIVATE', label: 'Sécurité privée' },
-  { value: 'SECURITY_ELECTRONIC', label: 'Sécurité électronique' },
-  { value: 'CONSTRUCTION', label: 'BTP / Construction' },
-  { value: 'LOGISTICS', label: 'Logistique' },
-  { value: 'IT_SOFTWARE', label: 'IT / Logiciels' },
-  { value: 'MAINTENANCE', label: 'Maintenance' },
-  { value: 'CONSULTING', label: 'Conseil' },
-  { value: 'CLEANING', label: 'Nettoyage' },
-  { value: 'CATERING', label: 'Restauration' },
-  { value: 'TRANSPORT', label: 'Transport' },
-  { value: 'ENERGY', label: 'Énergie' },
-  { value: 'HEALTHCARE', label: 'Santé' },
-  { value: 'EDUCATION', label: 'Éducation' },
-  { value: 'OTHER', label: 'Autre' },
+const SECTORS: { value: Sector; labelKey: string }[] = [
+  { value: 'SECURITY_PRIVATE', labelKey: 'tenders.new.sector.securityPrivate' },
+  { value: 'SECURITY_ELECTRONIC', labelKey: 'tenders.new.sector.securityElectronic' },
+  { value: 'CONSTRUCTION', labelKey: 'tenders.new.sector.construction' },
+  { value: 'LOGISTICS', labelKey: 'tenders.new.sector.logistics' },
+  { value: 'IT_SOFTWARE', labelKey: 'tenders.new.sector.itSoftware' },
+  { value: 'MAINTENANCE', labelKey: 'tenders.new.sector.maintenance' },
+  { value: 'CONSULTING', labelKey: 'tenders.new.sector.consulting' },
+  { value: 'CLEANING', labelKey: 'tenders.new.sector.cleaning' },
+  { value: 'CATERING', labelKey: 'tenders.new.sector.catering' },
+  { value: 'TRANSPORT', labelKey: 'tenders.new.sector.transport' },
+  { value: 'ENERGY', labelKey: 'tenders.new.sector.energy' },
+  { value: 'HEALTHCARE', labelKey: 'tenders.new.sector.healthcare' },
+  { value: 'EDUCATION', labelKey: 'tenders.new.sector.education' },
+  { value: 'OTHER', labelKey: 'tenders.new.sector.other' },
 ];
 
-const BUYER_TYPES: { value: BuyerType; label: string }[] = [
-  { value: 'STATE', label: 'État' },
-  { value: 'REGION', label: 'Région' },
-  { value: 'DEPARTMENT', label: 'Département' },
-  { value: 'MUNICIPALITY', label: 'Commune' },
-  { value: 'PUBLIC_ESTABLISHMENT', label: 'Établissement public' },
-  { value: 'HOSPITAL', label: 'Hôpital / CHU' },
-  { value: 'PRIVATE_COMPANY', label: 'Entreprise privée' },
-  { value: 'ASSOCIATION', label: 'Association' },
-  { value: 'OTHER', label: 'Autre' },
+const BUYER_TYPES: { value: BuyerType; labelKey: string }[] = [
+  { value: 'STATE', labelKey: 'tenders.new.buyerType.state' },
+  { value: 'REGION', labelKey: 'tenders.new.buyerType.region' },
+  { value: 'DEPARTMENT', labelKey: 'tenders.new.buyerType.department' },
+  { value: 'MUNICIPALITY', labelKey: 'tenders.new.buyerType.municipality' },
+  { value: 'PUBLIC_ESTABLISHMENT', labelKey: 'tenders.new.buyerType.publicEstablishment' },
+  { value: 'HOSPITAL', labelKey: 'tenders.new.buyerType.hospital' },
+  { value: 'PRIVATE_COMPANY', labelKey: 'tenders.new.buyerType.privateCompany' },
+  { value: 'ASSOCIATION', labelKey: 'tenders.new.buyerType.association' },
+  { value: 'OTHER', labelKey: 'tenders.new.buyerType.other' },
 ];
 
-const COUNTRIES: { value: CountryCode; label: string; flag: string }[] = [
-  { value: 'FR', label: 'France', flag: '🇫🇷' },
-  { value: 'DE', label: 'Allemagne', flag: '🇩🇪' },
-  { value: 'BE', label: 'Belgique', flag: '🇧🇪' },
-  { value: 'ES', label: 'Espagne', flag: '🇪🇸' },
-  { value: 'IT', label: 'Italie', flag: '🇮🇹' },
-  { value: 'NL', label: 'Pays-Bas', flag: '🇳🇱' },
-  { value: 'GB', label: 'Royaume-Uni', flag: '🇬🇧' },
-  { value: 'CH', label: 'Suisse', flag: '🇨🇭' },
-  { value: 'US', label: 'États-Unis', flag: '🇺🇸' },
-  { value: 'MA', label: 'Maroc', flag: '🇲🇦' },
+const COUNTRIES: { value: CountryCode; labelKey: string; flag: string }[] = [
+  { value: 'FR', labelKey: 'tenders.new.country.fr', flag: '🇫🇷' },
+  { value: 'DE', labelKey: 'tenders.new.country.de', flag: '🇩🇪' },
+  { value: 'BE', labelKey: 'tenders.new.country.be', flag: '🇧🇪' },
+  { value: 'ES', labelKey: 'tenders.new.country.es', flag: '🇪🇸' },
+  { value: 'IT', labelKey: 'tenders.new.country.it', flag: '🇮🇹' },
+  { value: 'NL', labelKey: 'tenders.new.country.nl', flag: '🇳🇱' },
+  { value: 'GB', labelKey: 'tenders.new.country.gb', flag: '🇬🇧' },
+  { value: 'CH', labelKey: 'tenders.new.country.ch', flag: '🇨🇭' },
+  { value: 'US', labelKey: 'tenders.new.country.us', flag: '🇺🇸' },
+  { value: 'MA', labelKey: 'tenders.new.country.ma', flag: '🇲🇦' },
 ];
 
 export default function NewTenderPage() {
+  const { locale } = useLocale();
+
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<TenderFormData>(INITIAL_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const entries = useMemo(
+    () => ({
+      'tenders.new.pageTitle': 'New tender',
+      'tenders.new.pageDescription': 'Create a new tender in a few steps',
+
+      'tenders.new.steps.typeInfo': 'Type & Info',
+      'tenders.new.steps.buyer': 'Buyer',
+      'tenders.new.steps.budgetDates': 'Budget & Dates',
+      'tenders.new.steps.details': 'Details',
+
+      'tenders.new.section.tenderType': 'Tender type',
+      'tenders.new.type.public': 'Public tender',
+      'tenders.new.type.public.desc': 'Government, local authorities, public bodies',
+      'tenders.new.type.private': 'Private tender',
+      'tenders.new.type.private.desc': 'Private companies, associations',
+      'tenders.new.badge.requiredDocs': '{count} required docs',
+      'tenders.new.badge.simplifiedProcedure': 'Simplified procedure',
+
+      'tenders.new.label.country': 'Country',
+      'tenders.new.hint.regulation': 'Regulation: {law}',
+
+      'tenders.new.label.title': 'Tender title',
+      'tenders.new.placeholder.title': 'e.g. IT equipment supply...',
+      'tenders.new.label.description': 'Description',
+      'tenders.new.placeholder.description': 'Describe the scope of the tender...',
+
+      'tenders.new.label.sector': 'Business sector',
+      'tenders.new.placeholder.sector': 'Select a sector',
+
+      'tenders.new.section.buyerInfo': 'Buyer information',
+      'tenders.new.label.buyerName': 'Buyer name',
+      'tenders.new.placeholder.buyerName': 'e.g. City of Paris, SNCF...',
+      'tenders.new.label.buyerType': 'Buyer type',
+      'tenders.new.placeholder.buyerType': 'Select a type',
+      'tenders.new.label.contact': 'Contact',
+      'tenders.new.placeholder.contact': 'Contact name',
+      'tenders.new.label.email': 'Email',
+      'tenders.new.label.phone': 'Phone',
+
+      'tenders.new.section.budgetDates': 'Budget and deadlines',
+      'tenders.new.label.estimatedValue': 'Estimated value ({currency})',
+      'tenders.new.placeholder.estimatedValue': 'e.g. 50000',
+      'tenders.new.label.deadline': 'Response deadline',
+      'tenders.new.label.publicationDate': 'Publication date',
+
+      'tenders.new.alert.legalDeadlines': 'Legal deadlines ({country}):',
+      'tenders.new.alert.openProcedure': 'Open procedure: {days} days min.',
+      'tenders.new.alert.restrictedProcedure': 'Restricted procedure: {days} days min.',
+      'tenders.new.alert.urgentProcedure': 'Urgent procedure: {days} days min.',
+
+      'tenders.new.section.details': 'Additional details',
+      'tenders.new.label.sourceUrl': 'Source URL',
+      'tenders.new.label.platform': 'Publishing platform',
+      'tenders.new.placeholder.platform': 'Select a platform',
+      'tenders.new.label.region': 'Region',
+      'tenders.new.placeholder.region': 'e.g. Île-de-France',
+      'tenders.new.label.department': 'Department',
+      'tenders.new.placeholder.department': 'e.g. 75 - Paris',
+      'tenders.new.label.notes': 'Internal notes',
+      'tenders.new.placeholder.notes': 'Additional information...',
+
+      'tenders.new.docsToPrepare': 'Documents to prepare ({type})',
+      'tenders.new.typeLabel.public': 'Public tender',
+      'tenders.new.typeLabel.private': 'Private tender',
+      'tenders.new.badge.required': 'Required',
+      'tenders.new.moreDocs': '+{count} more documents',
+
+      'tenders.new.nav.previous': 'Previous',
+      'tenders.new.nav.next': 'Next',
+      'tenders.new.nav.create': 'Create tender',
+
+      'tenders.new.validation.titleRequired': 'Title is required',
+      'tenders.new.validation.titleMin': 'Title must be at least 10 characters',
+      'tenders.new.validation.buyerRequired': 'Buyer name is required',
+      'tenders.new.validation.deadlineRequired': 'Deadline is required',
+
+      'tenders.new.error.unauthenticated': 'Not authenticated',
+      'tenders.new.error.noCompany': 'No associated company',
+      'tenders.new.toast.created': 'Tender created successfully!',
+      'tenders.new.toast.createError': 'Error while creating the tender',
+
+      'tenders.new.sector.securityPrivate': 'Private security',
+      'tenders.new.sector.securityElectronic': 'Electronic security',
+      'tenders.new.sector.construction': 'Construction',
+      'tenders.new.sector.logistics': 'Logistics',
+      'tenders.new.sector.itSoftware': 'IT / Software',
+      'tenders.new.sector.maintenance': 'Maintenance',
+      'tenders.new.sector.consulting': 'Consulting',
+      'tenders.new.sector.cleaning': 'Cleaning',
+      'tenders.new.sector.catering': 'Catering',
+      'tenders.new.sector.transport': 'Transport',
+      'tenders.new.sector.energy': 'Energy',
+      'tenders.new.sector.healthcare': 'Healthcare',
+      'tenders.new.sector.education': 'Education',
+      'tenders.new.sector.other': 'Other',
+
+      'tenders.new.buyerType.state': 'State',
+      'tenders.new.buyerType.region': 'Region',
+      'tenders.new.buyerType.department': 'Department',
+      'tenders.new.buyerType.municipality': 'Municipality',
+      'tenders.new.buyerType.publicEstablishment': 'Public establishment',
+      'tenders.new.buyerType.hospital': 'Hospital / University hospital',
+      'tenders.new.buyerType.privateCompany': 'Private company',
+      'tenders.new.buyerType.association': 'Association',
+      'tenders.new.buyerType.other': 'Other',
+
+      'tenders.new.country.fr': 'France',
+      'tenders.new.country.de': 'Germany',
+      'tenders.new.country.be': 'Belgium',
+      'tenders.new.country.es': 'Spain',
+      'tenders.new.country.it': 'Italy',
+      'tenders.new.country.nl': 'Netherlands',
+      'tenders.new.country.gb': 'United Kingdom',
+      'tenders.new.country.ch': 'Switzerland',
+      'tenders.new.country.us': 'United States',
+      'tenders.new.country.ma': 'Morocco',
+    }),
+    []
+  );
+
+  const { t } = useUiTranslations(locale, entries);
 
   const countryConfig = getCountryConfig(formData.country);
   const requiredDocs = getRequiredDocuments(formData.country, formData.type);
@@ -142,16 +268,16 @@ export default function NewTenderPage() {
     const newErrors: Record<string, string> = {};
 
     if (step === 1) {
-      if (!formData.title.trim()) newErrors.title = 'Le titre est requis';
-      if (formData.title.length < 10) newErrors.title = 'Le titre doit faire au moins 10 caractères';
+      if (!formData.title.trim()) newErrors.title = t('tenders.new.validation.titleRequired');
+      if (formData.title.length < 10) newErrors.title = t('tenders.new.validation.titleMin');
     }
 
     if (step === 2) {
-      if (!formData.buyer_name.trim()) newErrors.buyer_name = 'Le nom de l\'acheteur est requis';
+      if (!formData.buyer_name.trim()) newErrors.buyer_name = t('tenders.new.validation.buyerRequired');
     }
 
     if (step === 3) {
-      if (!formData.deadline) newErrors.deadline = 'La date limite est requise';
+      if (!formData.deadline) newErrors.deadline = t('tenders.new.validation.deadlineRequired');
     }
 
     setErrors(newErrors);
@@ -175,7 +301,7 @@ export default function NewTenderPage() {
     try {
       const supabase = createClient();
       const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error('Non authentifié');
+      if (!userData.user) throw new Error(t('tenders.new.error.unauthenticated'));
 
       // Récupérer la company de l'utilisateur
       const { data: membership } = await (supabase
@@ -184,7 +310,7 @@ export default function NewTenderPage() {
         .eq('user_id', userData.user.id)
         .single();
 
-      if (!membership?.company_id) throw new Error('Aucune entreprise associée');
+      if (!membership?.company_id) throw new Error(t('tenders.new.error.noCompany'));
 
       const { data, error } = await (supabase as any)
         .from('tenders')
@@ -215,11 +341,11 @@ export default function NewTenderPage() {
 
       if (error) throw error;
 
-      toast.success('Appel d\'offres créé avec succès !');
+      toast.success(t('tenders.new.toast.created'));
       router.push(`/tenders/${data.id}`);
     } catch (error) {
       console.error('Error creating tender:', error);
-      toast.error('Erreur lors de la création de l\'AO');
+      toast.error(t('tenders.new.toast.createError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -228,8 +354,8 @@ export default function NewTenderPage() {
   return (
     <AppLayout>
       <PageHeader
-        title="Nouvel appel d'offres"
-        description="Créez un nouvel AO en quelques étapes"
+        title={t('tenders.new.pageTitle')}
+        description={t('tenders.new.pageDescription')}
       />
 
       {/* Progress Steps */}
@@ -266,7 +392,7 @@ export default function NewTenderPage() {
                       <Icon className="w-4 h-4" />
                     )}
                   </div>
-                  <span className="hidden sm:block text-sm font-medium">{step.title}</span>
+                  <span className="hidden sm:block text-sm font-medium">{t(step.titleKey)}</span>
                 </button>
                 
                 {index < STEPS.length - 1 && (
@@ -293,7 +419,7 @@ export default function NewTenderPage() {
               className="space-y-6"
             >
               <div>
-                <h2 className="text-lg font-semibold text-slate-900 mb-4">Type de marché</h2>
+                <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('tenders.new.section.tenderType')}</h2>
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     type="button"
@@ -306,13 +432,15 @@ export default function NewTenderPage() {
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <GlobeAltIcon className="w-6 h-6 text-tender-public-600" />
-                      <span className="font-semibold text-slate-900">Marché Public</span>
+                      <span className="font-semibold text-slate-900">{t('tenders.new.type.public')}</span>
                     </div>
                     <p className="text-sm text-slate-600">
-                      État, collectivités, établissements publics
+                      {t('tenders.new.type.public.desc')}
                     </p>
                     <Badge variant="info" size="sm" className="mt-2">
-                      {requiredDocs.filter(d => d.mandatory).length} docs requis
+                      {t('tenders.new.badge.requiredDocs', {
+                        count: requiredDocs.filter(d => d.mandatory).length,
+                      })}
                     </Badge>
                   </button>
 
@@ -327,13 +455,13 @@ export default function NewTenderPage() {
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <LockClosedIcon className="w-6 h-6 text-tender-private-600" />
-                      <span className="font-semibold text-slate-900">Marché Privé</span>
+                      <span className="font-semibold text-slate-900">{t('tenders.new.type.private')}</span>
                     </div>
                     <p className="text-sm text-slate-600">
-                      Entreprises privées, associations
+                      {t('tenders.new.type.private.desc')}
                     </p>
                     <Badge variant="secondary" size="sm" className="mt-2">
-                      Procédure simplifiée
+                      {t('tenders.new.badge.simplifiedProcedure')}
                     </Badge>
                   </button>
                 </div>
@@ -341,23 +469,23 @@ export default function NewTenderPage() {
 
               <div>
                 <Select
-                  label="Pays"
+                  label={t('tenders.new.label.country')}
                   value={formData.country}
                   onChange={(e) => updateField('country', e.target.value as CountryCode)}
                   options={COUNTRIES.map(c => ({ 
                     value: c.value, 
-                    label: `${c.flag} ${c.label}` 
+                    label: `${c.flag} ${t(c.labelKey)}` 
                   }))}
                 />
                 <p className="mt-1 text-xs text-slate-500">
-                  Réglementation: {countryConfig.publicProcurementLaw}
+                  {t('tenders.new.hint.regulation', { law: countryConfig.publicProcurementLaw })}
                 </p>
               </div>
 
               <div>
                 <Input
-                  label="Titre de l'appel d'offres"
-                  placeholder="Ex: Fourniture de matériel informatique..."
+                  label={t('tenders.new.label.title')}
+                  placeholder={t('tenders.new.placeholder.title')}
                   value={formData.title}
                   onChange={(e) => updateField('title', e.target.value)}
                   error={errors.title}
@@ -367,8 +495,8 @@ export default function NewTenderPage() {
 
               <div>
                 <Textarea
-                  label="Description"
-                  placeholder="Décrivez l'objet du marché..."
+                  label={t('tenders.new.label.description')}
+                  placeholder={t('tenders.new.placeholder.description')}
                   value={formData.description}
                   onChange={(e) => updateField('description', e.target.value)}
                   rows={4}
@@ -377,12 +505,12 @@ export default function NewTenderPage() {
 
               <div>
                 <Select
-                  label="Secteur d'activité"
+                  label={t('tenders.new.label.sector')}
                   value={formData.sector}
                   onChange={(e) => updateField('sector', e.target.value as Sector)}
                   options={[
-                    { value: '', label: 'Sélectionner un secteur' },
-                    ...SECTORS,
+                    { value: '', label: t('tenders.new.placeholder.sector') },
+                    ...SECTORS.map(s => ({ value: s.value, label: t(s.labelKey) })),
                   ]}
                 />
               </div>
@@ -398,12 +526,12 @@ export default function NewTenderPage() {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <h2 className="text-lg font-semibold text-slate-900">Informations acheteur</h2>
+              <h2 className="text-lg font-semibold text-slate-900">{t('tenders.new.section.buyerInfo')}</h2>
 
               <div>
                 <Input
-                  label="Nom de l'acheteur"
-                  placeholder="Ex: Mairie de Paris, SNCF..."
+                  label={t('tenders.new.label.buyerName')}
+                  placeholder={t('tenders.new.placeholder.buyerName')}
                   value={formData.buyer_name}
                   onChange={(e) => updateField('buyer_name', e.target.value)}
                   error={errors.buyer_name}
@@ -413,25 +541,25 @@ export default function NewTenderPage() {
 
               <div>
                 <Select
-                  label="Type d'acheteur"
+                  label={t('tenders.new.label.buyerType')}
                   value={formData.buyer_type}
                   onChange={(e) => updateField('buyer_type', e.target.value as BuyerType)}
                   options={[
-                    { value: '', label: 'Sélectionner un type' },
-                    ...BUYER_TYPES,
+                    { value: '', label: t('tenders.new.placeholder.buyerType') },
+                    ...BUYER_TYPES.map(bt => ({ value: bt.value, label: t(bt.labelKey) })),
                   ]}
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
-                  label="Contact"
-                  placeholder="Nom du contact"
+                  label={t('tenders.new.label.contact')}
+                  placeholder={t('tenders.new.placeholder.contact')}
                   value={formData.buyer_contact}
                   onChange={(e) => updateField('buyer_contact', e.target.value)}
                 />
                 <Input
-                  label="Email"
+                  label={t('tenders.new.label.email')}
                   type="email"
                   placeholder="email@example.com"
                   value={formData.buyer_email}
@@ -441,7 +569,7 @@ export default function NewTenderPage() {
 
               <div>
                 <Input
-                  label="Téléphone"
+                  label={t('tenders.new.label.phone')}
                   type="tel"
                   placeholder="+33 1 23 45 67 89"
                   value={formData.buyer_phone}
@@ -460,13 +588,13 @@ export default function NewTenderPage() {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <h2 className="text-lg font-semibold text-slate-900">Budget et échéances</h2>
+              <h2 className="text-lg font-semibold text-slate-900">{t('tenders.new.section.budgetDates')}</h2>
 
               <div>
                 <Input
-                  label={`Valeur estimée (${countryConfig.currency})`}
+                  label={t('tenders.new.label.estimatedValue', { currency: countryConfig.currency })}
                   type="number"
-                  placeholder="Ex: 50000"
+                  placeholder={t('tenders.new.placeholder.estimatedValue')}
                   value={formData.estimated_value}
                   onChange={(e) => updateField('estimated_value', e.target.value)}
                   leftIcon={<CurrencyEuroIcon className="w-4 h-4" />}
@@ -475,7 +603,7 @@ export default function NewTenderPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
-                  label="Date limite de réponse"
+                  label={t('tenders.new.label.deadline')}
                   type="date"
                   value={formData.deadline}
                   onChange={(e) => updateField('deadline', e.target.value)}
@@ -483,7 +611,7 @@ export default function NewTenderPage() {
                   required
                 />
                 <Input
-                  label="Date de publication"
+                  label={t('tenders.new.label.publicationDate')}
                   type="date"
                   value={formData.publication_date}
                   onChange={(e) => updateField('publication_date', e.target.value)}
@@ -492,11 +620,28 @@ export default function NewTenderPage() {
 
               {formData.type === 'PUBLIC' && (
                 <Alert type="info">
-                  <strong>Délais légaux ({countryConfig.name}):</strong>
+                  <strong>
+                    {t('tenders.new.alert.legalDeadlines', { country: countryConfig.name })}
+                  </strong>
                   <ul className="mt-2 text-sm space-y-1">
-                    <li>• Procédure ouverte: {countryConfig.minResponseDays.openProcedure} jours min.</li>
-                    <li>• Procédure restreinte: {countryConfig.minResponseDays.restrictedProcedure} jours min.</li>
-                    <li>• Procédure d'urgence: {countryConfig.minResponseDays.urgentProcedure} jours min.</li>
+                    <li>
+                      •{' '}
+                      {t('tenders.new.alert.openProcedure', {
+                        days: countryConfig.minResponseDays.openProcedure,
+                      })}
+                    </li>
+                    <li>
+                      •{' '}
+                      {t('tenders.new.alert.restrictedProcedure', {
+                        days: countryConfig.minResponseDays.restrictedProcedure,
+                      })}
+                    </li>
+                    <li>
+                      •{' '}
+                      {t('tenders.new.alert.urgentProcedure', {
+                        days: countryConfig.minResponseDays.urgentProcedure,
+                      })}
+                    </li>
                   </ul>
                 </Alert>
               )}
@@ -512,11 +657,11 @@ export default function NewTenderPage() {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <h2 className="text-lg font-semibold text-slate-900">Détails complémentaires</h2>
+              <h2 className="text-lg font-semibold text-slate-900">{t('tenders.new.section.details')}</h2>
 
               <div>
                 <Input
-                  label="URL source"
+                  label={t('tenders.new.label.sourceUrl')}
                   type="url"
                   placeholder="https://..."
                   value={formData.source_url}
@@ -526,11 +671,11 @@ export default function NewTenderPage() {
 
               <div>
                 <Select
-                  label="Plateforme de publication"
+                  label={t('tenders.new.label.platform')}
                   value={formData.platform}
                   onChange={(e) => updateField('platform', e.target.value)}
                   options={[
-                    { value: '', label: 'Sélectionner une plateforme' },
+                    { value: '', label: t('tenders.new.placeholder.platform') },
                     ...countryConfig.platforms.map(p => ({
                       value: p.name,
                       label: p.name,
@@ -541,14 +686,14 @@ export default function NewTenderPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
-                  label="Région"
-                  placeholder="Ex: Île-de-France"
+                  label={t('tenders.new.label.region')}
+                  placeholder={t('tenders.new.placeholder.region')}
                   value={formData.region}
                   onChange={(e) => updateField('region', e.target.value)}
                 />
                 <Input
-                  label="Département"
-                  placeholder="Ex: 75 - Paris"
+                  label={t('tenders.new.label.department')}
+                  placeholder={t('tenders.new.placeholder.department')}
                   value={formData.department}
                   onChange={(e) => updateField('department', e.target.value)}
                 />
@@ -556,8 +701,8 @@ export default function NewTenderPage() {
 
               <div>
                 <Textarea
-                  label="Notes internes"
-                  placeholder="Informations supplémentaires..."
+                  label={t('tenders.new.label.notes')}
+                  placeholder={t('tenders.new.placeholder.notes')}
                   value={formData.notes}
                   onChange={(e) => updateField('notes', e.target.value)}
                   rows={3}
@@ -567,7 +712,12 @@ export default function NewTenderPage() {
               {/* Récapitulatif des documents requis */}
               <div className="pt-4 border-t border-slate-200">
                 <h3 className="font-medium text-slate-900 mb-3">
-                  Documents à préparer ({formData.type === 'PUBLIC' ? 'Marché public' : 'Marché privé'})
+                  {t('tenders.new.docsToPrepare', {
+                    type:
+                      formData.type === 'PUBLIC'
+                        ? t('tenders.new.typeLabel.public')
+                        : t('tenders.new.typeLabel.private'),
+                  })}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {requiredDocs.slice(0, 6).map((doc) => (
@@ -580,14 +730,14 @@ export default function NewTenderPage() {
                       <DocumentTextIcon className="w-4 h-4 flex-shrink-0" />
                       <span className="truncate">{doc.name}</span>
                       {doc.mandatory && (
-                        <Badge variant="warning" size="sm">Requis</Badge>
+                        <Badge variant="warning" size="sm">{t('tenders.new.badge.required')}</Badge>
                       )}
                     </div>
                   ))}
                 </div>
                 {requiredDocs.length > 6 && (
                   <p className="text-sm text-slate-500 mt-2">
-                    +{requiredDocs.length - 6} autres documents
+                    {t('tenders.new.moreDocs', { count: requiredDocs.length - 6 })}
                   </p>
                 )}
               </div>
@@ -603,12 +753,12 @@ export default function NewTenderPage() {
             disabled={currentStep === 1}
           >
             <ArrowLeftIcon className="w-4 h-4 mr-2" />
-            Précédent
+            {t('tenders.new.nav.previous')}
           </Button>
 
           {currentStep < STEPS.length ? (
             <Button onClick={handleNext}>
-              Suivant
+              {t('tenders.new.nav.next')}
               <ArrowRightIcon className="w-4 h-4 ml-2" />
             </Button>
           ) : (
@@ -618,7 +768,7 @@ export default function NewTenderPage() {
               className="bg-gradient-to-r from-primary-600 to-secondary-600"
             >
               <SparklesIcon className="w-4 h-4 mr-2" />
-              Créer l'appel d'offres
+              {t('tenders.new.nav.create')}
             </Button>
           )}
         </div>

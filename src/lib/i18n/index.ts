@@ -31,7 +31,7 @@ export const RTL_LOCALES: Locale[] = ['ar-MA'];
 
 export const isRTL = (locale: Locale): boolean => RTL_LOCALES.includes(locale);
 
-export const DEFAULT_LOCALE: Locale = 'fr';
+export const DEFAULT_LOCALE: Locale = 'en';
 
 // Type pour les traductions
 export interface Translations {

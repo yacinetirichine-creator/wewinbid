@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -27,9 +27,11 @@ import {
   FileSignature,
 } from 'lucide-react';
 import { formatDistance } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { enUS, fr } from 'date-fns/locale';
 import dynamic from 'next/dynamic';
 import { LOCALES, LOCALE_NAMES, LOCALE_FLAGS } from '@/lib/i18n';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 // Dynamically import React Quill to avoid SSR issues
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
@@ -63,14 +65,96 @@ interface GeneratedDocument {
 }
 
 const CATEGORIES = [
-  { value: 'proposal', label: 'Proposition commerciale', icon: FileText },
-  { value: 'cover_letter', label: 'Lettre de motivation', icon: FileText },
-  { value: 'technical_response', label: 'Réponse technique', icon: FileText },
-  { value: 'cv', label: 'CV / Présentation', icon: FileText },
-  { value: 'other', label: 'Autre', icon: FileText },
-];
+  { value: 'proposal', labelKey: 'documentsGenerator.category.proposal', icon: FileText },
+  { value: 'cover_letter', labelKey: 'documentsGenerator.category.coverLetter', icon: FileText },
+  { value: 'technical_response', labelKey: 'documentsGenerator.category.technicalResponse', icon: FileText },
+  { value: 'cv', labelKey: 'documentsGenerator.category.cv', icon: FileText },
+  { value: 'other', labelKey: 'documentsGenerator.category.other', icon: FileText },
+] as const;
+
+function useDocumentsGeneratorI18n() {
+  const { locale } = useLocale();
+  const entries = useMemo(
+    () => ({
+      'documentsGenerator.title': 'Documents',
+      'documentsGenerator.subtitle': 'Create and manage your business documents with AI assistance',
+
+      'documentsGenerator.action.generateWithAi': 'Generate with AI',
+      'documentsGenerator.action.newDocument': 'New document',
+      'documentsGenerator.action.newTemplate': 'New template',
+      'documentsGenerator.action.createTemplate': 'Create a template',
+      'documentsGenerator.action.edit': 'Edit',
+      'documentsGenerator.action.close': 'Close',
+      'documentsGenerator.action.cancel': 'Cancel',
+      'documentsGenerator.action.save': 'Save',
+      'documentsGenerator.action.saving': 'Saving…',
+      'documentsGenerator.action.generate': 'Generate',
+      'documentsGenerator.action.generating': 'Generating…',
+
+      'documentsGenerator.stats.documents': 'Documents',
+      'documentsGenerator.stats.aiGenerated': 'AI-generated',
+      'documentsGenerator.stats.finalized': 'Finalized',
+      'documentsGenerator.stats.templates': 'Templates',
+
+      'documentsGenerator.tab.documents': 'Documents',
+      'documentsGenerator.tab.templates': 'Templates',
+
+      'documentsGenerator.filter.allCategories': 'All categories',
+      'documentsGenerator.filter.allStatuses': 'All statuses',
+      'documentsGenerator.status.draft': 'Draft',
+      'documentsGenerator.status.final': 'Final',
+      'documentsGenerator.status.sent': 'Sent',
+      'documentsGenerator.status.signed': 'Signed',
+
+      'documentsGenerator.loading': 'Loading…',
+      'documentsGenerator.empty.documents.title': 'No documents yet',
+      'documentsGenerator.empty.documents.description': 'Create your first document or use AI to generate content.',
+      'documentsGenerator.empty.templates.title': 'No templates yet',
+      'documentsGenerator.empty.templates.description': 'Create reusable templates to save time.',
+
+      'documentsGenerator.card.status': 'Status',
+      'documentsGenerator.card.created': 'Created',
+      'documentsGenerator.card.tender': 'Tender',
+      'documentsGenerator.badge.ai': 'AI',
+
+      'documentsGenerator.template.default': 'Default',
+      'documentsGenerator.template.uses': 'Uses',
+
+      'documentsGenerator.confirm.deleteDocument': 'Delete this document?',
+      'documentsGenerator.confirm.deleteTemplate': 'Delete this template?',
+
+      'documentsGenerator.editor.editDocument': 'Edit document',
+      'documentsGenerator.editor.newDocument': 'New document',
+      'documentsGenerator.editor.title': 'Title',
+      'documentsGenerator.editor.titlePlaceholder': 'Document title',
+      'documentsGenerator.editor.category': 'Category',
+      'documentsGenerator.editor.content': 'Content',
+
+      'documentsGenerator.templateEditor.editTemplate': 'Edit template',
+      'documentsGenerator.templateEditor.newTemplate': 'New template',
+      'documentsGenerator.templateEditor.todo': 'Template editor (to be implemented)',
+
+      'documentsGenerator.ai.title': 'Generate with AI',
+      'documentsGenerator.ai.documentType': 'Document type',
+      'documentsGenerator.ai.generationLanguage': 'Generation language',
+      'documentsGenerator.ai.promptLabel': 'Describe what you want to generate',
+      'documentsGenerator.ai.promptPlaceholder': 'e.g. Create a commercial proposal for a web development project…',
+
+      'documentsGenerator.category.proposal': 'Business proposal',
+      'documentsGenerator.category.coverLetter': 'Cover letter',
+      'documentsGenerator.category.technicalResponse': 'Technical response',
+      'documentsGenerator.category.cv': 'CV / Company profile',
+      'documentsGenerator.category.other': 'Other',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
+  const dateFnsLocale = locale === 'fr' ? fr : enUS;
+  return { t, locale, dateFnsLocale };
+}
 
 export default function DocumentsPage() {
+  const { t } = useDocumentsGeneratorI18n();
   const [activeTab, setActiveTab] = useState<'documents' | 'templates'>('documents');
   const [documents, setDocuments] = useState<GeneratedDocument[]>([]);
   const [templates, setTemplates] = useState<DocumentTemplate[]>([]);
@@ -145,7 +229,7 @@ export default function DocumentsPage() {
   };
 
   const handleDeleteDocument = async (id: string) => {
-    if (!confirm('Supprimer ce document ?')) return;
+    if (!confirm(t('documentsGenerator.confirm.deleteDocument'))) return;
 
     try {
       await fetch(`/api/documents/generate?id=${id}`, { method: 'DELETE' });
@@ -156,7 +240,7 @@ export default function DocumentsPage() {
   };
 
   const handleDeleteTemplate = async (id: string) => {
-    if (!confirm('Supprimer ce template ?')) return;
+    if (!confirm(t('documentsGenerator.confirm.deleteTemplate'))) return;
 
     try {
       await fetch(`/api/documents/templates?id=${id}`, { method: 'DELETE' });
@@ -173,29 +257,30 @@ export default function DocumentsPage() {
       sent: 'success',
       signed: 'success',
     };
-    return <Badge variant={variants[status] || 'default'}>{status}</Badge>;
+    const label = t(`documentsGenerator.status.${status}`);
+    return <Badge variant={variants[status] || 'default'}>{label}</Badge>;
   };
 
   return (
     <AppLayout>
       <PageHeader
-        title="Génération de Documents"
-        description="Créez et gérez vos documents professionnels avec l'aide de l'IA"
+        title={t('documentsGenerator.title')}
+        description={t('documentsGenerator.subtitle')}
         actions={
           <div className="flex flex-col sm:flex-row gap-3">
             <Button variant="outline" onClick={() => setShowAIGenerator(true)}>
               <Sparkles className="w-4 h-4 mr-2" />
-              Générer avec IA
+              {t('documentsGenerator.action.generateWithAi')}
             </Button>
             {activeTab === 'documents' ? (
               <Button variant="primary" onClick={handleCreateDocument}>
                 <Plus className="w-4 h-4 mr-2" />
-                Nouveau document
+                {t('documentsGenerator.action.newDocument')}
               </Button>
             ) : (
               <Button variant="primary" onClick={handleCreateTemplate}>
                 <Plus className="w-4 h-4 mr-2" />
-                Nouveau template
+                {t('documentsGenerator.action.newTemplate')}
               </Button>
             )}
           </div>
@@ -213,7 +298,7 @@ export default function DocumentsPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-gray-900">{documents.length}</p>
-                  <p className="text-sm text-gray-500">Documents</p>
+                  <p className="text-sm text-gray-500">{t('documentsGenerator.stats.documents')}</p>
                 </div>
               </div>
             </CardContent>
@@ -228,7 +313,7 @@ export default function DocumentsPage() {
                   <p className="text-2xl font-bold text-gray-900">
                     {documents.filter((d) => d.ai_generated).length}
                   </p>
-                  <p className="text-sm text-gray-500">Générés par IA</p>
+                  <p className="text-sm text-gray-500">{t('documentsGenerator.stats.aiGenerated')}</p>
                 </div>
               </div>
             </CardContent>
@@ -243,7 +328,7 @@ export default function DocumentsPage() {
                   <p className="text-2xl font-bold text-gray-900">
                     {documents.filter((d) => d.status === 'final' || d.status === 'sent').length}
                   </p>
-                  <p className="text-sm text-gray-500">Finalisés</p>
+                  <p className="text-sm text-gray-500">{t('documentsGenerator.stats.finalized')}</p>
                 </div>
               </div>
             </CardContent>
@@ -256,7 +341,7 @@ export default function DocumentsPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-gray-900">{templates.length}</p>
-                  <p className="text-sm text-gray-500">Templates</p>
+                  <p className="text-sm text-gray-500">{t('documentsGenerator.stats.templates')}</p>
                 </div>
               </div>
             </CardContent>
@@ -276,7 +361,7 @@ export default function DocumentsPage() {
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
-                  Documents ({documents.length})
+                  {t('documentsGenerator.tab.documents')} ({documents.length})
                 </button>
                 <button
                   onClick={() => setActiveTab('templates')}
@@ -286,7 +371,7 @@ export default function DocumentsPage() {
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
-                  Templates ({templates.length})
+                  {t('documentsGenerator.tab.templates')} ({templates.length})
                 </button>
               </div>
 
@@ -297,10 +382,10 @@ export default function DocumentsPage() {
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
                 >
-                  <option value="">Toutes les catégories</option>
+                  <option value="">{t('documentsGenerator.filter.allCategories')}</option>
                   {CATEGORIES.map((cat) => (
                     <option key={cat.value} value={cat.value}>
-                      {cat.label}
+                      {t(cat.labelKey)}
                     </option>
                   ))}
                 </select>
@@ -311,11 +396,11 @@ export default function DocumentsPage() {
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                   >
-                    <option value="">Tous les statuts</option>
-                    <option value="draft">Brouillon</option>
-                    <option value="final">Final</option>
-                    <option value="sent">Envoyé</option>
-                    <option value="signed">Signé</option>
+                    <option value="">{t('documentsGenerator.filter.allStatuses')}</option>
+                    <option value="draft">{t('documentsGenerator.status.draft')}</option>
+                    <option value="final">{t('documentsGenerator.status.final')}</option>
+                    <option value="sent">{t('documentsGenerator.status.sent')}</option>
+                    <option value="signed">{t('documentsGenerator.status.signed')}</option>
                   </select>
                 )}
               </div>
@@ -327,7 +412,7 @@ export default function DocumentsPage() {
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-            <p className="text-gray-500 mt-4">Chargement...</p>
+            <p className="text-gray-500 mt-4">{t('documentsGenerator.loading')}</p>
           </div>
         ) : activeTab === 'documents' ? (
           documents.length === 0 ? (
@@ -335,19 +420,19 @@ export default function DocumentsPage() {
               <CardContent className="p-12 text-center">
                 <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Aucun document
+                  {t('documentsGenerator.empty.documents.title')}
                 </h3>
                 <p className="text-gray-500 mb-4">
-                  Créez votre premier document ou utilisez l'IA pour générer du contenu
+                  {t('documentsGenerator.empty.documents.description')}
                 </p>
                 <div className="flex gap-3 justify-center">
                   <Button variant="outline" onClick={() => setShowAIGenerator(true)}>
                     <Sparkles className="w-4 h-4 mr-2" />
-                    Générer avec IA
+                    {t('documentsGenerator.action.generateWithAi')}
                   </Button>
                   <Button variant="primary" onClick={handleCreateDocument}>
                     <Plus className="w-4 h-4 mr-2" />
-                    Nouveau document
+                    {t('documentsGenerator.action.newDocument')}
                   </Button>
                 </div>
               </CardContent>
@@ -370,14 +455,14 @@ export default function DocumentsPage() {
             <CardContent className="p-12 text-center">
               <Copy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Aucun template
+                {t('documentsGenerator.empty.templates.title')}
               </h3>
               <p className="text-gray-500 mb-4">
-                Créez des templates réutilisables pour gagner du temps
+                {t('documentsGenerator.empty.templates.description')}
               </p>
               <Button variant="primary" onClick={handleCreateTemplate}>
                 <Plus className="w-4 h-4 mr-2" />
-                Créer un template
+                {t('documentsGenerator.action.createTemplate')}
               </Button>
             </CardContent>
           </Card>
@@ -445,6 +530,7 @@ function DocumentCard({
   onDelete: () => void;
   getStatusBadge: (status: string) => JSX.Element;
 }) {
+  const { t, dateFnsLocale } = useDocumentsGeneratorI18n();
   const category = CATEGORIES.find((c) => c.value === document.category);
 
   return (
@@ -459,34 +545,34 @@ function DocumentCard({
               <h3 className="font-semibold text-gray-900 line-clamp-1">
                 {document.title}
               </h3>
-              <p className="text-xs text-gray-500">{category?.label}</p>
+              <p className="text-xs text-gray-500">{category ? t(category.labelKey) : ''}</p>
             </div>
           </div>
           {document.ai_generated && (
             <Badge variant="default" className="text-xs">
               <Sparkles className="w-3 h-3 mr-1" />
-              IA
+              {t('documentsGenerator.badge.ai')}
             </Badge>
           )}
         </div>
 
         <div className="space-y-2 mb-4">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-500">Statut</span>
+            <span className="text-gray-500">{t('documentsGenerator.card.status')}</span>
             {getStatusBadge(document.status)}
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-500">Créé</span>
+            <span className="text-gray-500">{t('documentsGenerator.card.created')}</span>
             <span className="text-gray-900">
               {formatDistance(new Date(document.created_at), new Date(), {
                 addSuffix: true,
-                locale: fr,
+                locale: dateFnsLocale,
               })}
             </span>
           </div>
           {document.tender && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500">AO</span>
+              <span className="text-gray-500">{t('documentsGenerator.card.tender')}</span>
               <span className="text-gray-900 line-clamp-1">{document.tender.title}</span>
             </div>
           )}
@@ -495,7 +581,7 @@ function DocumentCard({
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="flex-1" onClick={onEdit}>
             <Edit className="w-4 h-4 mr-1" />
-            Éditer
+            {t('documentsGenerator.action.edit')}
           </Button>
           {document.pdf_url && (
             <Button variant="outline" size="sm">
@@ -521,6 +607,7 @@ function TemplateCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useDocumentsGeneratorI18n();
   const category = CATEGORIES.find((c) => c.value === template.category);
 
   return (
@@ -535,12 +622,12 @@ function TemplateCard({
               <h3 className="font-semibold text-gray-900 line-clamp-1">
                 {template.name}
               </h3>
-              <p className="text-xs text-gray-500">{category?.label}</p>
+              <p className="text-xs text-gray-500">{category ? t(category.labelKey) : ''}</p>
             </div>
           </div>
           {template.is_default && (
             <Badge variant="success" className="text-xs">
-              Par défaut
+              {t('documentsGenerator.template.default')}
             </Badge>
           )}
         </div>
@@ -552,14 +639,14 @@ function TemplateCard({
         )}
 
         <div className="flex items-center justify-between mb-4 text-sm">
-          <span className="text-gray-500">Utilisations</span>
+          <span className="text-gray-500">{t('documentsGenerator.template.uses')}</span>
           <span className="font-semibold text-gray-900">{template.usage_count}</span>
         </div>
 
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="flex-1" onClick={onEdit}>
             <Edit className="w-4 h-4 mr-1" />
-            Éditer
+            {t('documentsGenerator.action.edit')}
           </Button>
           <Button variant="outline" size="sm" onClick={onDelete}>
             <Trash2 className="w-4 h-4" />
@@ -578,6 +665,7 @@ function DocumentEditor({
   document: GeneratedDocument | null;
   onClose: () => void;
 }) {
+  const { t } = useDocumentsGeneratorI18n();
   const [title, setTitle] = useState(document?.title || '');
   const [category, setCategory] = useState(document?.category || 'proposal');
   const [content, setContent] = useState(document?.content?.sections?.[0]?.content || '');
@@ -596,7 +684,7 @@ function DocumentEditor({
         title,
         category,
         content: {
-          sections: [{ id: 'main', title: 'Contenu', content, order: 1 }],
+          sections: [{ id: 'main', title: 'Content', content, order: 1 }],
         },
       };
 
@@ -626,7 +714,7 @@ function DocumentEditor({
       <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <div className="p-6 border-b border-gray-100 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-900">
-            {document ? 'Éditer le document' : 'Nouveau document'}
+            {document ? t('documentsGenerator.editor.editDocument') : t('documentsGenerator.editor.newDocument')}
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
             <X className="w-5 h-5" />
@@ -636,18 +724,18 @@ function DocumentEditor({
         <div className="p-6 space-y-4 overflow-y-auto flex-1">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Titre
+              {t('documentsGenerator.editor.title')}
             </label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Titre du document"
+              placeholder={t('documentsGenerator.editor.titlePlaceholder')}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Catégorie
+              {t('documentsGenerator.editor.category')}
             </label>
             <select
               className="w-full px-4 py-2 border border-gray-200 rounded-xl"
@@ -656,7 +744,7 @@ function DocumentEditor({
             >
               {CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>
-                  {cat.label}
+                  {t(cat.labelKey)}
                 </option>
               ))}
             </select>
@@ -664,7 +752,7 @@ function DocumentEditor({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Contenu
+              {t('documentsGenerator.editor.content')}
             </label>
             <ReactQuill
               theme="snow"
@@ -677,7 +765,7 @@ function DocumentEditor({
 
         <div className="p-6 border-t border-gray-100 flex gap-3">
           <Button variant="outline" className="flex-1" onClick={onClose}>
-            Annuler
+            {t('documentsGenerator.action.cancel')}
           </Button>
           <Button
             variant="primary"
@@ -686,7 +774,7 @@ function DocumentEditor({
             disabled={!title || saving}
           >
             <Save className="w-4 h-4 mr-2" />
-            {saving ? 'Enregistrement...' : 'Enregistrer'}
+            {saving ? t('documentsGenerator.action.saving') : t('documentsGenerator.action.save')}
           </Button>
         </div>
       </div>
@@ -702,6 +790,7 @@ function TemplateEditor({
   template: DocumentTemplate | null;
   onClose: () => void;
 }) {
+  const { t } = useDocumentsGeneratorI18n();
   const [name, setName] = useState(template?.name || '');
   const [category, setCategory] = useState(template?.category || 'proposal');
   const [content, setContent] = useState('');
@@ -711,15 +800,15 @@ function TemplateEditor({
       <div className="bg-white rounded-2xl w-full max-w-4xl">
         <div className="p-6 border-b border-gray-100">
           <h2 className="text-xl font-semibold">
-            {template ? 'Éditer le template' : 'Nouveau template'}
+            {template ? t('documentsGenerator.templateEditor.editTemplate') : t('documentsGenerator.templateEditor.newTemplate')}
           </h2>
         </div>
         <div className="p-6">
-          <p className="text-gray-500">Template editor (à implémenter)</p>
+          <p className="text-gray-500">{t('documentsGenerator.templateEditor.todo')}</p>
         </div>
         <div className="p-6 border-t flex gap-3">
           <Button variant="outline" className="flex-1" onClick={onClose}>
-            Fermer
+            {t('documentsGenerator.action.close')}
           </Button>
         </div>
       </div>
@@ -735,6 +824,7 @@ function AIGenerator({
   onClose: () => void;
   onGenerated: () => void;
 }) {
+  const { t } = useDocumentsGeneratorI18n();
   const [prompt, setPrompt] = useState('');
   const [generationType, setGenerationType] = useState('proposal');
   const [language, setLanguage] = useState('fr');
@@ -787,14 +877,14 @@ function AIGenerator({
         <div className="p-6 border-b border-gray-100">
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-purple-600" />
-            Générer avec l'IA
+            {t('documentsGenerator.ai.title')}
           </h2>
         </div>
 
         <div className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Type de document
+              {t('documentsGenerator.ai.documentType')}
             </label>
             <select
               className="w-full px-4 py-2 border border-gray-200 rounded-xl"
@@ -803,7 +893,7 @@ function AIGenerator({
             >
               {CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>
-                  {cat.label}
+                  {t(cat.labelKey)}
                 </option>
               ))}
             </select>
@@ -811,7 +901,7 @@ function AIGenerator({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Langue de génération
+              {t('documentsGenerator.ai.generationLanguage')}
             </label>
             <select
               className="w-full px-4 py-2 border border-gray-200 rounded-xl"
@@ -828,12 +918,12 @@ function AIGenerator({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Décrivez ce que vous voulez générer
+              {t('documentsGenerator.ai.promptLabel')}
             </label>
             <textarea
               className="w-full px-4 py-3 border border-gray-200 rounded-xl resize-none"
               rows={6}
-              placeholder="Ex: Créer une proposition commerciale pour un projet de développement web..."
+              placeholder={t('documentsGenerator.ai.promptPlaceholder')}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
             />
@@ -842,7 +932,7 @@ function AIGenerator({
 
         <div className="p-6 border-t border-gray-100 flex gap-3">
           <Button variant="outline" className="flex-1" onClick={onClose}>
-            Annuler
+            {t('documentsGenerator.action.cancel')}
           </Button>
           <Button
             variant="primary"
@@ -851,7 +941,7 @@ function AIGenerator({
             disabled={!prompt || generating}
           >
             <Sparkles className="w-4 h-4 mr-2" />
-            {generating ? 'Génération...' : 'Générer'}
+            {generating ? t('documentsGenerator.action.generating') : t('documentsGenerator.action.generate')}
           </Button>
         </div>
       </div>

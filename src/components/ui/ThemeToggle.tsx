@@ -9,6 +9,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/DropdownMenu';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
+
+const entries = {
+  'themeToggle.switchToLight': 'Switch to light mode',
+  'themeToggle.switchToDark': 'Switch to dark mode',
+  'themeToggle.changeTheme': 'Change theme',
+  'themeToggle.light': 'Light',
+  'themeToggle.dark': 'Dark',
+  'themeToggle.system': 'System',
+  'themeToggle.toggleDarkMode': 'Toggle dark mode',
+} as const;
 
 // Icons
 function SunIcon({ className }: { className?: string }) {
@@ -85,6 +97,9 @@ export function ThemeToggle({
   showLabel = false,
   className = '',
 }: ThemeToggleProps) {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+
   const { theme, resolvedTheme, setTheme, toggleTheme } = useTheme();
 
   const iconSize = {
@@ -101,6 +116,11 @@ export function ThemeToggle({
 
   // Simple toggle button
   if (variant === 'button') {
+    const buttonLabel =
+      resolvedTheme === 'dark'
+        ? t('themeToggle.switchToLight')
+        : t('themeToggle.switchToDark');
+
     return (
       <button
         onClick={toggleTheme}
@@ -116,8 +136,8 @@ export function ThemeToggle({
           dark:focus:ring-offset-surface-900
           ${className}
         `}
-        title={resolvedTheme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
-        aria-label={resolvedTheme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
+        title={buttonLabel}
+        aria-label={buttonLabel}
       >
         {resolvedTheme === 'dark' ? (
           <SunIcon className={`${iconSize} transition-transform hover:rotate-45`} />
@@ -136,14 +156,14 @@ export function ThemeToggle({
           variant="ghost"
           size="icon"
           className={`${buttonSize} ${className}`}
-          title="Changer le thème"
+          title={t('themeToggle.changeTheme')}
         >
           {resolvedTheme === 'dark' ? (
             <MoonIcon className={iconSize} />
           ) : (
             <SunIcon className={iconSize} />
           )}
-          <span className="sr-only">Changer le thème</span>
+          <span className="sr-only">{t('themeToggle.changeTheme')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
@@ -152,7 +172,7 @@ export function ThemeToggle({
           className={theme === 'light' ? 'bg-surface-100 dark:bg-surface-800' : ''}
         >
           <SunIcon className="h-4 w-4 mr-2" />
-          <span>Clair</span>
+          <span>{t('themeToggle.light')}</span>
           {theme === 'light' && (
             <span className="ml-auto text-primary-500">✓</span>
           )}
@@ -162,7 +182,7 @@ export function ThemeToggle({
           className={theme === 'dark' ? 'bg-surface-100 dark:bg-surface-800' : ''}
         >
           <MoonIcon className="h-4 w-4 mr-2" />
-          <span>Sombre</span>
+          <span>{t('themeToggle.dark')}</span>
           {theme === 'dark' && (
             <span className="ml-auto text-primary-500">✓</span>
           )}
@@ -172,7 +192,7 @@ export function ThemeToggle({
           className={theme === 'system' ? 'bg-surface-100 dark:bg-surface-800' : ''}
         >
           <MonitorIcon className="h-4 w-4 mr-2" />
-          <span>Système</span>
+          <span>{t('themeToggle.system')}</span>
           {theme === 'system' && (
             <span className="ml-auto text-primary-500">✓</span>
           )}
@@ -184,6 +204,9 @@ export function ThemeToggle({
 
 // Compact toggle for mobile or small spaces
 export function ThemeToggleCompact({ className = '' }: { className?: string }) {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+
   const { resolvedTheme, toggleTheme } = useTheme();
 
   return (
@@ -198,7 +221,7 @@ export function ThemeToggleCompact({ className = '' }: { className?: string }) {
       `}
       role="switch"
       aria-checked={resolvedTheme === 'dark'}
-      aria-label="Basculer le mode sombre"
+      aria-label={t('themeToggle.toggleDarkMode')}
     >
       <span
         className={`

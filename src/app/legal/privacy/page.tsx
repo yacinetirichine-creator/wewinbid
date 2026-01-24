@@ -1,9 +1,114 @@
 'use client';
 
 import Link from 'next/link';
-import Logo, { LogoNavbar } from '@/components/ui/Logo';
+import { useMemo } from 'react';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
+import { LogoNavbar } from '@/components/ui/Logo';
 
 export default function PrivacyPage() {
+  const { locale } = useLocale();
+
+  const entries = useMemo(
+    () => ({
+      'legal.privacy.title': 'Privacy Policy (GDPR)',
+      'legal.privacy.lastUpdated': 'Last updated: January 19, 2026',
+
+      'legal.privacy.s1.title': '1. Data Controller',
+      'legal.privacy.s1.p1': 'The controller of personal data processing is:',
+      'legal.privacy.s1.box.company': 'JARVIS SAS',
+      'legal.privacy.s1.box.legalForm': 'Simplified Joint-Stock Company with a share capital of €1,000',
+      'legal.privacy.s1.box.hq':
+        'Registered office: 64 Avenue Marinville, 94100 Saint-Maur-des-Fossés, France',
+      'legal.privacy.s1.box.siret': 'SIRET: Pending allocation',
+      'legal.privacy.s1.box.rcs': 'RCS Créteil (pending)',
+      'legal.privacy.s1.box.dpoEmailLabel': 'DPO email:',
+      'legal.privacy.s1.p2':
+        'JARVIS SAS, publisher of the WeWinBid platform, attaches great importance to protecting your personal data in accordance with the General Data Protection Regulation (GDPR) and the amended French Data Protection Act.',
+
+      'legal.privacy.s2.title': '2. Data Collected',
+      'legal.privacy.s2.p1': 'We collect the following data:',
+      'legal.privacy.s2.li1': 'Identification data: first name, last name, email, phone number',
+      'legal.privacy.s2.li2': 'Professional data: company, SIRET, business sector',
+      'legal.privacy.s2.li3': 'Connection data: IP address, logs, cookies',
+      'legal.privacy.s2.li4': 'Usage data: tenders viewed, documents generated',
+      'legal.privacy.s2.li5': 'Payment data: processed by our provider Stripe',
+
+      'legal.privacy.s3.title': '3. Use of Data',
+      'legal.privacy.s3.p1': 'Your data is used to:',
+      'legal.privacy.s3.li1': 'Provide and improve our services',
+      'legal.privacy.s3.li2': 'Manage your subscription and billing',
+      'legal.privacy.s3.li3': 'Send you relevant notifications',
+      'legal.privacy.s3.li4': 'Analyze use of the platform',
+      'legal.privacy.s3.li5': 'Ensure the security of our systems',
+
+      'legal.privacy.s4.title': '4. Data Sharing',
+      'legal.privacy.s4.p1': 'We never sell your data. We only share it with:',
+      'legal.privacy.s4.li1': 'Our technical providers (hosting, payment)',
+      'legal.privacy.s4.li2': 'Legal authorities if required by law',
+
+      'legal.privacy.s5.title': '5. Your Rights (GDPR)',
+      'legal.privacy.s5.p1':
+        'In accordance with the GDPR (Articles 15 to 22) and the French Data Protection Act, you have the following rights:',
+      'legal.privacy.s5.right1.label': 'Right of access',
+      'legal.privacy.s5.right1.desc':
+        'obtain confirmation that your data is being processed and receive a copy',
+      'legal.privacy.s5.right2.label': 'Right to rectification',
+      'legal.privacy.s5.right2.desc': 'correct inaccurate or incomplete data',
+      'legal.privacy.s5.right3.label': 'Right to erasure',
+      'legal.privacy.s5.right3.desc':
+        '(right to be forgotten) delete your data under certain conditions',
+      'legal.privacy.s5.right4.label': 'Right to restriction',
+      'legal.privacy.s5.right4.desc': 'limit the processing of your data',
+      'legal.privacy.s5.right5.label': 'Right to data portability',
+      'legal.privacy.s5.right5.desc':
+        'receive your data in a structured, commonly used and machine-readable format',
+      'legal.privacy.s5.right6.label': 'Right to object',
+      'legal.privacy.s5.right6.desc': 'object to the processing of your data',
+      'legal.privacy.s5.right7.label': 'Right to withdraw consent',
+      'legal.privacy.s5.right7.desc': 'at any time',
+      'legal.privacy.s5.p2a': 'To exercise these rights, contact us at',
+      'legal.privacy.s5.p2b':
+        'and specify your first name, last name and email address. We will respond within one month.',
+      'legal.privacy.s5.p3':
+        'You also have the right to lodge a complaint with the CNIL (French data protection authority):',
+
+      'legal.privacy.s6.title': '6. Security and Retention',
+      'legal.privacy.s6.p1':
+        'We implement appropriate technical and organizational measures to protect your data against unauthorized access, loss, destruction or disclosure:',
+      'legal.privacy.s6.li1': 'SSL/TLS encryption for all communications',
+      'legal.privacy.s6.li2': 'Secure hosting with certified providers',
+      'legal.privacy.s6.li3': 'Encrypted regular backups',
+      'legal.privacy.s6.li4': 'Restricted access with strong authentication',
+      'legal.privacy.s6.li5': 'Monitoring and logging of access',
+      'legal.privacy.s6.p2':
+        'Your data is retained for the duration of your subscription, then archived for 3 years for evidentiary purposes in the event of a dispute, in accordance with legal obligations. Billing data is retained for 10 years in accordance with accounting obligations.',
+
+      'legal.privacy.s7.title': '7. Data Transfers',
+      'legal.privacy.s7.p1':
+        'Your data is hosted within the European Union. No transfer to third countries is carried out without appropriate safeguards (standard contractual clauses of the European Commission).',
+
+      'legal.privacy.s8.title': '8. DPO Contact',
+      'legal.privacy.s8.p1':
+        'If you have any questions about this policy or exercising your rights:',
+      'legal.privacy.s8.box.title': 'Data Protection Officer (DPO)',
+      'legal.privacy.s8.box.company': 'JARVIS SAS',
+      'legal.privacy.s8.box.addr1': '64 Avenue Marinville',
+      'legal.privacy.s8.box.addr2': '94100 Saint-Maur-des-Fossés, France',
+      'legal.privacy.s8.box.dpoEmailLabel': 'DPO email:',
+      'legal.privacy.s8.box.supportLabel': 'Support:',
+
+      'legal.privacy.footer.legalDocs': 'Legal documents:',
+      'legal.privacy.footer.terms': 'Terms of Service',
+      'legal.privacy.footer.cgv': 'Terms of Sale',
+      'legal.privacy.footer.cookies': 'Cookies',
+      'legal.privacy.footer.mentions': 'Legal Notice',
+    }),
+    []
+  );
+
+  const { t } = useUiTranslations(locale, entries);
+
   return (
     <div className="min-h-screen bg-surface-50">
       <header className="border-b border-surface-200 bg-white">
@@ -16,98 +121,110 @@ export default function PrivacyPage() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h1 className="text-4xl font-display font-bold text-surface-900 mb-4">
-          Politique de Confidentialité (RGPD)
+          {t('legal.privacy.title')}
         </h1>
-        <p className="text-surface-500 mb-12">Dernière mise à jour : 19 janvier 2026</p>
+        <p className="text-surface-500 mb-12">{t('legal.privacy.lastUpdated')}</p>
 
         <div className="prose prose-lg max-w-none">
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-surface-900 mb-4">1. Responsable du Traitement</h2>
+            <h2 className="text-2xl font-bold text-surface-900 mb-4">{t('legal.privacy.s1.title')}</h2>
             <p className="text-surface-700 leading-relaxed mb-4">
-              Le responsable du traitement des données personnelles est :
+              {t('legal.privacy.s1.p1')}
             </p>
             <div className="p-6 bg-white rounded-xl border border-surface-200">
-              <p className="font-bold text-surface-900">JARVIS SAS</p>
-              <p className="text-surface-700">Société par Actions Simplifiée au capital de 1 000 €</p>
-              <p className="text-surface-700">Siège social : 64 Avenue Marinville, 94100 Saint-Maur-des-Fossés, France</p>
-              <p className="text-surface-700">SIRET : En cours d'attribution</p>
-              <p className="text-surface-700">RCS Créteil (en cours)</p>
+              <p className="font-bold text-surface-900">{t('legal.privacy.s1.box.company')}</p>
+              <p className="text-surface-700">{t('legal.privacy.s1.box.legalForm')}</p>
+              <p className="text-surface-700">{t('legal.privacy.s1.box.hq')}</p>
+              <p className="text-surface-700">{t('legal.privacy.s1.box.siret')}</p>
+              <p className="text-surface-700">{t('legal.privacy.s1.box.rcs')}</p>
               <p className="text-surface-700 mt-2">
-                Email DPO :{' '}
+                {t('legal.privacy.s1.box.dpoEmailLabel')}{' '}
                 <a href="mailto:commercial@wewinbid.com" className="text-primary-600 hover:underline">
                   commercial@wewinbid.com
                 </a>
               </p>
             </div>
             <p className="text-surface-700 leading-relaxed mt-4">
-              JARVIS SAS, éditeur de la plateforme WeWinBid, accorde une grande importance à la protection
-              de vos données personnelles conformément au Règlement Général sur la Protection des Données (RGPD)
-              et à la loi Informatique et Libertés modifiée.
+              {t('legal.privacy.s1.p2')}
             </p>
           </section>
 
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-surface-900 mb-4">2. Données Collectées</h2>
+            <h2 className="text-2xl font-bold text-surface-900 mb-4">{t('legal.privacy.s2.title')}</h2>
             <p className="text-surface-700 leading-relaxed mb-4">
-              Nous collectons les données suivantes :
+              {t('legal.privacy.s2.p1')}
             </p>
             <ul className="list-disc pl-6 space-y-2 text-surface-700">
-              <li>Données d'identification : nom, prénom, email, téléphone</li>
-              <li>Données professionnelles : entreprise, SIRET, secteur d'activité</li>
-              <li>Données de connexion : adresse IP, logs, cookies</li>
-              <li>Données d'utilisation : appels d'offres consultés, documents générés</li>
-              <li>Données de paiement : traitées par notre prestataire Stripe</li>
+              <li>{t('legal.privacy.s2.li1')}</li>
+              <li>{t('legal.privacy.s2.li2')}</li>
+              <li>{t('legal.privacy.s2.li3')}</li>
+              <li>{t('legal.privacy.s2.li4')}</li>
+              <li>{t('legal.privacy.s2.li5')}</li>
             </ul>
           </section>
 
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-surface-900 mb-4">3. Utilisation des Données</h2>
+            <h2 className="text-2xl font-bold text-surface-900 mb-4">{t('legal.privacy.s3.title')}</h2>
             <p className="text-surface-700 leading-relaxed mb-4">
-              Vos données sont utilisées pour :
+              {t('legal.privacy.s3.p1')}
             </p>
             <ul className="list-disc pl-6 space-y-2 text-surface-700">
-              <li>Fournir et améliorer nos services</li>
-              <li>Gérer votre abonnement et facturation</li>
-              <li>Vous envoyer des notifications pertinentes</li>
-              <li>Analyser l'utilisation de la plateforme</li>
-              <li>Assurer la sécurité de nos systèmes</li>
+              <li>{t('legal.privacy.s3.li1')}</li>
+              <li>{t('legal.privacy.s3.li2')}</li>
+              <li>{t('legal.privacy.s3.li3')}</li>
+              <li>{t('legal.privacy.s3.li4')}</li>
+              <li>{t('legal.privacy.s3.li5')}</li>
             </ul>
           </section>
 
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-surface-900 mb-4">4. Partage des Données</h2>
+            <h2 className="text-2xl font-bold text-surface-900 mb-4">{t('legal.privacy.s4.title')}</h2>
             <p className="text-surface-700 leading-relaxed mb-4">
-              Nous ne vendons jamais vos données. Nous les partageons uniquement avec :
+              {t('legal.privacy.s4.p1')}
             </p>
             <ul className="list-disc pl-6 space-y-2 text-surface-700">
-              <li>Nos prestataires techniques (hébergement, paiement)</li>
-              <li>Les autorités légales si requis par la loi</li>
+              <li>{t('legal.privacy.s4.li1')}</li>
+              <li>{t('legal.privacy.s4.li2')}</li>
             </ul>
           </section>
 
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-surface-900 mb-4">5. Vos Droits (RGPD)</h2>
+            <h2 className="text-2xl font-bold text-surface-900 mb-4">{t('legal.privacy.s5.title')}</h2>
             <p className="text-surface-700 leading-relaxed mb-4">
-              Conformément au RGPD (articles 15 à 22) et à la loi Informatique et Libertés, vous disposez des droits suivants :
+              {t('legal.privacy.s5.p1')}
             </p>
             <ul className="list-disc pl-6 space-y-2 text-surface-700">
-              <li><strong>Droit d'accès</strong> : obtenir la confirmation que vos données sont traitées et en obtenir une copie</li>
-              <li><strong>Droit de rectification</strong> : corriger vos données inexactes ou incomplètes</li>
-              <li><strong>Droit à l'effacement</strong> (droit à l'oubli) : supprimer vos données dans certaines conditions</li>
-              <li><strong>Droit à la limitation</strong> : limiter le traitement de vos données</li>
-              <li><strong>Droit à la portabilité</strong> : récupérer vos données dans un format structuré et lisible</li>
-              <li><strong>Droit d'opposition</strong> : vous opposer au traitement de vos données</li>
-              <li><strong>Droit de retirer votre consentement</strong> à tout moment</li>
+              <li>
+                <strong>{t('legal.privacy.s5.right1.label')}</strong>: {t('legal.privacy.s5.right1.desc')}
+              </li>
+              <li>
+                <strong>{t('legal.privacy.s5.right2.label')}</strong>: {t('legal.privacy.s5.right2.desc')}
+              </li>
+              <li>
+                <strong>{t('legal.privacy.s5.right3.label')}</strong> {t('legal.privacy.s5.right3.desc')}
+              </li>
+              <li>
+                <strong>{t('legal.privacy.s5.right4.label')}</strong>: {t('legal.privacy.s5.right4.desc')}
+              </li>
+              <li>
+                <strong>{t('legal.privacy.s5.right5.label')}</strong>: {t('legal.privacy.s5.right5.desc')}
+              </li>
+              <li>
+                <strong>{t('legal.privacy.s5.right6.label')}</strong>: {t('legal.privacy.s5.right6.desc')}
+              </li>
+              <li>
+                <strong>{t('legal.privacy.s5.right7.label')}</strong> {t('legal.privacy.s5.right7.desc')}
+              </li>
             </ul>
             <p className="text-surface-700 leading-relaxed mt-4">
-              Pour exercer ces droits, contactez-nous à{' '}
+              {t('legal.privacy.s5.p2a')}{' '}
               <a href="mailto:commercial@wewinbid.com" className="text-primary-600 hover:underline">
                 commercial@wewinbid.com
               </a>{' '}
-              en indiquant votre nom, prénom et adresse email. Nous vous répondrons dans un délai d'un mois.
+              {t('legal.privacy.s5.p2b')}
             </p>
             <p className="text-surface-700 leading-relaxed mt-4">
-              Vous disposez également du droit d'introduire une réclamation auprès de la CNIL (Commission Nationale de l'Informatique et des Libertés) :{' '}
+              {t('legal.privacy.s5.p3')}{' '}
               <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">
                 www.cnil.fr
               </a>
@@ -115,51 +232,47 @@ export default function PrivacyPage() {
           </section>
 
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-surface-900 mb-4">6. Sécurité et Conservation</h2>
+            <h2 className="text-2xl font-bold text-surface-900 mb-4">{t('legal.privacy.s6.title')}</h2>
             <p className="text-surface-700 leading-relaxed mb-4">
-              Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour
-              protéger vos données contre tout accès non autorisé, perte, destruction ou divulgation :
+              {t('legal.privacy.s6.p1')}
             </p>
             <ul className="list-disc pl-6 space-y-2 text-surface-700">
-              <li>Chiffrement SSL/TLS pour toutes les communications</li>
-              <li>Hébergement sécurisé chez des prestataires certifiés</li>
-              <li>Sauvegardes régulières chiffrées</li>
-              <li>Accès restreints aux données par authentification forte</li>
-              <li>Surveillance et journalisation des accès</li>
+              <li>{t('legal.privacy.s6.li1')}</li>
+              <li>{t('legal.privacy.s6.li2')}</li>
+              <li>{t('legal.privacy.s6.li3')}</li>
+              <li>{t('legal.privacy.s6.li4')}</li>
+              <li>{t('legal.privacy.s6.li5')}</li>
             </ul>
             <p className="text-surface-700 leading-relaxed mt-4">
-              Vos données sont conservées pendant la durée de votre abonnement, puis archivées pendant 3 ans
-              à des fins de preuve en cas de litige, conformément aux obligations légales. Les données de
-              facturation sont conservées 10 ans conformément aux obligations comptables.
+              {t('legal.privacy.s6.p2')}
             </p>
           </section>
 
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-surface-900 mb-4">7. Transferts de Données</h2>
+            <h2 className="text-2xl font-bold text-surface-900 mb-4">{t('legal.privacy.s7.title')}</h2>
             <p className="text-surface-700 leading-relaxed">
-              Vos données sont hébergées au sein de l'Union Européenne. Aucun transfert vers des pays tiers
-              n'est effectué sans garanties appropriées (clauses contractuelles types de la Commission Européenne).
+              {t('legal.privacy.s7.p1')}
             </p>
           </section>
 
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-surface-900 mb-4">8. Contact DPO</h2>
+            <h2 className="text-2xl font-bold text-surface-900 mb-4">{t('legal.privacy.s8.title')}</h2>
             <p className="text-surface-700 leading-relaxed">
-              Pour toute question concernant cette politique ou l'exercice de vos droits :
+              {t('legal.privacy.s8.p1')}
             </p>
             <div className="mt-4 p-6 bg-white rounded-xl border border-surface-200">
-              <p className="font-bold text-surface-900">Délégué à la Protection des Données (DPO)</p>
-              <p className="text-surface-700">JARVIS SAS</p>
-              <p className="text-surface-700">64 Avenue Marinville</p>
-              <p className="text-surface-700">94100 Saint-Maur-des-Fossés, France</p>
+              <p className="font-bold text-surface-900">{t('legal.privacy.s8.box.title')}</p>
+              <p className="text-surface-700">{t('legal.privacy.s8.box.company')}</p>
+              <p className="text-surface-700">{t('legal.privacy.s8.box.addr1')}</p>
+              <p className="text-surface-700">{t('legal.privacy.s8.box.addr2')}</p>
               <p className="text-surface-700 mt-2">
-                Email DPO :{' '}
+                {t('legal.privacy.s8.box.dpoEmailLabel')}{' '}
                 <a href="mailto:commercial@wewinbid.com" className="text-primary-600 hover:underline">
                   commercial@wewinbid.com
                 </a>
               </p>
               <p className="text-surface-700">
-                Support :{' '}
+                {t('legal.privacy.s8.box.supportLabel')}{' '}
                 <a href="mailto:contact@wewinbid.com" className="text-primary-600 hover:underline">
                   contact@wewinbid.com
                 </a>
@@ -169,21 +282,21 @@ export default function PrivacyPage() {
 
           <div className="mt-16 pt-8 border-t border-surface-200">
             <p className="text-sm text-surface-500 text-center">
-              Documents légaux :{' '}
+              {t('legal.privacy.footer.legalDocs')}{' '}
               <Link href="/legal/terms" className="text-primary-600 hover:underline">
-                CGU
+                {t('legal.privacy.footer.terms')}
               </Link>
               {' · '}
               <Link href="/legal/cgv" className="text-primary-600 hover:underline">
-                CGV
+                {t('legal.privacy.footer.cgv')}
               </Link>
               {' · '}
               <Link href="/legal/cookies" className="text-primary-600 hover:underline">
-                Cookies
+                {t('legal.privacy.footer.cookies')}
               </Link>
               {' · '}
               <Link href="/legal/mentions" className="text-primary-600 hover:underline">
-                Mentions Légales
+                {t('legal.privacy.footer.mentions')}
               </Link>
             </p>
           </div>

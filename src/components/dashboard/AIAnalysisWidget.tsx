@@ -7,14 +7,30 @@ import {
   Sparkles,
   Upload,
   ArrowRight,
-  Clock,
   FileText,
-  TrendingUp,
   Zap,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, Button, Badge, Skeleton } from '@/components/ui';
+import { Card, CardContent, CardHeader, Button, Skeleton } from '@/components/ui';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
+
+const entries = {
+  'aiAnalysisWidget.title': 'AI analysis',
+  'aiAnalysisWidget.subtitle': 'Analyze your tenders',
+  'aiAnalysisWidget.actions.analyze': 'Analyze',
+  'aiAnalysisWidget.cta.title': 'New tender package?',
+  'aiAnalysisWidget.cta.description': 'Upload your documents and get an instant analysis',
+  'aiAnalysisWidget.cta.start': 'Get started',
+  'aiAnalysisWidget.recent.title': 'Recent analyses',
+  'aiAnalysisWidget.recent.untitled': 'Untitled',
+  'aiAnalysisWidget.recent.empty': 'No recent analyses yet',
+  'aiAnalysisWidget.deadline.daysLeft': '{days}d left',
+  'aiAnalysisWidget.stats.analyzed': 'Analyzed',
+  'aiAnalysisWidget.stats.compatible': 'Compatible',
+  'aiAnalysisWidget.stats.perAnalysis': 'Per analysis',
+} as const;
 
 interface RecentAnalysis {
   id: string;
@@ -29,6 +45,9 @@ interface RecentAnalysis {
 }
 
 export function AIAnalysisWidget() {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+
   const [recentAnalyses, setRecentAnalyses] = useState<RecentAnalysis[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -54,7 +73,7 @@ export function AIAnalysisWidget() {
           setRecentAnalyses(data);
         }
       } catch (error) {
-        console.error('Erreur chargement analyses:', error);
+        console.error('Failed to load analyses:', error);
       } finally {
         setLoading(false);
       }
@@ -88,14 +107,14 @@ export function AIAnalysisWidget() {
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-semibold">Analyse IA</h3>
-              <p className="text-sm text-white/80">Analysez vos appels d'offres</p>
+              <h3 className="font-semibold">{t('aiAnalysisWidget.title')}</h3>
+              <p className="text-sm text-white/80">{t('aiAnalysisWidget.subtitle')}</p>
             </div>
           </div>
           <Link href="/tenders/analyze">
             <Button variant="secondary" size="sm" className="bg-white/20 hover:bg-white/30 text-white border-white/30">
               <Upload className="w-4 h-4 mr-2" />
-              Analyser
+              {t('aiAnalysisWidget.actions.analyze')}
             </Button>
           </Link>
         </div>
@@ -109,14 +128,14 @@ export function AIAnalysisWidget() {
               <Zap className="w-6 h-6 text-primary-600" />
             </div>
             <div className="flex-1">
-              <h4 className="font-semibold text-surface-900">Nouveau DCE ?</h4>
+              <h4 className="font-semibold text-surface-900">{t('aiAnalysisWidget.cta.title')}</h4>
               <p className="text-sm text-surface-500">
-                Uploadez vos documents et obtenez une analyse instantanée
+                {t('aiAnalysisWidget.cta.description')}
               </p>
             </div>
             <Link href="/tenders/analyze">
               <Button variant="primary" size="sm">
-                Commencer
+                {t('aiAnalysisWidget.cta.start')}
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </Link>
@@ -126,7 +145,7 @@ export function AIAnalysisWidget() {
         {/* Analyses récentes */}
         <div>
           <h4 className="text-sm font-medium text-surface-500 mb-3">
-            Analyses récentes
+            {t('aiAnalysisWidget.recent.title')}
           </h4>
 
           {loading ? (
@@ -158,7 +177,7 @@ export function AIAnalysisWidget() {
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-surface-900 text-sm truncate">
-                        {analysis.analysis_data.title || 'Sans titre'}
+                        {analysis.analysis_data.title || t('aiAnalysisWidget.recent.untitled')}
                       </p>
                       <div className="flex items-center gap-2 text-xs text-surface-500">
                         <span>{analysis.analysis_data.reference}</span>
@@ -168,7 +187,7 @@ export function AIAnalysisWidget() {
                             <span className={cn(
                               daysLeft <= 7 && 'text-orange-600 font-medium'
                             )}>
-                              J-{daysLeft}
+                              {t('aiAnalysisWidget.deadline.daysLeft', { days: daysLeft })}
                             </span>
                           </>
                         )}
@@ -182,7 +201,7 @@ export function AIAnalysisWidget() {
           ) : (
             <div className="text-center py-6 text-surface-400">
               <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Aucune analyse récente</p>
+              <p className="text-sm">{t('aiAnalysisWidget.recent.empty')}</p>
             </div>
           )}
         </div>
@@ -191,17 +210,17 @@ export function AIAnalysisWidget() {
         <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-surface-200">
           <div className="text-center">
             <p className="text-xl font-bold text-surface-900">{recentAnalyses.length}</p>
-            <p className="text-xs text-surface-500">Analysés</p>
+            <p className="text-xs text-surface-500">{t('aiAnalysisWidget.stats.analyzed')}</p>
           </div>
           <div className="text-center">
             <p className="text-xl font-bold text-primary-600">
               {recentAnalyses.filter(a => (a.analysis_data.matchScore || 0) >= 70).length}
             </p>
-            <p className="text-xs text-surface-500">Compatibles</p>
+            <p className="text-xs text-surface-500">{t('aiAnalysisWidget.stats.compatible')}</p>
           </div>
           <div className="text-center">
             <p className="text-xl font-bold text-surface-900">~2min</p>
-            <p className="text-xs text-surface-500">Par analyse</p>
+            <p className="text-xs text-surface-500">{t('aiAnalysisWidget.stats.perAnalysis')}</p>
           </div>
         </div>
       </CardContent>

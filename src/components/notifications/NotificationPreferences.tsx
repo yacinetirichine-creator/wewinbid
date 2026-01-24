@@ -1,8 +1,40 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Bell, Mail, Clock, Check, X } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
+
+const entries = {
+  'notificationPreferences.loadError': 'Failed to load preferences',
+  'notificationPreferences.loadErrorMessage': 'An error occurred while loading your preferences',
+  'notificationPreferences.saveError': 'Failed to save',
+  'notificationPreferences.saveErrorMessage': 'An error occurred while saving',
+  'notificationPreferences.saveSuccess': 'Preferences saved successfully',
+  'notificationPreferences.title': 'Notification preferences',
+  'notificationPreferences.channels.title': 'Notification channels',
+  'notificationPreferences.channels.email.label': 'Email notifications',
+  'notificationPreferences.channels.email.description': 'Receive notifications by email',
+  'notificationPreferences.channels.push.label': 'Push notifications',
+  'notificationPreferences.channels.push.description': 'Receive notifications in the app',
+  'notificationPreferences.deadlines.title': 'Deadline alerts',
+  'notificationPreferences.deadlines.7d.label': '7 days before',
+  'notificationPreferences.deadlines.7d.description': 'Alert 7 days before the deadline',
+  'notificationPreferences.deadlines.3d.label': '3 days before',
+  'notificationPreferences.deadlines.3d.description': 'Alert 3 days before the deadline',
+  'notificationPreferences.deadlines.24h.label': '24 hours before',
+  'notificationPreferences.deadlines.24h.description': 'Alert 24 hours before the deadline',
+  'notificationPreferences.activity.title': 'Activity',
+  'notificationPreferences.activity.tenderStatus.label': 'Tender status change',
+  'notificationPreferences.activity.tenderStatus.description': 'Get notified when a tender changes status',
+  'notificationPreferences.activity.team.label': 'Team activity',
+  'notificationPreferences.activity.team.description': 'Notifications about invitations and team activity',
+  'notificationPreferences.activity.marketing.label': 'Marketing communications',
+  'notificationPreferences.activity.marketing.description': 'New features, tips, and offers',
+  'notificationPreferences.actions.saving': 'Saving...',
+  'notificationPreferences.actions.save': 'Save preferences',
+} as const;
 
 interface Preferences {
   id: string;
@@ -20,17 +52,15 @@ interface Preferences {
 }
 
 export default function NotificationPreferences() {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+
   const [preferences, setPreferences] = useState<Preferences | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Fetch preferences on mount
-  useEffect(() => {
-    fetchPreferences();
-  }, []);
-
-  const fetchPreferences = async () => {
+  const fetchPreferences = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch('/api/notifications/preferences');
@@ -39,15 +69,20 @@ export default function NotificationPreferences() {
       if (res.ok) {
         setPreferences(data);
       } else {
-        throw new Error(data.error || 'Erreur de chargement');
+        throw new Error(data.error || t('notificationPreferences.loadError'));
       }
     } catch (error) {
       console.error('Error fetching preferences:', error);
-      setMessage({ type: 'error', text: 'Erreur lors du chargement des préférences' });
+      setMessage({ type: 'error', text: t('notificationPreferences.loadErrorMessage') });
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  // Fetch preferences on mount
+  useEffect(() => {
+    fetchPreferences();
+  }, [fetchPreferences]);
 
   const handleSave = async () => {
     if (!preferences) return;
@@ -64,13 +99,13 @@ export default function NotificationPreferences() {
 
       if (res.ok) {
         setPreferences(data);
-        setMessage({ type: 'success', text: 'Préférences enregistrées avec succès' });
+        setMessage({ type: 'success', text: t('notificationPreferences.saveSuccess') });
       } else {
-        throw new Error(data.error || 'Erreur de sauvegarde');
+        throw new Error(data.error || t('notificationPreferences.saveError'));
       }
     } catch (error) {
       console.error('Error saving preferences:', error);
-      setMessage({ type: 'error', text: 'Erreur lors de la sauvegarde' });
+      setMessage({ type: 'error', text: t('notificationPreferences.saveErrorMessage') });
     } finally {
       setSaving(false);
       setTimeout(() => setMessage(null), 3000);
@@ -99,7 +134,7 @@ export default function NotificationPreferences() {
     return (
       <Card>
         <div className="p-8 text-center text-surface-500">
-          Erreur de chargement des préférences
+          {t('notificationPreferences.loadError')}
         </div>
       </Card>
     );
@@ -109,7 +144,7 @@ export default function NotificationPreferences() {
     <Card>
       <div className="p-6">
         <h2 className="text-2xl font-display font-bold text-surface-900 dark:text-white mb-6">
-          Préférences de notifications
+          {t('notificationPreferences.title')}
         </h2>
 
         {/* Success/Error Message */}
@@ -135,21 +170,21 @@ export default function NotificationPreferences() {
           <div>
             <h3 className="text-lg font-semibold text-surface-900 dark:text-white mb-4 flex items-center gap-2">
               <Bell className="w-5 h-5" />
-              Canaux de notification
+              {t('notificationPreferences.channels.title')}
             </h3>
 
             <div className="space-y-3">
               <PreferenceToggle
-                label="Notifications email"
-                description="Recevoir les notifications par email"
+                label={t('notificationPreferences.channels.email.label')}
+                description={t('notificationPreferences.channels.email.description')}
                 icon={Mail}
                 checked={preferences.email_enabled}
                 onChange={() => togglePreference('email_enabled')}
               />
 
               <PreferenceToggle
-                label="Notifications push"
-                description="Recevoir les notifications dans l'application"
+                label={t('notificationPreferences.channels.push.label')}
+                description={t('notificationPreferences.channels.push.description')}
                 icon={Bell}
                 checked={preferences.push_enabled}
                 onChange={() => togglePreference('push_enabled')}
@@ -161,27 +196,27 @@ export default function NotificationPreferences() {
           <div>
             <h3 className="text-lg font-semibold text-surface-900 dark:text-white mb-4 flex items-center gap-2">
               <Clock className="w-5 h-5" />
-              Alertes de deadline
+              {t('notificationPreferences.deadlines.title')}
             </h3>
 
             <div className="space-y-3">
               <PreferenceToggle
-                label="7 jours avant"
-                description="Alerte 7 jours avant la date limite"
+                label={t('notificationPreferences.deadlines.7d.label')}
+                description={t('notificationPreferences.deadlines.7d.description')}
                 checked={preferences.deadline_7d}
                 onChange={() => togglePreference('deadline_7d')}
               />
 
               <PreferenceToggle
-                label="3 jours avant"
-                description="Alerte 3 jours avant la date limite"
+                label={t('notificationPreferences.deadlines.3d.label')}
+                description={t('notificationPreferences.deadlines.3d.description')}
                 checked={preferences.deadline_3d}
                 onChange={() => togglePreference('deadline_3d')}
               />
 
               <PreferenceToggle
-                label="24 heures avant"
-                description="Alerte 24 heures avant la date limite"
+                label={t('notificationPreferences.deadlines.24h.label')}
+                description={t('notificationPreferences.deadlines.24h.description')}
                 checked={preferences.deadline_24h}
                 onChange={() => togglePreference('deadline_24h')}
               />
@@ -191,27 +226,27 @@ export default function NotificationPreferences() {
           {/* Activity Notifications */}
           <div>
             <h3 className="text-lg font-semibold text-surface-900 dark:text-white mb-4">
-              Activité
+              {t('notificationPreferences.activity.title')}
             </h3>
 
             <div className="space-y-3">
               <PreferenceToggle
-                label="Changement de statut d'appel d'offres"
-                description="Notifications quand un AO change de statut"
+                label={t('notificationPreferences.activity.tenderStatus.label')}
+                description={t('notificationPreferences.activity.tenderStatus.description')}
                 checked={preferences.tender_status_change}
                 onChange={() => togglePreference('tender_status_change')}
               />
 
               <PreferenceToggle
-                label="Activité de l'équipe"
-                description="Notifications sur les invitations et activités d'équipe"
+                label={t('notificationPreferences.activity.team.label')}
+                description={t('notificationPreferences.activity.team.description')}
                 checked={preferences.team_activity}
                 onChange={() => togglePreference('team_activity')}
               />
 
               <PreferenceToggle
-                label="Communications marketing"
-                description="Nouvelles fonctionnalités, tips, et offres"
+                label={t('notificationPreferences.activity.marketing.label')}
+                description={t('notificationPreferences.activity.marketing.description')}
                 checked={preferences.marketing}
                 onChange={() => togglePreference('marketing')}
               />
@@ -225,7 +260,7 @@ export default function NotificationPreferences() {
               disabled={saving}
               className="w-full sm:w-auto"
             >
-              {saving ? 'Enregistrement...' : 'Enregistrer les préférences'}
+              {saving ? t('notificationPreferences.actions.saving') : t('notificationPreferences.actions.save')}
             </Button>
           </div>
         </div>

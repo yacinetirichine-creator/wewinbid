@@ -19,6 +19,34 @@ import {
 } from 'lucide-react';
 import { Button, Card, Badge, Progress } from '@/components/ui';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
+
+const entries = {
+  'tenderDocsUpload.drop.title': 'Drop the tender documents here',
+  'tenderDocsUpload.drop.subtitlePrefix': 'or',
+  'tenderDocsUpload.drop.browse': 'browse',
+  'tenderDocsUpload.drop.subtitleSuffix': 'to select',
+  'tenderDocsUpload.drop.maxPerFile': 'Max {size} MB per file',
+  'tenderDocsUpload.fileTypes.pdf': 'PDF',
+  'tenderDocsUpload.fileTypes.word': 'Word',
+  'tenderDocsUpload.fileTypes.excel': 'Excel',
+  'tenderDocsUpload.fileTypes.images': 'Images',
+  'tenderDocsUpload.uploaded.title': 'Uploaded documents ({count})',
+  'tenderDocsUpload.uploaded.removeAll': 'Remove all',
+  'tenderDocsUpload.file.words': '{count} words',
+  'tenderDocsUpload.file.extractedBadge': 'Extracted',
+  'tenderDocsUpload.file.previewTitle': 'Preview content',
+  'tenderDocsUpload.extracting.title': 'Extracting content...',
+  'tenderDocsUpload.extracting.filesExtracted': '{count} extracted files',
+  'tenderDocsUpload.extracting.wordsTotal': '{count} total words',
+  'tenderDocsUpload.analyze.analyzing': 'Analysis in progress...',
+  'tenderDocsUpload.analyze.extracting': 'Extracting...',
+  'tenderDocsUpload.analyze.cta': 'Analyze with AI',
+  'tenderDocsUpload.alerts.maxFiles': 'You can’t upload more than {max} files',
+  'tenderDocsUpload.alerts.fileTooLarge': 'File {name} exceeds the {max} MB limit',
+  'tenderDocsUpload.preview.wordsExtracted': '{count} extracted words',
+} as const;
 
 interface UploadedFile {
   id: string;
@@ -62,6 +90,9 @@ export function TenderDocumentsUpload({
   maxFileSize = 50, // 50 MB par défaut
   autoExtract = true,
 }: TenderDocumentsUploadProps) {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
@@ -136,7 +167,7 @@ export function TenderDocumentsUpload({
     
     // Vérifier le nombre max de fichiers
     if (files.length + fileArray.length > maxFiles) {
-      alert(`Vous ne pouvez pas uploader plus de ${maxFiles} fichiers`);
+      alert(t('tenderDocsUpload.alerts.maxFiles', { max: maxFiles }));
       return;
     }
 
@@ -144,7 +175,7 @@ export function TenderDocumentsUpload({
       .filter(file => {
         // Vérifier la taille
         if (file.size > maxFileSize * 1024 * 1024) {
-          alert(`Le fichier ${file.name} dépasse la limite de ${maxFileSize} MB`);
+          alert(t('tenderDocsUpload.alerts.fileTooLarge', { name: file.name, max: maxFileSize }));
           return false;
         }
         return true;
@@ -167,7 +198,7 @@ export function TenderDocumentsUpload({
     const newFilesList = [...files, ...uploadedFiles];
     setFiles(newFilesList);
     onFilesChange(newFilesList);
-  }, [files, maxFiles, maxFileSize, onFilesChange, autoExtract]);
+  }, [files, maxFiles, maxFileSize, onFilesChange, autoExtract, t]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -234,23 +265,25 @@ export function TenderDocumentsUpload({
           
           <div>
             <p className="text-lg font-semibold text-surface-900">
-              Déposez les documents de l'appel d'offres ici
+              {t('tenderDocsUpload.drop.title')}
             </p>
             <p className="text-sm text-surface-500 mt-1">
-              ou <span className="text-primary-600 font-medium">parcourez</span> pour sélectionner
+                {t('tenderDocsUpload.drop.subtitlePrefix')}{' '}
+                <span className="text-primary-600 font-medium">{t('tenderDocsUpload.drop.browse')}</span>{' '}
+                {t('tenderDocsUpload.drop.subtitleSuffix')}
             </p>
           </div>
           
           <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-surface-400">
-            <span>PDF</span>
+            <span>{t('tenderDocsUpload.fileTypes.pdf')}</span>
             <span>•</span>
-            <span>Word</span>
+            <span>{t('tenderDocsUpload.fileTypes.word')}</span>
             <span>•</span>
-            <span>Excel</span>
+            <span>{t('tenderDocsUpload.fileTypes.excel')}</span>
             <span>•</span>
-            <span>Images</span>
+            <span>{t('tenderDocsUpload.fileTypes.images')}</span>
             <span className="ml-2 text-surface-300">|</span>
-            <span>Max {maxFileSize} MB par fichier</span>
+            <span>{t('tenderDocsUpload.drop.maxPerFile', { size: maxFileSize })}</span>
           </div>
         </div>
       </div>
@@ -260,7 +293,7 @@ export function TenderDocumentsUpload({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="font-semibold text-surface-900">
-              Documents uploadés ({files.length})
+              {t('tenderDocsUpload.uploaded.title', { count: files.length })}
             </h4>
             <button
               onClick={() => {
@@ -269,7 +302,7 @@ export function TenderDocumentsUpload({
               }}
               className="text-sm text-surface-500 hover:text-red-500 transition-colors"
             >
-              Tout supprimer
+              {t('tenderDocsUpload.uploaded.removeAll')}
             </button>
           </div>
           
@@ -302,14 +335,14 @@ export function TenderDocumentsUpload({
                         {file.status === 'extracted' && file.wordCount && (
                           <>
                             <span>•</span>
-                            <span className="text-green-600">{file.wordCount} mots</span>
+                            <span className="text-green-600">{t('tenderDocsUpload.file.words', { count: file.wordCount })}</span>
                           </>
                         )}
                         {file.status === 'success' && (
                           <CheckCircle2 className="w-3 h-3 text-green-500" />
                         )}
                         {file.status === 'extracted' && (
-                          <Badge variant="success" className="text-[10px] py-0 px-1">Extrait</Badge>
+                          <Badge variant="success" className="text-[10px] py-0 px-1">{t('tenderDocsUpload.file.extractedBadge')}</Badge>
                         )}
                       </div>
                     </div>
@@ -322,7 +355,7 @@ export function TenderDocumentsUpload({
                             setPreviewFile(file);
                           }}
                           className="p-1.5 text-surface-400 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-all"
-                          title="Aperçu du contenu"
+                          title={t('tenderDocsUpload.file.previewTitle')}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
@@ -354,7 +387,7 @@ export function TenderDocumentsUpload({
             <div className="w-full max-w-md">
               <div className="flex items-center gap-2 mb-2">
                 <FileSearch className="w-4 h-4 text-primary-600 animate-pulse" />
-                <span className="text-sm text-surface-600">Extraction du contenu...</span>
+                <span className="text-sm text-surface-600">{t('tenderDocsUpload.extracting.title')}</span>
               </div>
               <Progress value={extractionProgress} className="h-2" />
             </div>
@@ -365,10 +398,10 @@ export function TenderDocumentsUpload({
             <div className="flex items-center gap-4 text-sm text-surface-600">
               <span className="flex items-center gap-1">
                 <CheckCircle2 className="w-4 h-4 text-green-500" />
-                {files.filter(f => f.status === 'extracted').length} fichiers extraits
+                {t('tenderDocsUpload.extracting.filesExtracted', { count: files.filter(f => f.status === 'extracted').length })}
               </span>
               <span>
-                {files.reduce((acc, f) => acc + (f.wordCount || 0), 0).toLocaleString()} mots au total
+                {t('tenderDocsUpload.extracting.wordsTotal', { count: files.reduce((acc, f) => acc + (f.wordCount || 0), 0).toLocaleString(locale) })}
               </span>
             </div>
           )}
@@ -383,17 +416,17 @@ export function TenderDocumentsUpload({
             {isAnalyzing ? (
               <>
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Analyse en cours...
+                {t('tenderDocsUpload.analyze.analyzing')}
               </>
             ) : isExtracting ? (
               <>
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Extraction...
+                {t('tenderDocsUpload.analyze.extracting')}
               </>
             ) : (
               <>
                 <Sparkles className="w-5 h-5 mr-2" />
-                Analyser avec l'IA
+                {t('tenderDocsUpload.analyze.cta')}
               </>
             )}
           </Button>
@@ -421,7 +454,9 @@ export function TenderDocumentsUpload({
                 <div>
                   <h3 className="font-semibold text-surface-900">{previewFile.name}</h3>
                   <p className="text-sm text-surface-500">
-                    {previewFile.wordCount?.toLocaleString()} mots extraits
+                    {previewFile.wordCount
+                      ? t('tenderDocsUpload.preview.wordsExtracted', { count: previewFile.wordCount.toLocaleString(locale) })
+                      : ''}
                   </p>
                 </div>
                 <button

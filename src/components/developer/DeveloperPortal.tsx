@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 import {
   Key,
   Webhook,
@@ -89,6 +91,36 @@ const AVAILABLE_EVENTS = [
 ];
 
 export function DeveloperPortal() {
+  const { locale } = useLocale();
+  const entries = useMemo(
+    () => ({
+      'developerPortal.rateLimit.header.limit': 'X-RateLimit-Limit',
+      'developerPortal.rateLimit.header.remaining': 'X-RateLimit-Remaining',
+      'developerPortal.rateLimit.header.reset': 'X-RateLimit-Reset',
+      'developerPortal.rateLimit.label.limit': 'Request limit',
+      'developerPortal.rateLimit.label.remaining': 'Remaining requests',
+      'developerPortal.rateLimit.label.reset': 'Reset timestamp',
+
+      'developerPortal.modal.newKey.title': 'API key created!',
+      'developerPortal.modal.newKey.subtitle': "Copy this key now; it won't be shown again.",
+      'developerPortal.modal.important': 'Important',
+      'developerPortal.modal.newKey.warning': 'This key will be shown only once. Save it in a safe place.',
+      'developerPortal.modal.newKey.cta': "I've copied my key",
+
+      'developerPortal.modal.newWebhook.title': 'Webhook created!',
+      'developerPortal.modal.newWebhook.subtitle': 'Copy this secret to verify signatures.',
+      'developerPortal.modal.newWebhook.warning': 'This secret will be shown only once. Save it to verify signatures.',
+      'developerPortal.modal.newWebhook.cta': "I've copied my secret",
+
+      'developerPortal.placeholder.keyName': 'e.g. Production API',
+      'developerPortal.placeholder.optionalDescription': 'Optional description',
+      'developerPortal.placeholder.emptyNever': 'Empty = never',
+      'developerPortal.placeholder.webhookName': 'e.g. Slack notifications',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
+
   const [activeTab, setActiveTab] = useState<'keys' | 'webhooks' | 'docs'>('keys');
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [webhooks, setWebhooks] = useState<WebhookConfig[]>([]);
@@ -570,16 +602,16 @@ function verifyWebhook(payload, signature, secret) {
               </p>
               <div className="space-y-2">
                 <div className="flex items-center gap-3 p-2 bg-surface-50 dark:bg-surface-800 rounded">
-                  <code className="text-sm font-mono">X-RateLimit-Limit</code>
-                  <span className="text-sm text-surface-500">Limite de requêtes</span>
+                  <code className="text-sm font-mono">{t('developerPortal.rateLimit.header.limit')}</code>
+                  <span className="text-sm text-surface-500">{t('developerPortal.rateLimit.label.limit')}</span>
                 </div>
                 <div className="flex items-center gap-3 p-2 bg-surface-50 dark:bg-surface-800 rounded">
-                  <code className="text-sm font-mono">X-RateLimit-Remaining</code>
-                  <span className="text-sm text-surface-500">Requêtes restantes</span>
+                  <code className="text-sm font-mono">{t('developerPortal.rateLimit.header.remaining')}</code>
+                  <span className="text-sm text-surface-500">{t('developerPortal.rateLimit.label.remaining')}</span>
                 </div>
                 <div className="flex items-center gap-3 p-2 bg-surface-50 dark:bg-surface-800 rounded">
-                  <code className="text-sm font-mono">X-RateLimit-Reset</code>
-                  <span className="text-sm text-surface-500">Timestamp de réinitialisation</span>
+                  <code className="text-sm font-mono">{t('developerPortal.rateLimit.header.reset')}</code>
+                  <span className="text-sm text-surface-500">{t('developerPortal.rateLimit.label.reset')}</span>
                 </div>
               </div>
             </div>
@@ -598,10 +630,10 @@ function verifyWebhook(payload, signature, secret) {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100">
-                    Clé API créée !
+                    {t('developerPortal.modal.newKey.title')}
                   </h3>
                   <p className="text-sm text-surface-500">
-                    Copiez cette clé maintenant, elle ne sera plus affichée.
+                    {t('developerPortal.modal.newKey.subtitle')}
                   </p>
                 </div>
               </div>
@@ -609,10 +641,10 @@ function verifyWebhook(payload, signature, secret) {
               <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg mb-4">
                 <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200 mb-2">
                   <AlertTriangle className="h-4 w-4" />
-                  <span className="font-medium">Important</span>
+                  <span className="font-medium">{t('developerPortal.modal.important')}</span>
                 </div>
                 <p className="text-sm text-amber-700 dark:text-amber-300">
-                  Cette clé ne sera affichée qu'une seule fois. Sauvegardez-la dans un endroit sûr.
+                  {t('developerPortal.modal.newKey.warning')}
                 </p>
               </div>
 
@@ -632,7 +664,7 @@ function verifyWebhook(payload, signature, secret) {
 
               <div className="flex justify-end mt-6">
                 <Button onClick={() => setNewKey(null)}>
-                  J'ai copié ma clé
+                  {t('developerPortal.modal.newKey.cta')}
                 </Button>
               </div>
             </div>
@@ -651,10 +683,10 @@ function verifyWebhook(payload, signature, secret) {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100">
-                    Webhook créé !
+                    {t('developerPortal.modal.newWebhook.title')}
                   </h3>
                   <p className="text-sm text-surface-500">
-                    Copiez ce secret pour vérifier les signatures.
+                    {t('developerPortal.modal.newWebhook.subtitle')}
                   </p>
                 </div>
               </div>
@@ -662,10 +694,10 @@ function verifyWebhook(payload, signature, secret) {
               <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg mb-4">
                 <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200 mb-2">
                   <AlertTriangle className="h-4 w-4" />
-                  <span className="font-medium">Important</span>
+                  <span className="font-medium">{t('developerPortal.modal.important')}</span>
                 </div>
                 <p className="text-sm text-amber-700 dark:text-amber-300">
-                  Ce secret ne sera affiché qu'une seule fois. Sauvegardez-le pour vérifier les signatures.
+                  {t('developerPortal.modal.newWebhook.warning')}
                 </p>
               </div>
 
@@ -685,7 +717,7 @@ function verifyWebhook(payload, signature, secret) {
 
               <div className="flex justify-end mt-6">
                 <Button onClick={() => setNewWebhook(null)}>
-                  J'ai copié mon secret
+                  {t('developerPortal.modal.newWebhook.cta')}
                 </Button>
               </div>
             </div>
@@ -715,7 +747,7 @@ function verifyWebhook(payload, signature, secret) {
                   <Input
                     value={keyForm.name}
                     onChange={(e) => setKeyForm({ ...keyForm, name: e.target.value })}
-                    placeholder="Ex: Production API"
+                    placeholder={t('developerPortal.placeholder.keyName')}
                   />
                 </div>
 
@@ -726,7 +758,7 @@ function verifyWebhook(payload, signature, secret) {
                   <Textarea
                     value={keyForm.description}
                     onChange={(e) => setKeyForm({ ...keyForm, description: e.target.value })}
-                    placeholder="Description optionnelle"
+                    placeholder={t('developerPortal.placeholder.optionalDescription')}
                     rows={2}
                   />
                 </div>
@@ -769,7 +801,7 @@ function verifyWebhook(payload, signature, secret) {
                     type="number"
                     value={keyForm.expires_in_days}
                     onChange={(e) => setKeyForm({ ...keyForm, expires_in_days: e.target.value })}
-                    placeholder="Vide = jamais"
+                    placeholder={t('developerPortal.placeholder.emptyNever')}
                   />
                 </div>
               </div>
@@ -809,7 +841,7 @@ function verifyWebhook(payload, signature, secret) {
                   <Input
                     value={webhookForm.name}
                     onChange={(e) => setWebhookForm({ ...webhookForm, name: e.target.value })}
-                    placeholder="Ex: Notifications Slack"
+                    placeholder={t('developerPortal.placeholder.webhookName')}
                   />
                 </div>
 
@@ -832,7 +864,7 @@ function verifyWebhook(payload, signature, secret) {
                   <Textarea
                     value={webhookForm.description}
                     onChange={(e) => setWebhookForm({ ...webhookForm, description: e.target.value })}
-                    placeholder="Description optionnelle"
+                    placeholder={t('developerPortal.placeholder.optionalDescription')}
                     rows={2}
                   />
                 </div>

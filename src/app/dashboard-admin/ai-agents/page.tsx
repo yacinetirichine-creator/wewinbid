@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Bot,
   Activity,
   Pause,
   Play,
@@ -12,10 +11,11 @@ import {
   Clock,
   FileCode,
   Zap,
-  TrendingUp,
 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/Sidebar';
 import { Card } from '@/components/ui';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 interface AgentStatus {
   status: 'active' | 'paused' | 'error';
@@ -39,37 +39,93 @@ interface AIAgentsData {
   recentActions: any[];
 }
 
+type UiT = (key: string, vars?: Record<string, any>) => string;
+
 export default function AIAgentsPage() {
+  const { locale } = useLocale();
+  const entries = useMemo(
+    () => ({
+      'aiAgents.title': 'AI agents',
+      'aiAgents.description': 'Monitor and control autonomous agents',
+
+      'aiAgents.agent.landing.name': 'Landing Agent',
+      'aiAgents.agent.landing.description': 'Marketing and SEO optimization',
+      'aiAgents.agent.app.name': 'App Agent',
+      'aiAgents.agent.app.description': 'Code maintenance and optimization',
+
+      'aiAgents.recentActions.title': 'Recent actions (24h)',
+      'aiAgents.recentActions.empty': 'No recent actions',
+      'aiAgents.recentActions.files': '{count} files',
+      'aiAgents.recentActions.lines': '{count} lines',
+
+      'aiAgents.guide.title': 'Usage guide',
+      'aiAgents.guide.emergencyPause.title': 'Emergency pause',
+      'aiAgents.guide.emergencyPause.text': 'Click the Pause button to stop an agent immediately',
+      'aiAgents.guide.autonomy.title': 'Autonomy level',
+      'aiAgents.guide.autonomy.text': 'Medium = major actions require approval',
+      'aiAgents.guide.pendingApprovals.title': 'Pending approvals',
+      'aiAgents.guide.pendingApprovals.text': 'Review and approve proposed changes',
+      'aiAgents.guide.docs.title': 'Full documentation',
+      'aiAgents.guide.docs.text': 'See AI_AGENTS_GUIDE.md for all details',
+
+      'aiAgents.error.adminOnly': 'Access restricted to administrators',
+      'aiAgents.error.fetch': 'Error while fetching data',
+      'aiAgents.error.unknown': 'Unknown error',
+      'aiAgents.error.toggle': 'Error toggling agent:',
+      'aiAgents.error.update': 'Error while updating',
+
+      'aiAgents.agent.toggle.pause': 'Pause',
+      'aiAgents.agent.toggle.resume': 'Resume',
+
+      'aiAgents.agent.stats.actions24h': 'Actions (24h)',
+      'aiAgents.agent.stats.successRate': 'Success rate',
+
+      'aiAgents.agent.status.active': 'Active',
+      'aiAgents.agent.status.error': 'Error',
+      'aiAgents.agent.status.paused': 'Paused',
+
+      'aiAgents.agent.autonomy.low': 'Low autonomy',
+      'aiAgents.agent.autonomy.medium': 'Medium autonomy',
+      'aiAgents.agent.autonomy.high': 'High autonomy',
+
+      'aiAgents.agent.pendingApprovals': '{count} pending',
+      'aiAgents.agent.lastAction': 'Last action: {date}',
+      'aiAgents.agent.recentChanges': 'Recent changes',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
+
   const [data, setData] = useState<AIAgentsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const fetchAgentsStatus = useCallback(async () => {
+    try {
+      const response = await fetch('/api/ai-agents/status');
+      if (!response.ok) {
+        if (response.status === 403) {
+          setError(t('aiAgents.error.adminOnly'));
+          return;
+        }
+        throw new Error(t('aiAgents.error.fetch'));
+      }
+      const data = await response.json();
+      setData(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('aiAgents.error.unknown'));
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
 
   useEffect(() => {
     fetchAgentsStatus();
     // Refresh toutes les 30 secondes
     const interval = setInterval(fetchAgentsStatus, 30000);
     return () => clearInterval(interval);
-  }, []);
-
-  const fetchAgentsStatus = async () => {
-    try {
-      const response = await fetch('/api/ai-agents/status');
-      if (!response.ok) {
-        if (response.status === 403) {
-          setError('Accès réservé aux administrateurs');
-          return;
-        }
-        throw new Error('Erreur lors de la récupération des données');
-      }
-      const data = await response.json();
-      setData(data);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [fetchAgentsStatus]);
 
   const toggleAgent = async (agentName: 'landing' | 'app', enabled: boolean) => {
     try {
@@ -79,11 +135,11 @@ export default function AIAgentsPage() {
         body: JSON.stringify({ agentName, enabled }),
       });
 
-      if (!response.ok) throw new Error('Erreur lors de la mise à jour');
+      if (!response.ok) throw new Error(t('aiAgents.error.update'));
 
       await fetchAgentsStatus();
     } catch (err) {
-      console.error('Erreur toggle agent:', err);
+      console.error(t('aiAgents.error.toggle'), err);
     }
   };
 
@@ -113,8 +169,8 @@ export default function AIAgentsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <PageHeader
-        title="Agents IA"
-        description="Surveillance et contrôle des agents autonomes"
+        title={t('aiAgents.title')}
+        description={t('aiAgents.description')}
       />
 
       <div className="p-8 space-y-6">
@@ -122,19 +178,23 @@ export default function AIAgentsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Landing Agent */}
           <AgentCard
-            name="Landing Agent"
-            description="Optimisation marketing et SEO"
+            name={t('aiAgents.agent.landing.name')}
+            description={t('aiAgents.agent.landing.description')}
             icon={<Zap className="h-6 w-6" />}
             status={data.landingAgent}
+            locale={locale}
+            t={t}
             onToggle={(enabled) => toggleAgent('landing', enabled)}
           />
 
           {/* App Agent */}
           <AgentCard
-            name="App Agent"
-            description="Maintenance et optimisation code"
+            name={t('aiAgents.agent.app.name')}
+            description={t('aiAgents.agent.app.description')}
             icon={<FileCode className="h-6 w-6" />}
             status={data.appAgent}
+            locale={locale}
+            t={t}
             onToggle={(enabled) => toggleAgent('app', enabled)}
           />
         </div>
@@ -143,11 +203,11 @@ export default function AIAgentsPage() {
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Activity className="h-5 w-5 text-blue-600" />
-            Actions récentes (24h)
+            {t('aiAgents.recentActions.title')}
           </h3>
           {data.recentActions.length === 0 ? (
             <p className="text-gray-500 text-center py-8">
-              Aucune action récente
+              {t('aiAgents.recentActions.empty')}
             </p>
           ) : (
             <div className="space-y-3">
@@ -185,10 +245,10 @@ export default function AIAgentsPage() {
                     </div>
                     <p className="text-sm text-gray-600">{action.description}</p>
                     <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                      <span>{action.files_modified?.length || 0} fichiers</span>
-                      <span>{action.lines_changed || 0} lignes</span>
+                      <span>{t('aiAgents.recentActions.files', { count: action.files_modified?.length || 0 })}</span>
+                      <span>{t('aiAgents.recentActions.lines', { count: action.lines_changed || 0 })}</span>
                       <span>
-                        {new Date(action.created_at).toLocaleString('fr-FR')}
+                        {new Date(action.created_at).toLocaleString(locale)}
                       </span>
                     </div>
                   </div>
@@ -201,24 +261,20 @@ export default function AIAgentsPage() {
         {/* Guide d'utilisation */}
         <Card className="p-6 bg-blue-50 border border-blue-200">
           <h3 className="text-lg font-semibold mb-3 text-blue-900">
-            📚 Guide d'utilisation
+            📚 {t('aiAgents.guide.title')}
           </h3>
           <ul className="space-y-2 text-sm text-blue-800">
             <li>
-              • <strong>Pause d'urgence</strong> : Cliquez sur le bouton Pause pour
-              arrêter un agent immédiatement
+              • <strong>{t('aiAgents.guide.emergencyPause.title')}</strong>: {t('aiAgents.guide.emergencyPause.text')}
             </li>
             <li>
-              • <strong>Niveau d'autonomie</strong> : Medium = actions majeures
-              nécessitent approbation
+              • <strong>{t('aiAgents.guide.autonomy.title')}</strong>: {t('aiAgents.guide.autonomy.text')}
             </li>
             <li>
-              • <strong>Approbations en attente</strong> : Consultez et approuvez les
-              modifications proposées
+              • <strong>{t('aiAgents.guide.pendingApprovals.title')}</strong>: {t('aiAgents.guide.pendingApprovals.text')}
             </li>
             <li>
-              • <strong>Documentation complète</strong> : Voir AI_AGENTS_GUIDE.md pour
-              tous les détails
+              • <strong>{t('aiAgents.guide.docs.title')}</strong>: {t('aiAgents.guide.docs.text')}
             </li>
           </ul>
         </Card>
@@ -233,10 +289,12 @@ interface AgentCardProps {
   description: string;
   icon: React.ReactNode;
   status: AgentStatus;
+  locale: string;
+  t: UiT;
   onToggle: (enabled: boolean) => void;
 }
 
-function AgentCard({ name, description, icon, status, onToggle }: AgentCardProps) {
+function AgentCard({ name, description, icon, status, locale, t, onToggle }: AgentCardProps) {
   const isActive = status.status === 'active';
   const hasError = status.status === 'error';
 
@@ -267,7 +325,7 @@ function AgentCard({ name, description, icon, status, onToggle }: AgentCardProps
               ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
               : 'bg-green-100 text-green-700 hover:bg-green-200'
           }`}
-          title={isActive ? 'Pause' : 'Reprendre'}
+          title={isActive ? t('aiAgents.agent.toggle.pause') : t('aiAgents.agent.toggle.resume')}
         >
           {isActive ? (
             <Pause className="h-5 w-5" />
@@ -283,13 +341,13 @@ function AgentCard({ name, description, icon, status, onToggle }: AgentCardProps
           <div className="text-2xl font-bold text-gray-900">
             {status.totalActions}
           </div>
-          <div className="text-xs text-gray-600">Actions (24h)</div>
+          <div className="text-xs text-gray-600">{t('aiAgents.agent.stats.actions24h')}</div>
         </div>
         <div className="bg-gray-50 p-3 rounded-lg">
           <div className="text-2xl font-bold text-green-600">
             {status.successRate}%
           </div>
-          <div className="text-xs text-gray-600">Taux de succès</div>
+          <div className="text-xs text-gray-600">{t('aiAgents.agent.stats.successRate')}</div>
         </div>
       </div>
 
@@ -305,21 +363,21 @@ function AgentCard({ name, description, icon, status, onToggle }: AgentCardProps
           }`}
         >
           {status.status === 'active'
-            ? 'Actif'
+            ? t('aiAgents.agent.status.active')
             : status.status === 'error'
-            ? 'Erreur'
-            : 'En pause'}
+            ? t('aiAgents.agent.status.error')
+            : t('aiAgents.agent.status.paused')}
         </span>
         <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
           {status.autonomyLevel === 'low'
-            ? 'Basse autonomie'
+            ? t('aiAgents.agent.autonomy.low')
             : status.autonomyLevel === 'high'
-            ? 'Haute autonomie'
-            : 'Autonomie moyenne'}
+            ? t('aiAgents.agent.autonomy.high')
+            : t('aiAgents.agent.autonomy.medium')}
         </span>
         {status.pendingApprovals > 0 && (
           <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700">
-            {status.pendingApprovals} en attente
+            {t('aiAgents.agent.pendingApprovals', { count: status.pendingApprovals })}
           </span>
         )}
       </div>
@@ -327,15 +385,14 @@ function AgentCard({ name, description, icon, status, onToggle }: AgentCardProps
       {/* Dernière action */}
       {status.lastAction && (
         <div className="text-xs text-gray-600">
-          Dernière action :{' '}
-          {new Date(status.lastAction).toLocaleString('fr-FR')}
+          {t('aiAgents.agent.lastAction', { date: new Date(status.lastAction).toLocaleString(locale) })}
         </div>
       )}
 
       {/* Actions récentes */}
       {status.recentChanges.length > 0 && (
         <div className="mt-4 pt-4 border-t">
-          <h4 className="text-sm font-medium mb-2">Changements récents</h4>
+          <h4 className="text-sm font-medium mb-2">{t('aiAgents.agent.recentChanges')}</h4>
           <div className="space-y-2">
             {status.recentChanges.slice(0, 3).map((change, index) => (
               <div key={index} className="text-xs bg-gray-50 p-2 rounded">

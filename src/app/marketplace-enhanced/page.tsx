@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { 
   Card, 
@@ -32,8 +32,8 @@ import {
   Briefcase,
   Clock,
 } from 'lucide-react';
-import { formatDistance } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 // Types
 interface Tender {
@@ -96,6 +96,64 @@ const TENDER_TYPES = ['PUBLIC', 'PRIVATE', 'EUROPEAN'];
 
 // Main component
 export default function EnhancedMarketplacePage() {
+  const { locale } = useLocale();
+  const entries = useMemo(
+    () => ({
+      'marketplace.title': 'Marketplace',
+      'marketplace.subtitle': 'Search and find the best tenders',
+      'marketplace.action.filters': 'Filters',
+      'marketplace.action.recommendations': 'AI recommendations',
+
+      'marketplace.reco.title': 'AI recommendations',
+      'marketplace.reco.subtitle': '{count, plural, one {# tender selected for you} other {# tenders selected for you}}',
+      'marketplace.action.refresh': 'Refresh',
+      'marketplace.action.view': 'View',
+
+      'marketplace.search.placeholder': 'Search by title, description, sector…',
+      'marketplace.savedSearches': 'Saved searches',
+      'marketplace.tooltip.saveSearch': 'Save this search',
+      'marketplace.tooltip.createAlert': 'Create an alert',
+
+      'marketplace.filters.sectors': 'Sectors',
+      'marketplace.filters.countries': 'Countries',
+      'marketplace.filters.deadline': 'Deadline',
+      'marketplace.filters.clear': 'Clear filters',
+      'marketplace.filterChip.query': 'Search: {query}',
+      'marketplace.filterChip.min': 'Min: {value}€',
+      'marketplace.filterChip.max': 'Max: {value}€',
+
+      'marketplace.loading': 'Loading…',
+      'marketplace.empty.title': 'No tenders found',
+      'marketplace.empty.description': 'Try adjusting your search criteria.',
+      'marketplace.empty.reset': 'Reset filters',
+
+      'marketplace.results.count': '{count, plural, one {# result} other {# results}}',
+
+      'marketplace.deadline.daysRemaining': '{days, plural, one {# day remaining} other {# days remaining}}',
+      'marketplace.deadline.days': '{days, plural, one {# day} other {# days}}',
+      'marketplace.action.viewDetails': 'View details',
+
+      'marketplace.saveSearch.title': 'Save search',
+      'marketplace.field.name': 'Name',
+      'marketplace.field.name.placeholder': 'e.g. EU IT tenders',
+      'marketplace.field.descriptionOptional': 'Description (optional)',
+      'marketplace.field.description.placeholder': 'Search description',
+      'marketplace.action.cancel': 'Cancel',
+      'marketplace.action.save': 'Save',
+
+      'marketplace.createAlert.title': 'Create alert',
+      'marketplace.createAlert.name': 'Alert name',
+      'marketplace.createAlert.name.placeholder': 'e.g. New IT tenders',
+      'marketplace.createAlert.frequency': 'Frequency',
+      'marketplace.createAlert.frequency.instant': 'Instant',
+      'marketplace.createAlert.frequency.daily': 'Daily',
+      'marketplace.createAlert.frequency.weekly': 'Weekly',
+      'marketplace.action.create': 'Create',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
+
   const [supabase, setSupabase] = useState<any>(null);
   const [tenders, setTenders] = useState<Tender[]>([]);
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
@@ -348,17 +406,17 @@ export default function EnhancedMarketplacePage() {
   return (
     <AppLayout>
       <PageHeader
-        title="Marketplace"
-        description="Recherchez et trouvez les meilleurs appels d'offres"
+        title={t('marketplace.title')}
+        description={t('marketplace.subtitle')}
         actions={
           <div className="flex flex-col sm:flex-row gap-3">
             <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
               <Filter className="w-4 h-4 mr-2" />
-              Filtres {activeFilterCount > 0 && `(${activeFilterCount})`}
+              {t('marketplace.action.filters')} {activeFilterCount > 0 && `(${activeFilterCount})`}
             </Button>
             <Button variant="outline" onClick={generateRecommendations}>
               <Sparkles className="w-4 h-4 mr-2" />
-              Recommandations AI
+              {t('marketplace.action.recommendations')}
             </Button>
           </div>
         }
@@ -375,14 +433,14 @@ export default function EnhancedMarketplacePage() {
                     <Sparkles className="w-5 h-5 text-purple-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Recommandations AI</h3>
+                    <h3 className="font-semibold text-gray-900">{t('marketplace.reco.title')}</h3>
                     <p className="text-sm text-gray-600">
-                      {recommendations.length} appels d'offres sélectionnés pour vous
+                      {t('marketplace.reco.subtitle', { count: recommendations.length })}
                     </p>
                   </div>
                 </div>
                 <Button variant="outline" size="sm" onClick={generateRecommendations}>
-                  Actualiser
+                  {t('marketplace.action.refresh')}
                 </Button>
               </div>
               <div className="grid grid-cols-1 gap-3">
@@ -423,7 +481,7 @@ export default function EnhancedMarketplacePage() {
                         />
                       </Button>
                       <Button variant="primary" size="sm">
-                        Voir
+                        {t('marketplace.action.view')}
                       </Button>
                     </div>
                   </div>
@@ -443,7 +501,7 @@ export default function EnhancedMarketplacePage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <Input
                     type="text"
-                    placeholder="Rechercher par titre, description, secteur..."
+                    placeholder={t('marketplace.search.placeholder')}
                     className="pl-10"
                     value={filters.query || ''}
                     onChange={(e) =>
@@ -463,7 +521,7 @@ export default function EnhancedMarketplacePage() {
                     if (search) loadSavedSearch(search);
                   }}
                 >
-                  <option value="">Recherches sauvegardées</option>
+                  <option value="">{t('marketplace.savedSearches')}</option>
                   {savedSearches.map((search) => (
                     <option key={search.id} value={search.id}>
                       {search.name}
@@ -476,14 +534,14 @@ export default function EnhancedMarketplacePage() {
               <Button
                 variant="outline"
                 onClick={() => setShowSaveSearch(true)}
-                title="Sauvegarder cette recherche"
+                title={t('marketplace.tooltip.saveSearch')}
               >
                 <Save className="w-4 h-4" />
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setShowCreateAlert(true)}
-                title="Créer une alerte"
+                title={t('marketplace.tooltip.createAlert')}
               >
                 <Bell className="w-4 h-4" />
               </Button>
@@ -520,7 +578,7 @@ export default function EnhancedMarketplacePage() {
                   {/* Sectors */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Secteurs
+                      {t('marketplace.filters.sectors')}
                     </label>
                     <div className="space-y-2 max-h-40 overflow-y-auto">
                       {SECTORS.map((sector) => (
@@ -545,7 +603,7 @@ export default function EnhancedMarketplacePage() {
                   {/* Countries */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Pays
+                      {t('marketplace.filters.countries')}
                     </label>
                     <div className="space-y-2 max-h-40 overflow-y-auto">
                       {COUNTRIES.map((country) => (
@@ -601,7 +659,7 @@ export default function EnhancedMarketplacePage() {
                   {/* Deadline range */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Échéance
+                      {t('marketplace.filters.deadline')}
                     </label>
                     <div className="space-y-2">
                       <Input
@@ -627,7 +685,7 @@ export default function EnhancedMarketplacePage() {
                   <div className="mt-4 flex justify-end">
                     <Button variant="outline" onClick={clearFilters}>
                       <X className="w-4 h-4 mr-2" />
-                      Effacer les filtres
+                      {t('marketplace.filters.clear')}
                     </Button>
                   </div>
                 )}
@@ -638,7 +696,7 @@ export default function EnhancedMarketplacePage() {
             {activeFilterCount > 0 && !showFilters && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {filters.query && (
-                  <Badge variant="default">Recherche: {filters.query}</Badge>
+                  <Badge variant="default">{t('marketplace.filterChip.query', { query: filters.query })}</Badge>
                 )}
                 {filters.sectors?.map((s) => (
                   <Badge key={s} variant="default">
@@ -651,10 +709,10 @@ export default function EnhancedMarketplacePage() {
                   </Badge>
                 ))}
                 {filters.min_value && (
-                  <Badge variant="default">Min: {filters.min_value}€</Badge>
+                  <Badge variant="default">{t('marketplace.filterChip.min', { value: filters.min_value })}</Badge>
                 )}
                 {filters.max_value && (
-                  <Badge variant="default">Max: {filters.max_value}€</Badge>
+                  <Badge variant="default">{t('marketplace.filterChip.max', { value: filters.max_value })}</Badge>
                 )}
               </div>
             )}
@@ -665,7 +723,7 @@ export default function EnhancedMarketplacePage() {
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-            <p className="text-gray-500 mt-4">Chargement...</p>
+            <p className="text-gray-500 mt-4">{t('marketplace.loading')}</p>
           </div>
         ) : tenders.length === 0 ? (
           <Card>
@@ -674,20 +732,20 @@ export default function EnhancedMarketplacePage() {
                 <Search className="w-8 h-8 text-gray-400" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Aucun appel d'offres trouvé
+                {t('marketplace.empty.title')}
               </h3>
               <p className="text-gray-500 mb-4">
-                Essayez de modifier vos critères de recherche
+                {t('marketplace.empty.description')}
               </p>
               <Button variant="outline" onClick={clearFilters}>
-                Réinitialiser les filtres
+                {t('marketplace.empty.reset')}
               </Button>
             </CardContent>
           </Card>
         ) : (
           <>
             <div className="mb-4 text-sm text-gray-600">
-              {tenders.length} résultat{tenders.length > 1 ? 's' : ''}
+              {t('marketplace.results.count', { count: tenders.length })}
             </div>
             <div
               className={
@@ -703,6 +761,7 @@ export default function EnhancedMarketplacePage() {
                   isFavorite={favorites.has(tender.id)}
                   onToggleFavorite={() => toggleFavorite(tender.id)}
                   viewMode={viewMode}
+                  t={t}
                 />
               ))}
             </div>
@@ -715,6 +774,7 @@ export default function EnhancedMarketplacePage() {
         <SaveSearchModal
           onSave={saveCurrentSearch}
           onClose={() => setShowSaveSearch(false)}
+          t={t}
         />
       )}
 
@@ -723,6 +783,7 @@ export default function EnhancedMarketplacePage() {
         <CreateAlertModal
           onSave={createAlert}
           onClose={() => setShowCreateAlert(false)}
+          t={t}
         />
       )}
     </AppLayout>
@@ -735,11 +796,13 @@ function TenderCard({
   isFavorite,
   onToggleFavorite,
   viewMode,
+  t,
 }: {
   tender: Tender;
   isFavorite: boolean;
   onToggleFavorite: () => void;
   viewMode: 'grid' | 'list';
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const daysUntilDeadline = Math.floor(
     (new Date(tender.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
@@ -775,7 +838,7 @@ function TenderCard({
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
-                  {daysUntilDeadline} jours restants
+                  {t('marketplace.deadline.daysRemaining', { days: daysUntilDeadline })}
                 </span>
               </div>
             </div>
@@ -788,7 +851,7 @@ function TenderCard({
                 />
               </Button>
               <Button variant="primary" size="sm">
-                Voir détails
+                {t('marketplace.action.viewDetails')}
               </Button>
             </div>
           </div>
@@ -838,7 +901,7 @@ function TenderCard({
         <div className="flex items-center justify-between pt-4 border-t border-gray-100">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-gray-400" />
-            <span className="text-sm text-gray-600">{daysUntilDeadline} jours</span>
+            <span className="text-sm text-gray-600">{t('marketplace.deadline.days', { days: daysUntilDeadline })}</span>
             <Badge
               variant={daysUntilDeadline < 7 ? 'danger' : 'success'}
               className="text-xs"
@@ -847,7 +910,7 @@ function TenderCard({
             </Badge>
           </div>
           <Button variant="primary" size="sm">
-            Voir détails
+            {t('marketplace.action.viewDetails')}
           </Button>
         </div>
       </CardContent>
@@ -859,9 +922,11 @@ function TenderCard({
 function SaveSearchModal({
   onSave,
   onClose,
+  t,
 }: {
   onSave: (name: string, description?: string) => void;
   onClose: () => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -871,34 +936,34 @@ function SaveSearchModal({
       <div className="bg-white rounded-2xl w-full max-w-md">
         <div className="p-6 border-b border-gray-100">
           <h2 className="text-xl font-semibold text-gray-900">
-            Sauvegarder la recherche
+            {t('marketplace.saveSearch.title')}
           </h2>
         </div>
         <div className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nom
+              {t('marketplace.field.name')}
             </label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ex: AO IT France"
+              placeholder={t('marketplace.field.name.placeholder')}
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description (optionnel)
+              {t('marketplace.field.descriptionOptional')}
             </label>
             <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Description de la recherche"
+              placeholder={t('marketplace.field.description.placeholder')}
             />
           </div>
         </div>
         <div className="p-6 border-t border-gray-100 flex gap-3">
           <Button variant="outline" className="flex-1" onClick={onClose}>
-            Annuler
+            {t('marketplace.action.cancel')}
           </Button>
           <Button
             variant="primary"
@@ -906,7 +971,7 @@ function SaveSearchModal({
             onClick={() => onSave(name, description)}
             disabled={!name.trim()}
           >
-            Sauvegarder
+            {t('marketplace.action.save')}
           </Button>
         </div>
       </div>
@@ -918,9 +983,11 @@ function SaveSearchModal({
 function CreateAlertModal({
   onSave,
   onClose,
+  t,
 }: {
   onSave: (name: string, frequency: string) => void;
   onClose: () => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const [name, setName] = useState('');
   const [frequency, setFrequency] = useState('daily');
@@ -929,37 +996,37 @@ function CreateAlertModal({
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-md">
         <div className="p-6 border-b border-gray-100">
-          <h2 className="text-xl font-semibold text-gray-900">Créer une alerte</h2>
+          <h2 className="text-xl font-semibold text-gray-900">{t('marketplace.createAlert.title')}</h2>
         </div>
         <div className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nom de l'alerte
+              {t('marketplace.createAlert.name')}
             </label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ex: Nouveaux AO IT"
+              placeholder={t('marketplace.createAlert.name.placeholder')}
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Fréquence
+              {t('marketplace.createAlert.frequency')}
             </label>
             <select
               className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500"
               value={frequency}
               onChange={(e) => setFrequency(e.target.value)}
             >
-              <option value="instant">Instantané</option>
-              <option value="daily">Quotidien</option>
-              <option value="weekly">Hebdomadaire</option>
+              <option value="instant">{t('marketplace.createAlert.frequency.instant')}</option>
+              <option value="daily">{t('marketplace.createAlert.frequency.daily')}</option>
+              <option value="weekly">{t('marketplace.createAlert.frequency.weekly')}</option>
             </select>
           </div>
         </div>
         <div className="p-6 border-t border-gray-100 flex gap-3">
           <Button variant="outline" className="flex-1" onClick={onClose}>
-            Annuler
+            {t('marketplace.action.cancel')}
           </Button>
           <Button
             variant="primary"
@@ -967,7 +1034,7 @@ function CreateAlertModal({
             onClick={() => onSave(name, frequency)}
             disabled={!name.trim()}
           >
-            Créer
+            {t('marketplace.action.create')}
           </Button>
         </div>
       </div>

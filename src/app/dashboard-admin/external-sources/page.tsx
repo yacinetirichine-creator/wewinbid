@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   GlobeAltIcon,
@@ -19,6 +19,8 @@ import { Button, Card, Badge, Skeleton } from '@/components/ui';
 import { AppLayout, PageHeader } from '@/components/layout/Sidebar';
 import { formatDate } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 interface ExternalSource {
   id: string;
@@ -55,14 +57,70 @@ const SOURCE_ICONS: Record<string, string> = {
   'Gazzetta Ufficiale': '🇮🇹',
 };
 
-const FREQUENCY_LABELS: Record<string, string> = {
-  'HOURLY': 'Toutes les heures',
-  'DAILY': 'Quotidienne',
-  'WEEKLY': 'Hebdomadaire',
-  'MANUAL': 'Manuelle uniquement',
+const FREQUENCY_LABEL_KEYS: Record<ExternalSource['sync_frequency'], string> = {
+  HOURLY: 'externalSources.frequency.hourly',
+  DAILY: 'externalSources.frequency.daily',
+  WEEKLY: 'externalSources.frequency.weekly',
+  MANUAL: 'externalSources.frequency.manualOnly',
 };
 
 export default function ExternalSourcesPage() {
+  const { locale } = useLocale();
+  const entries = useMemo(
+    () => ({
+      'externalSources.title': 'External sources',
+      'externalSources.subtitle': 'Manage tender data sources',
+      'externalSources.badge.activeOfTotal': '{active} / {total} active',
+
+      'externalSources.stats.activeSources': 'Active sources',
+      'externalSources.stats.totalSyncs': 'Total synchronizations',
+      'externalSources.stats.avgSuccessRate': 'Average success rate',
+      'externalSources.stats.recentlySynced': 'Recently synced',
+
+      'externalSources.status.active': 'Active',
+      'externalSources.status.inactive': 'Inactive',
+
+      'externalSources.action.sync': 'Sync',
+      'externalSources.action.syncing': 'Syncing…',
+      'externalSources.action.cancel': 'Cancel',
+      'externalSources.action.configure': 'Configure',
+      'externalSources.action.save': 'Save',
+
+      'externalSources.field.apiKey': 'API key',
+      'externalSources.field.apiKey.placeholder': 'Enter the API key…',
+      'externalSources.field.apiKey.configured': 'API key configured',
+      'externalSources.field.syncFrequency': 'Sync frequency',
+
+      'externalSources.frequency.hourly': 'Hourly',
+      'externalSources.frequency.daily': 'Daily',
+      'externalSources.frequency.weekly': 'Weekly',
+      'externalSources.frequency.manualOnly': 'Manual only',
+
+      'externalSources.info.frequency': 'Frequency',
+      'externalSources.info.lastSync': 'Last sync',
+      'externalSources.info.successRate': 'Success rate',
+      'externalSources.info.apiKey': 'API key',
+      'externalSources.value.never': 'Never',
+      'externalSources.value.configured': 'Configured',
+      'externalSources.value.notConfigured': 'Not configured',
+
+      'externalSources.logs.title': 'Sync history ({count})',
+      'externalSources.logs.empty': 'No synchronizations yet',
+      'externalSources.logs.importedOfFound': '{imported} / {found} tenders imported',
+      'externalSources.logs.error': 'Error',
+
+      'externalSources.toast.loadError': 'Error loading sources',
+      'externalSources.toast.toggleActivated': 'Source activated',
+      'externalSources.toast.toggleDeactivated': 'Source deactivated',
+      'externalSources.toast.updateSuccess': 'Source updated successfully',
+      'externalSources.toast.updateError': 'Error updating source',
+      'externalSources.toast.syncStarted': 'Synchronization started',
+      'externalSources.toast.syncStartError': 'Error starting synchronization',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
+
   const [sources, setSources] = useState<ExternalSource[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingSource, setEditingSource] = useState<string | null>(null);
@@ -76,11 +134,7 @@ export default function ExternalSourcesPage() {
   });
   const [syncing, setSyncing] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    fetchSources();
-  }, []);
-
-  async function fetchSources() {
+  const fetchSources = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/admin/external-sources');
@@ -90,11 +144,15 @@ export default function ExternalSourcesPage() {
       setSources(data.sources || []);
     } catch (error) {
       console.error('Error fetching sources:', error);
-      toast.error('Erreur lors du chargement des sources');
+      toast.error(t('externalSources.toast.loadError'));
     } finally {
       setLoading(false);
     }
-  }
+  }, [t]);
+
+  useEffect(() => {
+    fetchSources();
+  }, [fetchSources]);
 
   async function toggleSource(sourceId: string, currentStatus: boolean) {
     try {
@@ -109,11 +167,13 @@ export default function ExternalSourcesPage() {
 
       if (!response.ok) throw new Error('Failed to toggle source');
 
-      toast.success(`Source ${!currentStatus ? 'activée' : 'désactivée'}`);
+      toast.success(
+        t(!currentStatus ? 'externalSources.toast.toggleActivated' : 'externalSources.toast.toggleDeactivated')
+      );
       await fetchSources();
     } catch (error) {
       console.error('Error toggling source:', error);
-      toast.error('Erreur lors de la mise à jour');
+      toast.error(t('externalSources.toast.updateError'));
     }
   }
 
@@ -131,13 +191,13 @@ export default function ExternalSourcesPage() {
 
       if (!response.ok) throw new Error('Failed to update source');
 
-      toast.success('Source mise à jour avec succès');
+      toast.success(t('externalSources.toast.updateSuccess'));
       setEditingSource(null);
       setFormData({ api_key: '', sync_frequency: 'DAILY' });
       await fetchSources();
     } catch (error) {
       console.error('Error updating source:', error);
-      toast.error('Erreur lors de la mise à jour');
+      toast.error(t('externalSources.toast.updateError'));
     }
   }
 
@@ -152,7 +212,7 @@ export default function ExternalSourcesPage() {
 
       if (!response.ok) throw new Error('Failed to trigger sync');
 
-      toast.success('Synchronisation démarrée');
+      toast.success(t('externalSources.toast.syncStarted'));
       
       // Rafraîchir les données après 4 secondes
       setTimeout(() => {
@@ -161,7 +221,7 @@ export default function ExternalSourcesPage() {
       }, 4000);
     } catch (error) {
       console.error('Error triggering sync:', error);
-      toast.error('Erreur lors du démarrage de la synchronisation');
+      toast.error(t('externalSources.toast.syncStartError'));
       setSyncing({ ...syncing, [sourceId]: false });
     }
   }
@@ -207,8 +267,8 @@ export default function ExternalSourcesPage() {
     return (
       <AppLayout>
         <PageHeader
-          title="Sources Externes"
-          subtitle="Gestion des sources de données d'appels d'offres"
+          title={t('externalSources.title')}
+          subtitle={t('externalSources.subtitle')}
         />
         <div className="space-y-6">
           {[1, 2, 3, 4, 5].map(i => (
@@ -222,12 +282,15 @@ export default function ExternalSourcesPage() {
   return (
     <AppLayout>
       <PageHeader
-        title="Sources Externes"
-        description="Gestion des sources de données d'appels d'offres"
+        title={t('externalSources.title')}
+        description={t('externalSources.subtitle')}
         actions={
           <div className="flex items-center gap-3">
             <Badge variant="secondary">
-              {sources.filter(s => s.is_active).length} / {sources.length} actives
+              {t('externalSources.badge.activeOfTotal', {
+                active: sources.filter(s => s.is_active).length,
+                total: sources.length,
+              })}
             </Badge>
           </div>
         }
@@ -250,7 +313,7 @@ export default function ExternalSourcesPage() {
                 <p className="text-2xl font-bold text-slate-900">
                   {sources.filter(s => s.is_active).length}
                 </p>
-                <p className="text-sm text-slate-500">Sources actives</p>
+                <p className="text-sm text-slate-500">{t('externalSources.stats.activeSources')}</p>
               </div>
             </div>
           </Card>
@@ -264,7 +327,7 @@ export default function ExternalSourcesPage() {
                 <p className="text-2xl font-bold text-slate-900">
                   {sources.reduce((sum, s) => sum + s.total_syncs, 0)}
                 </p>
-                <p className="text-sm text-slate-500">Synchronisations totales</p>
+                <p className="text-sm text-slate-500">{t('externalSources.stats.totalSyncs')}</p>
               </div>
             </div>
           </Card>
@@ -280,7 +343,7 @@ export default function ExternalSourcesPage() {
                     sources.reduce((sum, s) => sum + s.success_rate, 0) / sources.length || 0
                   )}%
                 </p>
-                <p className="text-sm text-slate-500">Taux de succès moyen</p>
+                <p className="text-sm text-slate-500">{t('externalSources.stats.avgSuccessRate')}</p>
               </div>
             </div>
           </Card>
@@ -294,7 +357,7 @@ export default function ExternalSourcesPage() {
                 <p className="text-2xl font-bold text-slate-900">
                   {sources.filter(s => s.last_sync_at).length}
                 </p>
-                <p className="text-sm text-slate-500">Synchronisées récemment</p>
+                <p className="text-sm text-slate-500">{t('externalSources.stats.recentlySynced')}</p>
               </div>
             </div>
           </Card>
@@ -313,9 +376,9 @@ export default function ExternalSourcesPage() {
                       <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                         {source.name}
                         {source.is_active ? (
-                          <Badge variant="success" size="sm">Actif</Badge>
+                          <Badge variant="success" size="sm">{t('externalSources.status.active')}</Badge>
                         ) : (
-                          <Badge variant="secondary" size="sm">Inactif</Badge>
+                          <Badge variant="secondary" size="sm">{t('externalSources.status.inactive')}</Badge>
                         )}
                       </h3>
                       <p className="text-sm text-slate-500 flex items-center gap-2">
@@ -334,7 +397,7 @@ export default function ExternalSourcesPage() {
                         className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                       />
                       <span className="text-sm text-gray-700">
-                        {source.is_active ? 'Actif' : 'Inactif'}
+                        {source.is_active ? t('externalSources.status.active') : t('externalSources.status.inactive')}
                       </span>
                     </label>
                     <Button
@@ -346,12 +409,12 @@ export default function ExternalSourcesPage() {
                       {syncing[source.id] ? (
                         <>
                           <ArrowPathIcon className="w-4 h-4 mr-2 animate-spin" />
-                          Sync...
+                          {t('externalSources.action.syncing')}
                         </>
                       ) : (
                         <>
                           <PlayIcon className="w-4 h-4 mr-2" />
-                          Synchroniser
+                          {t('externalSources.action.sync')}
                         </>
                       )}
                     </Button>
@@ -361,7 +424,7 @@ export default function ExternalSourcesPage() {
                         variant="ghost"
                         size="sm"
                       >
-                        Annuler
+                        {t('externalSources.action.cancel')}
                       </Button>
                     ) : (
                       <Button
@@ -370,7 +433,7 @@ export default function ExternalSourcesPage() {
                         size="sm"
                       >
                         <Cog6ToothIcon className="w-4 h-4 mr-2" />
-                        Configurer
+                        {t('externalSources.action.configure')}
                       </Button>
                     )}
                   </div>
@@ -386,7 +449,7 @@ export default function ExternalSourcesPage() {
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">
                           <KeyIcon className="w-4 h-4 inline mr-1" />
-                          Clé API
+                          {t('externalSources.field.apiKey')}
                         </label>
                         <div className="relative">
                           <input
@@ -394,7 +457,7 @@ export default function ExternalSourcesPage() {
                             value={formData.api_key}
                             onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
                             className="w-full px-3 py-2 pr-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            placeholder="Entrez la clé API..."
+                            placeholder={t('externalSources.field.apiKey.placeholder')}
                           />
                           <button
                             type="button"
@@ -411,7 +474,7 @@ export default function ExternalSourcesPage() {
                         {source.api_key_encrypted && (
                           <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1">
                             <CheckCircleIcon className="w-3 h-3" />
-                            Clé API configurée
+                            {t('externalSources.field.apiKey.configured')}
                           </p>
                         )}
                       </div>
@@ -419,17 +482,17 @@ export default function ExternalSourcesPage() {
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">
                           <ClockIcon className="w-4 h-4 inline mr-1" />
-                          Fréquence de synchronisation
+                          {t('externalSources.field.syncFrequency')}
                         </label>
                         <select
                           value={formData.sync_frequency}
                           onChange={(e) => setFormData({ ...formData, sync_frequency: e.target.value })}
                           className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         >
-                          <option value="HOURLY">Toutes les heures</option>
-                          <option value="DAILY">Quotidienne</option>
-                          <option value="WEEKLY">Hebdomadaire</option>
-                          <option value="MANUAL">Manuelle uniquement</option>
+                          <option value="HOURLY">{t('externalSources.frequency.hourly')}</option>
+                          <option value="DAILY">{t('externalSources.frequency.daily')}</option>
+                          <option value="WEEKLY">{t('externalSources.frequency.weekly')}</option>
+                          <option value="MANUAL">{t('externalSources.frequency.manualOnly')}</option>
                         </select>
                       </div>
                     </div>
@@ -437,7 +500,7 @@ export default function ExternalSourcesPage() {
                     <div className="flex gap-2">
                       <Button onClick={() => updateSource(source.id)} variant="primary" size="sm">
                         <CheckCircleIcon className="w-4 h-4 mr-2" />
-                        Enregistrer
+                        {t('externalSources.action.save')}
                       </Button>
                     </div>
                   </div>
@@ -445,35 +508,35 @@ export default function ExternalSourcesPage() {
                   // Info Display
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div>
-                      <p className="text-xs text-slate-500 mb-1">Fréquence</p>
+                      <p className="text-xs text-slate-500 mb-1">{t('externalSources.info.frequency')}</p>
                       <p className="font-medium text-slate-900">
-                        {FREQUENCY_LABELS[source.sync_frequency]}
+                        {t(FREQUENCY_LABEL_KEYS[source.sync_frequency])}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500 mb-1">Dernière sync</p>
+                      <p className="text-xs text-slate-500 mb-1">{t('externalSources.info.lastSync')}</p>
                       <p className="font-medium text-slate-900">
-                        {source.last_sync_at ? formatDate(source.last_sync_at) : 'Jamais'}
+                        {source.last_sync_at ? formatDate(source.last_sync_at, undefined, locale) : t('externalSources.value.never')}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500 mb-1">Taux de succès</p>
+                      <p className="text-xs text-slate-500 mb-1">{t('externalSources.info.successRate')}</p>
                       <p className={`font-medium text-xl ${getSuccessRateColor(source.success_rate)}`}>
                         {source.success_rate}%
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500 mb-1">Clé API</p>
+                      <p className="text-xs text-slate-500 mb-1">{t('externalSources.info.apiKey')}</p>
                       <p className="font-medium text-slate-900">
                         {source.api_key_encrypted ? (
                           <span className="flex items-center gap-1 text-emerald-600">
                             <CheckCircleIcon className="w-4 h-4" />
-                            Configurée
+                            {t('externalSources.value.configured')}
                           </span>
                         ) : (
                           <span className="flex items-center gap-1 text-amber-600">
                             <XCircleIcon className="w-4 h-4" />
-                            Non configurée
+                            {t('externalSources.value.notConfigured')}
                           </span>
                         )}
                       </p>
@@ -485,13 +548,13 @@ export default function ExternalSourcesPage() {
                 <div>
                   <h4 className="font-medium text-slate-900 mb-3 flex items-center gap-2">
                     <ChartBarIcon className="w-5 h-5 text-indigo-600" />
-                    Historique de synchronisation ({source.recent_logs.length})
+                    {t('externalSources.logs.title', { count: source.recent_logs.length })}
                   </h4>
                   
                   {source.recent_logs.length === 0 ? (
                     <div className="text-center py-8 bg-slate-50 rounded-lg border-2 border-dashed border-slate-300">
                       <ClockIcon className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                      <p className="text-sm text-slate-500">Aucune synchronisation</p>
+                      <p className="text-sm text-slate-500">{t('externalSources.logs.empty')}</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -513,16 +576,19 @@ export default function ExternalSourcesPage() {
                             </div>
                             <div>
                               <p className="text-sm font-medium text-slate-900">
-                                {log.tenders_imported} / {log.tenders_found} AO importés
+                                {t('externalSources.logs.importedOfFound', {
+                                  imported: log.tenders_imported,
+                                  found: log.tenders_found,
+                                })}
                               </p>
                               <p className="text-xs text-slate-500">
-                                {formatDate(log.sync_started_at)}
+                                {formatDate(log.sync_started_at, undefined, locale)}
                               </p>
                             </div>
                           </div>
                           {log.error_message && (
                             <Badge variant="danger" size="sm">
-                              Erreur
+                              {t('externalSources.logs.error')}
                             </Badge>
                           )}
                         </div>

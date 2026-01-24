@@ -1349,8 +1349,8 @@ export default function SettingsPage() {
                     <div className="flex items-center gap-3">
                       <Smartphone className="w-5 h-5 text-gray-500" />
                       <div>
-                        <p className="font-medium text-gray-900">Chrome sur MacOS</p>
-                        <p className="text-sm text-gray-500">Paris, France • Session actuelle</p>
+                        <p className="font-medium text-gray-900">{'Chrome on macOS'}</p>
+                        <p className="text-sm text-gray-500">{'Paris, France • Current session'}</p>
                       </div>
                     </div>
                     <Badge className="bg-green-100 text-green-800">{t('settings.security.session.active')}</Badge>
@@ -1549,18 +1549,26 @@ export default function SettingsPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.preferences.timezone')}</label>
                   <select className="px-3 py-2 border rounded-lg">
-                    <option value="Europe/Paris">Europe/Paris (UTC+1)</option>
-                    <option value="Europe/London">Europe/London (UTC+0)</option>
-                    <option value="America/New_York">America/New_York (UTC-5)</option>
+                    {[
+                      { value: 'Europe/Paris', label: 'Europe/Paris (UTC+1)' },
+                      { value: 'Europe/London', label: 'Europe/London (UTC+0)' },
+                      { value: 'America/New_York', label: 'America/New_York (UTC-5)' },
+                    ].map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.preferences.dateFormat')}</label>
                   <select className="px-3 py-2 border rounded-lg">
-                    <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                    <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                    <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                    {['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'].map((fmt) => (
+                      <option key={fmt} value={fmt}>
+                        {fmt}
+                      </option>
+                    ))}
                   </select>
                 </div>
 

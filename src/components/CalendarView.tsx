@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Filter, Download, Settings } from 'lucide-react';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 type ViewMode = 'month' | 'week' | 'day' | 'agenda';
 
@@ -29,12 +31,47 @@ type CalendarViewProps = {
   onSettings?: () => void;
 };
 
+type UiT = (key: string, vars?: Record<string, any>) => string;
+
 export default function CalendarView({
   onEventClick,
   onCreateEvent,
   onExport,
   onSettings,
 }: CalendarViewProps) {
+  const { locale } = useLocale();
+  const entries = useMemo(
+    () => ({
+      'calendarView.header.title': 'Calendar',
+      'calendarView.header.today': 'Today',
+
+      'calendarView.mode.month': 'Month',
+      'calendarView.mode.week': 'Week',
+      'calendarView.mode.day': 'Day',
+      'calendarView.mode.agenda': 'Agenda',
+
+      'calendarView.filter.all': 'All events',
+      'calendarView.filter.deadline': 'Deadlines',
+      'calendarView.filter.meeting': 'Meetings',
+      'calendarView.filter.reminder': 'Reminders',
+      'calendarView.filter.milestone': 'Milestones',
+      'calendarView.filter.custom': 'Custom',
+
+      'calendarView.toggle.team': 'Team',
+
+      'calendarView.action.export': 'Export',
+      'calendarView.action.settings': 'Settings',
+      'calendarView.action.newEvent': 'New event',
+
+      'calendarView.title.agendaRange': 'Agenda - Next 30 days',
+
+      'calendarView.month.more': '+{count} more',
+      'calendarView.agenda.empty': 'No upcoming events',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
+
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -143,7 +180,7 @@ export default function CalendarView({
         weekStart.setDate(weekStart.getDate() - day + 1);
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekEnd.getDate() + 6);
-        return `${weekStart.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - ${weekEnd.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+        return `${weekStart.toLocaleDateString(locale, { day: 'numeric', month: 'short' })} - ${weekEnd.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}`;
       case 'day':
         options.weekday = 'long';
         options.day = 'numeric';
@@ -151,10 +188,10 @@ export default function CalendarView({
         options.year = 'numeric';
         break;
       case 'agenda':
-        return 'Agenda - Prochains 30 jours';
+        return t('calendarView.title.agendaRange');
     }
 
-    return currentDate.toLocaleDateString('fr-FR', options);
+    return currentDate.toLocaleDateString(locale, options);
   };
 
   const getEventColor = (event: CalendarEvent) => {
@@ -176,12 +213,12 @@ export default function CalendarView({
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center gap-4">
-          <h2 className="text-2xl font-bold text-gray-900">Calendrier</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{t('calendarView.header.title')}</h2>
           <button
             onClick={goToToday}
             className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
           >
-            Aujourd'hui
+            {t('calendarView.header.today')}
           </button>
         </div>
 
@@ -198,10 +235,10 @@ export default function CalendarView({
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                {mode === 'month' && 'Mois'}
-                {mode === 'week' && 'Semaine'}
-                {mode === 'day' && 'Jour'}
-                {mode === 'agenda' && 'Agenda'}
+                {mode === 'month' && t('calendarView.mode.month')}
+                {mode === 'week' && t('calendarView.mode.week')}
+                {mode === 'day' && t('calendarView.mode.day')}
+                {mode === 'agenda' && t('calendarView.mode.agenda')}
               </button>
             ))}
           </div>
@@ -212,12 +249,12 @@ export default function CalendarView({
             onChange={(e) => setFilterType(e.target.value)}
             className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
           >
-            <option value="all">Tous les événements</option>
-            <option value="deadline">Deadlines</option>
-            <option value="meeting">Réunions</option>
-            <option value="reminder">Rappels</option>
-            <option value="milestone">Jalons</option>
-            <option value="custom">Personnalisés</option>
+            <option value="all">{t('calendarView.filter.all')}</option>
+            <option value="deadline">{t('calendarView.filter.deadline')}</option>
+            <option value="meeting">{t('calendarView.filter.meeting')}</option>
+            <option value="reminder">{t('calendarView.filter.reminder')}</option>
+            <option value="milestone">{t('calendarView.filter.milestone')}</option>
+            <option value="custom">{t('calendarView.filter.custom')}</option>
           </select>
 
           {/* Team events toggle */}
@@ -228,7 +265,7 @@ export default function CalendarView({
               onChange={(e) => setShowTeamEvents(e.target.checked)}
               className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
-            <span className="text-gray-700">Équipe</span>
+            <span className="text-gray-700">{t('calendarView.toggle.team')}</span>
           </label>
 
           {/* Actions */}
@@ -237,7 +274,7 @@ export default function CalendarView({
               <button
                 onClick={onExport}
                 className="p-2 text-gray-600 hover:bg-gray-100 rounded-md"
-                title="Exporter"
+                title={t('calendarView.action.export')}
               >
                 <Download className="w-5 h-5" />
               </button>
@@ -246,7 +283,7 @@ export default function CalendarView({
               <button
                 onClick={onSettings}
                 className="p-2 text-gray-600 hover:bg-gray-100 rounded-md"
-                title="Paramètres"
+                title={t('calendarView.action.settings')}
               >
                 <Settings className="w-5 h-5" />
               </button>
@@ -257,7 +294,7 @@ export default function CalendarView({
                 className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
               >
                 <Plus className="w-5 h-5" />
-                <span>Nouvel événement</span>
+                <span>{t('calendarView.action.newEvent')}</span>
               </button>
             )}
           </div>
@@ -298,6 +335,8 @@ export default function CalendarView({
             onEventClick={onEventClick}
             onDateClick={onCreateEvent}
             getEventColor={getEventColor}
+            locale={locale}
+            t={t}
           />
         ) : viewMode === 'week' ? (
           <WeekView
@@ -306,6 +345,7 @@ export default function CalendarView({
             onEventClick={onEventClick}
             onDateClick={onCreateEvent}
             getEventColor={getEventColor}
+            locale={locale}
           />
         ) : viewMode === 'day' ? (
           <DayView
@@ -313,12 +353,15 @@ export default function CalendarView({
             events={events}
             onEventClick={onEventClick}
             getEventColor={getEventColor}
+            locale={locale}
           />
         ) : (
           <AgendaView
             events={events}
             onEventClick={onEventClick}
             getEventColor={getEventColor}
+            locale={locale}
+            t={t}
           />
         )}
       </div>
@@ -327,7 +370,7 @@ export default function CalendarView({
 }
 
 // Month View Component
-function MonthView({ currentDate, events, onEventClick, onDateClick, getEventColor }: any) {
+function MonthView({ currentDate, events, onEventClick, onDateClick, getEventColor, locale, t }: any) {
   const getDaysInMonth = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -380,7 +423,13 @@ function MonthView({ currentDate, events, onEventClick, onDateClick, getEventCol
   };
 
   const days = getDaysInMonth();
-  const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  const weekDays = useMemo(() => {
+    // Use a known Monday to generate weekday names
+    const monday = new Date(Date.UTC(2021, 0, 4));
+    return Array.from({ length: 7 }, (_, i) =>
+      new Date(monday.getTime() + i * 24 * 60 * 60 * 1000).toLocaleDateString(locale, { weekday: 'short' })
+    );
+  }, [locale]);
 
   return (
     <div className="h-full">
@@ -436,7 +485,7 @@ function MonthView({ currentDate, events, onEventClick, onDateClick, getEventCol
                 ))}
                 {dayEvents.length > 3 && (
                   <div className="text-xs text-gray-500 px-2">
-                    +{dayEvents.length - 3} autres
+                    {t('calendarView.month.more', { count: dayEvents.length - 3 })}
                   </div>
                 )}
               </div>
@@ -449,7 +498,7 @@ function MonthView({ currentDate, events, onEventClick, onDateClick, getEventCol
 }
 
 // Week View Component
-function WeekView({ currentDate, events, onEventClick, onDateClick, getEventColor }: any) {
+function WeekView({ currentDate, events, onEventClick, onDateClick, getEventColor, locale }: any) {
   const getWeekDays = () => {
     const days = [];
     const weekStart = new Date(currentDate);
@@ -484,7 +533,7 @@ function WeekView({ currentDate, events, onEventClick, onDateClick, getEventColo
                 isToday ? 'text-blue-600' : 'text-gray-900'
               }`}
             >
-              <div>{day.toLocaleDateString('fr-FR', { weekday: 'short' })}</div>
+              <div>{day.toLocaleDateString(locale, { weekday: 'short' })}</div>
               <div
                 className={`text-2xl ${
                   isToday
@@ -508,7 +557,7 @@ function WeekView({ currentDate, events, onEventClick, onDateClick, getEventColo
                     {event.title}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">
-                    {new Date(event.start_date).toLocaleTimeString('fr-FR', {
+                    {new Date(event.start_date).toLocaleTimeString(locale, {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
@@ -524,7 +573,7 @@ function WeekView({ currentDate, events, onEventClick, onDateClick, getEventColo
 }
 
 // Day View Component
-function DayView({ currentDate, events, onEventClick, getEventColor }: any) {
+function DayView({ currentDate, events, onEventClick, getEventColor, locale }: any) {
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
   const dayEvents = events.filter((event: CalendarEvent) => {
@@ -561,7 +610,7 @@ function DayView({ currentDate, events, onEventClick, getEventColor }: any) {
                       {event.title}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {new Date(event.start_date).toLocaleTimeString('fr-FR', {
+                      {new Date(event.start_date).toLocaleTimeString(locale, {
                         hour: '2-digit',
                         minute: '2-digit',
                       })}
@@ -577,12 +626,12 @@ function DayView({ currentDate, events, onEventClick, getEventColor }: any) {
 }
 
 // Agenda View Component
-function AgendaView({ events, onEventClick, getEventColor }: any) {
+function AgendaView({ events, onEventClick, getEventColor, locale, t }: any) {
   const groupEventsByDate = () => {
     const grouped: { [key: string]: CalendarEvent[] } = {};
 
     events.forEach((event: CalendarEvent) => {
-      const dateKey = new Date(event.start_date).toLocaleDateString('fr-FR', {
+      const dateKey = new Date(event.start_date).toLocaleDateString(locale, {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
@@ -604,7 +653,7 @@ function AgendaView({ events, onEventClick, getEventColor }: any) {
     <div className="space-y-6">
       {Object.keys(groupedEvents).length === 0 ? (
         <div className="text-center py-12 text-gray-500">
-          Aucun événement à venir
+          {t('calendarView.agenda.empty')}
         </div>
       ) : (
         Object.entries(groupedEvents).map(([date, dateEvents]) => (
@@ -625,7 +674,7 @@ function AgendaView({ events, onEventClick, getEventColor }: any) {
                       {new Date(event.start_date).getDate()}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {new Date(event.start_date).toLocaleTimeString('fr-FR', {
+                      {new Date(event.start_date).toLocaleTimeString(locale, {
                         hour: '2-digit',
                         minute: '2-digit',
                       })}
@@ -650,7 +699,7 @@ function AgendaView({ events, onEventClick, getEventColor }: any) {
                       </span>
                       {event.is_team_event && (
                         <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                          Équipe
+                          {t('calendarView.toggle.team')}
                         </span>
                       )}
                     </div>

@@ -33,12 +33,14 @@ import {
 } from '@/components/dashboard/AnalyticsCharts';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/utils';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 // Types
 interface DateRange {
   start: Date;
   end: Date;
-  label: string;
+  labelKey: string;
 }
 
 interface AnalyticsData {
@@ -102,27 +104,27 @@ interface AnalyticsReportProps {
 // Périodes prédéfinies
 const DATE_RANGES: DateRange[] = [
   {
-    label: '7 derniers jours',
+    labelKey: 'analyticsReport.range.7d',
     start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
     end: new Date(),
   },
   {
-    label: '30 derniers jours',
+    labelKey: 'analyticsReport.range.30d',
     start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
     end: new Date(),
   },
   {
-    label: '90 derniers jours',
+    labelKey: 'analyticsReport.range.90d',
     start: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
     end: new Date(),
   },
   {
-    label: 'Cette année',
+    labelKey: 'analyticsReport.range.thisYear',
     start: new Date(new Date().getFullYear(), 0, 1),
     end: new Date(),
   },
   {
-    label: 'Année précédente',
+    labelKey: 'analyticsReport.range.lastYear',
     start: new Date(new Date().getFullYear() - 1, 0, 1),
     end: new Date(new Date().getFullYear() - 1, 11, 31),
   },
@@ -135,10 +137,12 @@ function DateRangePicker({
   value,
   onChange,
   className,
+  t,
 }: {
   value: DateRange;
   onChange: (range: DateRange) => void;
   className?: string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -149,7 +153,7 @@ function DateRangePicker({
         className="flex items-center gap-2 px-4 py-2 bg-white border border-surface-200 rounded-lg hover:bg-surface-50 transition-colors"
       >
         <Calendar className="w-4 h-4 text-surface-500" />
-        <span className="text-sm font-medium text-surface-700">{value.label}</span>
+        <span className="text-sm font-medium text-surface-700">{t(value.labelKey)}</span>
         <ChevronDown className={cn('w-4 h-4 text-surface-400 transition-transform', isOpen && 'rotate-180')} />
       </button>
 
@@ -159,17 +163,19 @@ function DateRangePicker({
           <div className="absolute top-full mt-1 right-0 z-50 bg-white border border-surface-200 rounded-lg shadow-lg py-1 min-w-[180px]">
             {DATE_RANGES.map((range) => (
               <button
-                key={range.label}
+                key={range.labelKey}
                 onClick={() => {
                   onChange(range);
                   setIsOpen(false);
                 }}
                 className={cn(
                   'w-full px-4 py-2 text-left text-sm hover:bg-surface-50 transition-colors',
-                  value.label === range.label ? 'bg-primary-50 text-primary-700 font-medium' : 'text-surface-700'
+                  value.labelKey === range.labelKey
+                    ? 'bg-primary-50 text-primary-700 font-medium'
+                    : 'text-surface-700'
                 )}
               >
-                {range.label}
+                {t(range.labelKey)}
               </button>
             ))}
           </div>
@@ -189,6 +195,9 @@ function KPICard({
   format = 'number',
   icon: Icon,
   color = 'primary',
+  locale,
+  vsPreviousPeriodLabel,
+  daysUnit,
 }: {
   title: string;
   value: number;
@@ -196,6 +205,9 @@ function KPICard({
   format?: 'number' | 'currency' | 'percent' | 'days';
   icon: React.ComponentType<{ className?: string }>;
   color?: 'primary' | 'success' | 'warning' | 'danger';
+  locale: string;
+  vsPreviousPeriodLabel: string;
+  daysUnit: string;
 }) {
   const change = previousValue ? ((value - previousValue) / previousValue) * 100 : 0;
   const isPositive = change >= 0;
@@ -207,9 +219,9 @@ function KPICard({
       case 'percent':
         return `${val.toFixed(1)}%`;
       case 'days':
-        return `${val.toFixed(0)} j`;
+        return `${val.toFixed(0)} ${daysUnit}`;
       default:
-        return val.toLocaleString('fr-FR');
+        return val.toLocaleString(locale);
     }
   };
 
@@ -238,7 +250,7 @@ function KPICard({
                 <span className={cn('text-sm font-medium', isPositive ? 'text-green-600' : 'text-red-600')}>
                   {isPositive ? '+' : ''}{change.toFixed(1)}%
                 </span>
-                <span className="text-sm text-surface-400">vs période précédente</span>
+                <span className="text-sm text-surface-400">{vsPreviousPeriodLabel}</span>
               </div>
             )}
           </div>
@@ -257,9 +269,11 @@ function KPICard({
 function ConversionFunnel({
   data,
   className,
+  title,
 }: {
   data: AnalyticsData['conversionFunnel'];
   className?: string;
+  title: string;
 }) {
   const maxCount = Math.max(...data.map(d => d.count));
 
@@ -268,7 +282,7 @@ function ConversionFunnel({
       <CardHeader>
         <div className="flex items-center gap-2">
           <Filter className="w-5 h-5 text-primary-500" />
-          <h3 className="font-semibold text-surface-900">Entonnoir de conversion</h3>
+          <h3 className="font-semibold text-surface-900">{title}</h3>
         </div>
       </CardHeader>
       <CardContent>
@@ -316,6 +330,57 @@ function ConversionFunnel({
  * Rapport d'analytics complet
  */
 export function AnalyticsReport({ organizationId, className }: AnalyticsReportProps) {
+  const { locale } = useLocale();
+  const entries = useMemo(
+    () => ({
+      'analyticsReport.title': 'Analytics dashboard',
+      'analyticsReport.subtitle': 'Overview of your performance',
+      'analyticsReport.refresh': 'Refresh',
+      'analyticsReport.export': 'Export',
+
+      'analyticsReport.kpi.tenders': 'Tenders',
+      'analyticsReport.kpi.winRate': 'Win rate',
+      'analyticsReport.kpi.revenue': 'Revenue',
+      'analyticsReport.kpi.avgResponseTime': 'Average response time',
+      'analyticsReport.kpi.vsPreviousPeriod': 'vs previous period',
+
+      'analyticsReport.chart.performanceEvolution': 'Performance trend',
+      'analyticsReport.chart.typeDistribution': 'Distribution by type',
+      'analyticsReport.chart.typeDistribution.subtitle': 'Tender categories',
+      'analyticsReport.chart.total': 'Total',
+
+      'analyticsReport.section.conversionFunnel': 'Conversion funnel',
+      'analyticsReport.section.topClients': 'Top clients',
+      'analyticsReport.section.topClients.subtitle': 'By contract volume',
+      'analyticsReport.section.topClients.valueLabel': 'Contracts',
+      'analyticsReport.section.byCategory': 'By category',
+      'analyticsReport.section.byCategory.subtitle': 'Number of responses',
+
+      'analyticsReport.section.teamPerformance': 'Team performance',
+      'analyticsReport.table.member': 'Member',
+      'analyticsReport.table.casesHandled': 'Cases handled',
+      'analyticsReport.table.won': 'Won',
+      'analyticsReport.table.winRate': 'Win rate',
+      'analyticsReport.table.avgScore': 'Average score',
+
+      'analyticsReport.section.comparison': 'Comparison with previous period',
+      'analyticsReport.comparison.tendersHandled': 'Tenders processed',
+      'analyticsReport.comparison.wonDeals': 'Deals won',
+      'analyticsReport.comparison.revenue': 'Revenue',
+      'analyticsReport.comparison.winRate': 'Win rate',
+
+      'analyticsReport.unit.daysShort': 'd',
+
+      'analyticsReport.range.7d': 'Last 7 days',
+      'analyticsReport.range.30d': 'Last 30 days',
+      'analyticsReport.range.90d': 'Last 90 days',
+      'analyticsReport.range.thisYear': 'This year',
+      'analyticsReport.range.lastYear': 'Last year',
+    }),
+    []
+  );
+  const { t } = useUiTranslations(locale, entries);
+
   const [dateRange, setDateRange] = useState<DateRange>(DATE_RANGES[1]); // 30 derniers jours
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<AnalyticsData | null>(null);
@@ -338,7 +403,7 @@ export function AnalyticsReport({ organizationId, className }: AnalyticsReportPr
         setPreviousData(result.previous);
       }
     } catch (error) {
-      console.error('Erreur chargement analytics:', error);
+      console.error('Error loading analytics:', error);
     } finally {
       setLoading(false);
     }
@@ -363,12 +428,12 @@ export function AnalyticsReport({ organizationId, className }: AnalyticsReportPr
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `rapport-analytics-${dateRange.label.replace(/\s/g, '-')}.${format}`;
+        a.download = `analytics-report-${t(dateRange.labelKey).replace(/\s/g, '-')}.${format}`;
         a.click();
         URL.revokeObjectURL(url);
       }
     } catch (error) {
-      console.error('Erreur export:', error);
+      console.error('Export error:', error);
     }
   };
 
@@ -387,19 +452,19 @@ export function AnalyticsReport({ organizationId, className }: AnalyticsReportPr
       {/* Header avec contrôles */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-surface-900">Tableau de bord analytique</h1>
-          <p className="text-surface-500">Vue d'ensemble de vos performances</p>
+          <h1 className="text-2xl font-bold text-surface-900">{t('analyticsReport.title')}</h1>
+          <p className="text-surface-500">{t('analyticsReport.subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
-          <DateRangePicker value={dateRange} onChange={setDateRange} />
+          <DateRangePicker value={dateRange} onChange={setDateRange} t={t} />
           <Button variant="outline" onClick={() => loadData()}>
             <RefreshCw className="w-4 h-4 mr-2" />
-            Actualiser
+            {t('analyticsReport.refresh')}
           </Button>
           <div className="relative group">
             <Button variant="primary">
               <Download className="w-4 h-4 mr-2" />
-              Exporter
+              {t('analyticsReport.export')}
             </Button>
             <div className="absolute top-full mt-1 right-0 z-50 bg-white border border-surface-200 rounded-lg shadow-lg py-1 min-w-[120px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
               <button
@@ -428,35 +493,47 @@ export function AnalyticsReport({ organizationId, className }: AnalyticsReportPr
       {/* KPIs principaux */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
-          title="Appels d'offres"
+          title={t('analyticsReport.kpi.tenders')}
           value={data.overview.totalTenders}
           previousValue={previousData?.overview.totalTenders}
           icon={FileText}
           color="primary"
+          locale={locale}
+          vsPreviousPeriodLabel={t('analyticsReport.kpi.vsPreviousPeriod')}
+          daysUnit={t('analyticsReport.unit.daysShort')}
         />
         <KPICard
-          title="Taux de réussite"
+          title={t('analyticsReport.kpi.winRate')}
           value={data.overview.winRate}
           previousValue={previousData?.overview.winRate}
           format="percent"
           icon={Target}
           color="success"
+          locale={locale}
+          vsPreviousPeriodLabel={t('analyticsReport.kpi.vsPreviousPeriod')}
+          daysUnit={t('analyticsReport.unit.daysShort')}
         />
         <KPICard
-          title="Chiffre d'affaires"
+          title={t('analyticsReport.kpi.revenue')}
           value={data.overview.totalRevenue}
           previousValue={previousData?.overview.totalRevenue}
           format="currency"
           icon={Euro}
           color="primary"
+          locale={locale}
+          vsPreviousPeriodLabel={t('analyticsReport.kpi.vsPreviousPeriod')}
+          daysUnit={t('analyticsReport.unit.daysShort')}
         />
         <KPICard
-          title="Temps de réponse moyen"
+          title={t('analyticsReport.kpi.avgResponseTime')}
           value={data.overview.avgResponseTime}
           previousValue={previousData?.overview.avgResponseTime}
           format="days"
           icon={Clock}
           color="warning"
+          locale={locale}
+          vsPreviousPeriodLabel={t('analyticsReport.kpi.vsPreviousPeriod')}
+          daysUnit={t('analyticsReport.unit.daysShort')}
         />
       </div>
 
@@ -464,8 +541,8 @@ export function AnalyticsReport({ organizationId, className }: AnalyticsReportPr
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Tendance temporelle */}
         <TrendChart
-          title="Évolution des performances"
-          subtitle={dateRange.label}
+          title={t('analyticsReport.chart.performanceEvolution')}
+          subtitle={t(dateRange.labelKey)}
           data={data.trends.map(t => ({ date: t.date, value: t.tenders }))}
           trend={data.overview.totalTenders > (previousData?.overview.totalTenders || 0) ? 'up' : 'down'}
           trendLabel={`${Math.abs(
@@ -476,27 +553,27 @@ export function AnalyticsReport({ organizationId, className }: AnalyticsReportPr
 
         {/* Répartition par type */}
         <DonutChart
-          title="Répartition par type"
-          subtitle="Catégories d'appels d'offres"
+          title={t('analyticsReport.chart.typeDistribution')}
+          subtitle={t('analyticsReport.chart.typeDistribution.subtitle')}
           data={data.byType.map(t => ({
             label: t.type,
             value: t.count,
           }))}
           centerValue={data.overview.totalTenders}
-          centerLabel="Total"
+          centerLabel={t('analyticsReport.chart.total')}
         />
       </div>
 
       {/* Deuxième ligne de graphiques */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Entonnoir de conversion */}
-        <ConversionFunnel data={data.conversionFunnel} />
+        <ConversionFunnel data={data.conversionFunnel} title={t('analyticsReport.section.conversionFunnel')} />
 
         {/* Top clients */}
         <LeaderboardWidget
-          title="Meilleurs clients"
-          subtitle="Par volume de marchés"
-          valueLabel="Marchés"
+          title={t('analyticsReport.section.topClients')}
+          subtitle={t('analyticsReport.section.topClients.subtitle')}
+          valueLabel={t('analyticsReport.section.topClients.valueLabel')}
           items={data.topClients.map((client, idx) => ({
             rank: idx + 1,
             name: client.name,
@@ -507,8 +584,8 @@ export function AnalyticsReport({ organizationId, className }: AnalyticsReportPr
 
         {/* Performance par catégorie */}
         <HorizontalBarChart
-          title="Par catégorie"
-          subtitle="Nombre de réponses"
+          title={t('analyticsReport.section.byCategory')}
+          subtitle={t('analyticsReport.section.byCategory.subtitle')}
           data={data.byCategory.map(c => ({
             label: c.category,
             value: c.count,
@@ -522,7 +599,7 @@ export function AnalyticsReport({ organizationId, className }: AnalyticsReportPr
           <CardHeader>
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-primary-500" />
-              <h3 className="font-semibold text-surface-900">Performance de l'équipe</h3>
+              <h3 className="font-semibold text-surface-900">{t('analyticsReport.section.teamPerformance')}</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -530,11 +607,11 @@ export function AnalyticsReport({ organizationId, className }: AnalyticsReportPr
               <table className="w-full">
                 <thead>
                   <tr className="text-left text-sm text-surface-500 border-b border-surface-200">
-                    <th className="pb-3 font-medium">Membre</th>
-                    <th className="pb-3 font-medium text-center">Dossiers traités</th>
-                    <th className="pb-3 font-medium text-center">Gagnés</th>
-                    <th className="pb-3 font-medium text-center">Taux de réussite</th>
-                    <th className="pb-3 font-medium text-center">Score moyen</th>
+                    <th className="pb-3 font-medium">{t('analyticsReport.table.member')}</th>
+                    <th className="pb-3 font-medium text-center">{t('analyticsReport.table.casesHandled')}</th>
+                    <th className="pb-3 font-medium text-center">{t('analyticsReport.table.won')}</th>
+                    <th className="pb-3 font-medium text-center">{t('analyticsReport.table.winRate')}</th>
+                    <th className="pb-3 font-medium text-center">{t('analyticsReport.table.avgScore')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -596,26 +673,26 @@ export function AnalyticsReport({ organizationId, className }: AnalyticsReportPr
       {/* Comparaison avec période précédente */}
       {previousData && (
         <ComparisonWidget
-          title="Comparaison avec la période précédente"
+          title={t('analyticsReport.section.comparison')}
           items={[
             {
-              label: 'Appels d\'offres traités',
+              label: t('analyticsReport.comparison.tendersHandled'),
               current: data.overview.totalTenders,
               previous: previousData.overview.totalTenders,
             },
             {
-              label: 'Marchés gagnés',
+              label: t('analyticsReport.comparison.wonDeals'),
               current: data.overview.wonTenders,
               previous: previousData.overview.wonTenders,
             },
             {
-              label: 'Chiffre d\'affaires',
+              label: t('analyticsReport.comparison.revenue'),
               current: data.overview.totalRevenue,
               previous: previousData.overview.totalRevenue,
               unit: ' €',
             },
             {
-              label: 'Taux de réussite',
+              label: t('analyticsReport.comparison.winRate'),
               current: data.overview.winRate,
               previous: previousData.overview.winRate,
               unit: '%',
