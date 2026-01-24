@@ -1,79 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo } from 'react';
 import { useLocale } from '@/hooks/useLocale';
-import { useUiTranslations } from '@/hooks/useUiTranslations';
+import { useLegalTranslations } from '@/lib/i18n/legal-translations';
 import { LogoNavbar } from '@/components/ui/Logo';
 
 export default function CookiesPage() {
   const { locale } = useLocale();
-
-  const entries = useMemo(
-    () => ({
-      'legal.cookies.title': 'Cookie Policy',
-      'legal.cookies.lastUpdated': 'Last updated: January 19, 2026',
-
-      'legal.cookies.s1.title': 'What is a cookie?',
-      'legal.cookies.s1.p1':
-        'A cookie is a small text file stored on your device (computer, smartphone, tablet) when you visit a website. It helps remember information related to your browsing.',
-
-      'legal.cookies.s2.title': 'Cookies used on WeWinBid',
-
-      'legal.cookies.s2.h1': '1. Essential cookies (always active)',
-      'legal.cookies.s2.h1.p1': 'These cookies are necessary for the platform to function:',
-      'legal.cookies.s2.h1.li1.label': 'Session',
-      'legal.cookies.s2.h1.li1.desc': 'keeps you signed in',
-      'legal.cookies.s2.h1.li2.label': 'CSRF',
-      'legal.cookies.s2.h1.li2.desc': 'protection against attacks',
-      'legal.cookies.s2.h1.li3.label': 'Preferences',
-      'legal.cookies.s2.h1.li3.desc': 'language, theme',
-
-      'legal.cookies.s2.h2': '2. Analytics cookies',
-      'legal.cookies.s2.h2.p1': 'We use PostHog to understand how you use the platform:',
-      'legal.cookies.s2.h2.li1': 'Visited pages',
-      'legal.cookies.s2.h2.li2': 'Session duration',
-      'legal.cookies.s2.h2.li3': 'Features used',
-      'legal.cookies.s2.h2.p2':
-        'This data is anonymized and helps us improve the user experience.',
-
-      'legal.cookies.s2.h3': '3. Third-party cookies',
-      'legal.cookies.s2.h3.li1.label': 'Stripe',
-      'legal.cookies.s2.h3.li1.desc': 'secure payment processing',
-      'legal.cookies.s2.h3.li2.label': 'Supabase',
-      'legal.cookies.s2.h3.li2.desc': 'authentication and storage',
-
-      'legal.cookies.s3.title': 'Managing cookies',
-      'legal.cookies.s3.p1': 'You can manage your cookie preferences:',
-      'legal.cookies.s3.li1': 'Via the banner shown on your first visit',
-      'legal.cookies.s3.li2': "In your browser settings",
-      'legal.cookies.s3.li3': 'By contacting us at contact@wewinbid.com',
-      'legal.cookies.s3.p2.strong': 'Warning:',
-      'legal.cookies.s3.p2':
-        'Disabling certain cookies may affect how the platform works.',
-
-      'legal.cookies.s4.title': 'Retention period',
-      'legal.cookies.s4.li1': 'Session cookies: deleted when you close the browser',
-      'legal.cookies.s4.li2': 'Preference cookies: 12 months',
-      'legal.cookies.s4.li3': 'Analytics cookies: up to 13 months',
-
-      'legal.cookies.s5.title': 'Contact',
-      'legal.cookies.s5.box.company': 'JARVIS SAS',
-      'legal.cookies.s5.box.address1': '64 Avenue Marinville',
-      'legal.cookies.s5.box.address2': '94100 Saint-Maur-des-Fossés, France',
-      'legal.cookies.s5.box.dpoLabel': 'DPO email:',
-      'legal.cookies.s5.box.supportLabel': 'Support:',
-
-      'legal.cookies.footer.label': 'Legal documents:',
-      'legal.cookies.footer.privacy': 'Privacy',
-      'legal.cookies.footer.terms': 'Terms',
-      'legal.cookies.footer.cgv': 'Terms of Sale',
-      'legal.cookies.footer.mentions': 'Legal Notice',
-    }),
-    []
-  );
-
-  const { t } = useUiTranslations(locale, entries);
+  const { t } = useLegalTranslations(locale);
 
   return (
     <div className="min-h-screen bg-surface-50">
