@@ -5,7 +5,7 @@ import { QueryProvider } from '@/components/providers/QueryProvider';
 import { AnalyticsProvider } from '@/components/providers/AnalyticsProvider';
 import { LocaleHtmlUpdater } from '@/components/providers/LocaleHtmlUpdater';
 import { ThemeProvider, themeScript } from '@/components/providers/ThemeProvider';
-import AIChatWidget from '@/components/chat/AIChatWidget';
+import { LazyAIChatWidget } from '@/components/chat/LazyAIChatWidget';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
@@ -143,7 +143,7 @@ export default function RootLayout({
             <QueryProvider>
               <AnalyticsProvider>
                 {children}
-                <AIChatWidget />
+                <LazyAIChatWidget />
               </AnalyticsProvider>
             </QueryProvider>
           </ThemeProvider>
