@@ -5,11 +5,22 @@ import type { Database } from '@/types/database';
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     // Vérifier l'authentification
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
+    }
+
+    // Vérifier que l'utilisateur est admin
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile || profile.role !== 'admin') {
+      return NextResponse.json({ error: 'Accès réservé aux administrateurs' }, { status: 403 });
     }
 
     // Récupérer toutes les sources externes
@@ -61,11 +72,22 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     // Vérifier l'authentification
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
+    }
+
+    // Vérifier que l'utilisateur est admin
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile || profile.role !== 'admin') {
+      return NextResponse.json({ error: 'Accès réservé aux administrateurs' }, { status: 403 });
     }
 
     const body = await request.json();
@@ -107,11 +129,22 @@ export async function PATCH(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     // Vérifier l'authentification
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
+    }
+
+    // Vérifier que l'utilisateur est admin
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile || profile.role !== 'admin') {
+      return NextResponse.json({ error: 'Accès réservé aux administrateurs' }, { status: 403 });
     }
 
     const body = await request.json();

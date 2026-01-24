@@ -29,6 +29,8 @@ import { Button, Card, Badge } from '@/components/ui';
 import Logo, { LogoNavbar } from '@/components/ui/Logo';
 import { DEFAULT_LOCALE, isRTL, LOCALES, LOCALE_FLAGS, LOCALE_NAMES, type Locale } from '@/lib/i18n';
 import { useLandingTranslations } from '@/lib/i18n/landing-translations';
+import { CookieConsentBanner } from '@/components/cookies/CookieConsentBanner';
+import { Linkedin, Twitter, Facebook } from 'lucide-react';
 
 const features = [
   {
@@ -81,19 +83,25 @@ const testimonials = [
     quoteKey: 'landing.testimonials.quote1',
     author: 'Marie Lefort',
     roleKey: 'landing.testimonials.role1',
-    avatar: '/images/testimonials/marie.jpg',
+    avatar: '/images/testimonials/marie.svg',
+    initials: 'ML',
+    color: 'from-violet-500 to-purple-600',
   },
   {
     quoteKey: 'landing.testimonials.quote2',
     author: 'Thomas Durand',
     roleKey: 'landing.testimonials.role2',
-    avatar: '/images/testimonials/thomas.jpg',
+    avatar: '/images/testimonials/thomas.svg',
+    initials: 'TD',
+    color: 'from-blue-500 to-cyan-500',
   },
   {
     quoteKey: 'landing.testimonials.quote3',
     author: 'Sophie Martin',
     roleKey: 'landing.testimonials.role3',
-    avatar: '/images/testimonials/sophie.jpg',
+    avatar: '/images/testimonials/sophie.svg',
+    initials: 'SM',
+    color: 'from-pink-500 to-rose-500',
   },
 ];
 
@@ -1058,6 +1066,56 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <section id="testimonials" className="py-32 px-4 sm:px-6 lg:px-8 bg-white border-t border-slate-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+            <Badge variant="primary" className="mb-4 bg-primary-100 text-primary-700 border-none px-4 py-1.5 text-sm font-medium rounded-full">
+              {t('landing.testimonials.badge')}
+            </Badge>
+            <h2 className="text-4xl sm:text-5xl font-display font-bold text-slate-900 mb-6 tracking-tight">
+              {t('landing.testimonials.title')}
+            </h2>
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+              {t('landing.testimonials.subtitle')}
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-slate-50 rounded-3xl p-8 border border-slate-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+              >
+                <div className="flex items-center gap-1 mb-6">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 text-amber-400 fill-current" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <blockquote className="text-slate-700 leading-relaxed mb-6 text-lg italic">
+                  "{t(testimonial.quoteKey)}"
+                </blockquote>
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${testimonial.color} flex items-center justify-center text-white font-bold text-sm shadow-lg`}>
+                    {testimonial.initials}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-900">{testimonial.author}</p>
+                    <p className="text-sm text-slate-500">{t(testimonial.roleKey)}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA - Modern Fintech Dark Mode */}
       <section className="py-32 px-4 sm:px-6 lg:px-8 bg-slate-900 relative overflow-hidden">
         {/* Abstract Grid Background */}
@@ -1105,10 +1163,33 @@ export default function LandingPage() {
                 {t('landing.footer.about')}
               </p>
               <div className="flex gap-3">
-                 {/* Social icons placeholders */}
-                 <div className="w-8 h-8 rounded-full bg-white border border-slate-200 hover:border-primary-500 hover:text-primary-600 transition-all cursor-pointer flex items-center justify-center shadow-sm" />
-                 <div className="w-8 h-8 rounded-full bg-white border border-slate-200 hover:border-primary-500 hover:text-primary-600 transition-all cursor-pointer flex items-center justify-center shadow-sm" />
-                 <div className="w-8 h-8 rounded-full bg-white border border-slate-200 hover:border-primary-500 hover:text-primary-600 transition-all cursor-pointer flex items-center justify-center shadow-sm" />
+                 <a
+                   href="https://www.linkedin.com/company/wewinbid"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   className="w-8 h-8 rounded-full bg-white border border-slate-200 hover:border-primary-500 hover:text-primary-600 transition-all cursor-pointer flex items-center justify-center shadow-sm text-slate-500"
+                   aria-label="LinkedIn"
+                 >
+                   <Linkedin className="w-4 h-4" />
+                 </a>
+                 <a
+                   href="https://twitter.com/wewinbid"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   className="w-8 h-8 rounded-full bg-white border border-slate-200 hover:border-primary-500 hover:text-primary-600 transition-all cursor-pointer flex items-center justify-center shadow-sm text-slate-500"
+                   aria-label="Twitter"
+                 >
+                   <Twitter className="w-4 h-4" />
+                 </a>
+                 <a
+                   href="https://www.facebook.com/wewinbid"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   className="w-8 h-8 rounded-full bg-white border border-slate-200 hover:border-primary-500 hover:text-primary-600 transition-all cursor-pointer flex items-center justify-center shadow-sm text-slate-500"
+                   aria-label="Facebook"
+                 >
+                   <Facebook className="w-4 h-4" />
+                 </a>
               </div>
             </div>
             
@@ -1149,6 +1230,9 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Cookie Consent Banner */}
+      <CookieConsentBanner />
     </div>
   );
 }
