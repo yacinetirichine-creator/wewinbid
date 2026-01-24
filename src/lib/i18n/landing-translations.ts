@@ -804,7 +804,7 @@ export const landingTranslations: Record<Locale, Record<string, string>> = {
     'landing.contact.email': 'commercial@wewinbid.com',
     'landing.footer.copyright': '© 2025 WeWinBid. Commercializzato da JARVIS SAS. Tutti i diritti riservati.',
     'landing.roi.badge': 'ROI e Performance',
-    'landing.roi.title': 'Massimizza il tuo ritorno sull'investimento',
+    'landing.roi.title': 'Massimizza il tuo ritorno sull\'investimento',
     'landing.roi.subtitle': 'Risultati misurabili che trasformano il tuo approccio alle gare',
     'landing.roi.stat1.value': '+45%',
     'landing.roi.stat1.label': 'Tasso di successo medio',
