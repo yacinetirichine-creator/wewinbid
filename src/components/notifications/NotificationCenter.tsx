@@ -16,8 +16,48 @@ import {
 } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import Link from 'next/link';
+import { useLocale } from '@/hooks/useLocale';
+import { useUiTranslations } from '@/hooks/useUiTranslations';
+
+const entries = {
+  'notificationCenter.ariaLabel': 'Notifications',
+  'notificationCenter.title': 'Notifications',
+  'notificationCenter.empty': 'No notifications',
+  'notificationCenter.actions.markAllRead': 'Mark all as read',
+  'notificationCenter.actions.markAsRead': 'Mark as read',
+  'notificationCenter.actions.delete': 'Delete',
+  'notificationCenter.viewAll': 'View all notifications',
+
+  'notificationCenter.time.justNow': 'Just now',
+  'notificationCenter.time.minutesAgo': '{count} min ago',
+  'notificationCenter.time.hoursAgo': '{count}h ago',
+  'notificationCenter.time.daysAgo': '{count}d ago',
+} as const;
+
+function formatRelativeDate(
+  dateString: string,
+  locale: string,
+  t: (key: string, params?: Record<string, string | number>) => string
+) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return t('notificationCenter.time.justNow');
+  if (diffMins < 60) return t('notificationCenter.time.minutesAgo', { count: diffMins });
+  if (diffHours < 24) return t('notificationCenter.time.hoursAgo', { count: diffHours });
+  if (diffDays < 7) return t('notificationCenter.time.daysAgo', { count: diffDays });
+
+  return date.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+}
 
 export function NotificationCenter() {
+  const { locale } = useLocale();
+  const { t } = useUiTranslations(locale, entries);
+
   const [isOpen, setIsOpen] = useState(false);
   const {
     notifications,
@@ -62,28 +102,13 @@ export function NotificationCenter() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'À l\'instant';
-    if (diffMins < 60) return `Il y a ${diffMins} min`;
-    if (diffHours < 24) return `Il y a ${diffHours}h`;
-    if (diffDays < 7) return `Il y a ${diffDays}j`;
-    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-  };
-
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Bouton notification avec badge */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
-        aria-label="Notifications"
+        aria-label={t('notificationCenter.ariaLabel')}
       >
         <Bell className="h-6 w-6 text-gray-700" />
         {unreadCount > 0 && (
@@ -105,13 +130,13 @@ export function NotificationCenter() {
           >
             {/* Header */}
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="font-semibold text-lg">Notifications</h3>
+              <h3 className="font-semibold text-lg">{t('notificationCenter.title')}</h3>
               <div className="flex items-center gap-2">
                 {unreadCount > 0 && (
                   <button
                     onClick={markAllAsRead}
                     className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                    title="Tout marquer comme lu"
+                    title={t('notificationCenter.actions.markAllRead')}
                   >
                     <CheckCheck className="h-4 w-4 text-gray-600" />
                   </button>
@@ -134,7 +159,7 @@ export function NotificationCenter() {
               ) : notifications.length === 0 ? (
                 <div className="p-8 text-center text-gray-500">
                   <Bell className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                  <p>Aucune notification</p>
+                  <p>{t('notificationCenter.empty')}</p>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100">
@@ -144,6 +169,8 @@ export function NotificationCenter() {
                       notification={notification}
                       onMarkAsRead={() => markAsRead([notification.id])}
                       onDelete={() => deleteNotifications([notification.id])}
+                      locale={locale}
+                      t={t}
                     />
                   ))}
                 </div>
@@ -158,7 +185,7 @@ export function NotificationCenter() {
                   className="block text-center text-sm text-blue-600 hover:text-blue-700 font-medium"
                   onClick={() => setIsOpen(false)}
                 >
-                  Voir toutes les notifications
+                  {t('notificationCenter.viewAll')}
                 </Link>
               </div>
             )}
@@ -174,9 +201,11 @@ interface NotificationItemProps {
   notification: any;
   onMarkAsRead: () => void;
   onDelete: () => void;
+  locale: string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
-function NotificationItem({ notification, onMarkAsRead, onDelete }: NotificationItemProps) {
+function NotificationItem({ notification, onMarkAsRead, onDelete, locale, t }: NotificationItemProps) {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'DEADLINE_7D':
@@ -194,21 +223,6 @@ function NotificationItem({ notification, onMarkAsRead, onDelete }: Notification
       default:
         return <Bell className="h-5 w-5 text-gray-600" />;
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'À l\'instant';
-    if (diffMins < 60) return `Il y a ${diffMins} min`;
-    if (diffHours < 24) return `Il y a ${diffHours}h`;
-    if (diffDays < 7) return `Il y a ${diffDays}j`;
-    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   };
 
   const content = (
@@ -231,7 +245,9 @@ function NotificationItem({ notification, onMarkAsRead, onDelete }: Notification
           </div>
           <p className="text-sm text-gray-600 line-clamp-2">{notification.message}</p>
           <div className="flex items-center justify-between mt-2">
-            <span className="text-xs text-gray-500">{formatDate(notification.created_at)}</span>
+            <span className="text-xs text-gray-500">
+              {formatRelativeDate(notification.created_at, locale, t)}
+            </span>
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               {!notification.read && (
                 <button
@@ -241,7 +257,7 @@ function NotificationItem({ notification, onMarkAsRead, onDelete }: Notification
                     onMarkAsRead();
                   }}
                   className="p-1 hover:bg-gray-200 rounded transition-colors"
-                  title="Marquer comme lu"
+                  title={t('notificationCenter.actions.markAsRead')}
                 >
                   <Check className="h-3.5 w-3.5 text-gray-600" />
                 </button>
@@ -253,7 +269,7 @@ function NotificationItem({ notification, onMarkAsRead, onDelete }: Notification
                   onDelete();
                 }}
                 className="p-1 hover:bg-red-100 rounded transition-colors"
-                title="Supprimer"
+                title={t('notificationCenter.actions.delete')}
               >
                 <Trash2 className="h-3.5 w-3.5 text-red-600" />
               </button>
