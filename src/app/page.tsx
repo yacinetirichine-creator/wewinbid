@@ -302,7 +302,7 @@ export default function LandingPage() {
                 </select>
               </div>
               <Link href="/auth/login">
-                <Button variant="ghost" className="font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg">{t('landing.nav.login')}</Button>
+                <Button variant="outline" className="font-semibold text-slate-900 border-2 border-slate-300 hover:border-slate-900 hover:bg-slate-900 hover:text-white rounded-lg px-5 py-2.5 transition-all">{t('landing.nav.login')}</Button>
               </Link>
               <Link href="/auth/register">
                 <Button className="bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-500/20 rounded-lg px-5 py-2.5 font-medium transition-all hover:scale-[1.02] active:scale-[0.98]">

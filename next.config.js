@@ -97,12 +97,12 @@ const nextConfig = {
                 : "script-src 'self' 'unsafe-inline' https://js.stripe.com https://cdn.vercel-insights.com",
               // Styles
               "style-src 'self' 'unsafe-inline'",
-              // Images - sources autorisées uniquement
-              "img-src 'self' data: blob: https://*.supabase.co https://avatars.githubusercontent.com https://lh3.googleusercontent.com https://oaidalleapiprodscus.blob.core.windows.net",
-              // Fonts
-              "font-src 'self' data:",
-              // Connexions - API autorisées
-              "connect-src 'self' https://*.supabase.co https://api.openai.com https://api.stripe.com https://vitals.vercel-insights.com wss://*.supabase.co https://*.sentry.io",
+              // Images - sources autorisées (élargi pour compatibilité entreprise)
+              "img-src 'self' data: blob: https://*.supabase.co https://avatars.githubusercontent.com https://lh3.googleusercontent.com https://oaidalleapiprodscus.blob.core.windows.net https://*.googleusercontent.com https://www.gravatar.com https://ui-avatars.com",
+              // Fonts - Google Fonts pour compatibilité
+              "font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com",
+              // Connexions - API autorisées (élargi pour analytics et services)
+              "connect-src 'self' https://*.supabase.co https://api.openai.com https://api.anthropic.com https://api.stripe.com https://vitals.vercel-insights.com wss://*.supabase.co https://*.sentry.io https://*.posthog.com https://app.posthog.com https://eu.posthog.com https://api.together.xyz https://api.stability.ai https://api.replicate.com",
               // Frames - paiement uniquement
               "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
               // Objets interdits
