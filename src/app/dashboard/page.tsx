@@ -17,6 +17,7 @@ import { TendersTable } from '@/components/dashboard/TendersTable';
 import { MatchedTendersWidget } from '@/components/dashboard/MatchedTendersWidget';
 import { DashboardStatsWidget } from '@/components/dashboard/DashboardStatsWidget';
 import { AIAnalysisWidget } from '@/components/dashboard/AIAnalysisWidget';
+import { DraftsWidget } from '@/components/dashboard/DraftsWidget';
 import { OnboardingReminder } from '@/components/onboarding/OnboardingReminder';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate, getDaysRemaining } from '@/lib/utils';
@@ -546,6 +547,11 @@ export default function DashboardPage() {
 
             {/* Sidebar */}
             <div className="space-y-6">
+              {/* Dossiers en cours */}
+              <motion.div variants={item}>
+                <DraftsWidget />
+              </motion.div>
+
               {/* Notifications */}
               {notifications.length > 0 && (
                 <motion.div variants={item}>

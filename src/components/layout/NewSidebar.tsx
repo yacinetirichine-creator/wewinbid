@@ -93,16 +93,22 @@ const navigationConfig: NavCategory[] = [
     icon: FileText,
     defaultOpen: true,
     items: [
-      { 
-        labelKey: 'nav.tenders', 
-        href: '/tenders', 
-        icon: FileText, 
+      {
+        labelKey: 'nav.tenders',
+        href: '/tenders',
+        icon: FileText,
         badge: 3,
         descriptionKey: 'nav.desc.tenders'
       },
-      { 
-        labelKey: 'nav.analyzeAO', 
-        href: '/tenders/analyze', 
+      {
+        labelKey: 'nav.drafts',
+        href: '/tenders/drafts',
+        icon: Briefcase,
+        descriptionKey: 'nav.desc.drafts'
+      },
+      {
+        labelKey: 'nav.analyzeAO',
+        href: '/tenders/analyze',
         icon: Zap,
         descriptionKey: 'nav.desc.analyzeAO'
       },
@@ -219,6 +225,7 @@ export function NewSidebar({ user, company }: NewSidebarProps) {
     () => ({
       'nav.dashboard': 'Tableau de bord',
       'nav.tenders': "Appels d'offres",
+      'nav.drafts': 'Dossiers en cours',
       'nav.analyzeAO': 'Analyser un AO',
       'nav.analytics': 'Analytics',
       'nav.calendar': 'Calendrier',
@@ -241,6 +248,7 @@ export function NewSidebar({ user, company }: NewSidebarProps) {
       'nav.desc.dashboard': "Vue d'ensemble de votre activité",
       'nav.desc.analytics': 'Statistiques et performances',
       'nav.desc.tenders': "Gérer vos appels d'offres",
+      'nav.desc.drafts': 'Vos réponses en cours de rédaction',
       'nav.desc.analyzeAO': "Analyser un DCE avec l'IA",
       'nav.desc.search': 'Rechercher de nouveaux AO',
       'nav.desc.alerts': 'Alertes et notifications AO',
