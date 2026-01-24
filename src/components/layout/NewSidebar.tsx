@@ -46,6 +46,7 @@ import { OnboardingReminder } from '@/components/onboarding/OnboardingReminder';
 import { useLocale } from '@/hooks/useLocale';
 import { useUiTranslations } from '@/hooks/useUiTranslations';
 import { createClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
 
 // Types
 interface NavItem {
@@ -193,9 +194,11 @@ interface NewSidebarProps {
 
 export function NewSidebar({ user, company }: NewSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     navigationConfig.forEach(cat => {
@@ -269,6 +272,27 @@ export function NewSidebar({ user, company }: NewSidebarProps) {
     if (!collapsed) {
       setOpenCategories(prev => ({ ...prev, [categoryId]: !prev[categoryId] }));
     }
+  };
+
+  // Handler pour la déconnexion
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.push('/');
+      router.refresh();
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  // Handler pour l'upgrade
+  const handleUpgrade = () => {
+    router.push('/pricing');
   };
 
   // Composant lien de navigation
@@ -412,7 +436,10 @@ export function NewSidebar({ user, company }: NewSidebarProps) {
       {/* Quick Actions */}
       {!collapsed && (
         <div className="px-4 py-3 border-t border-surface-200">
-          <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl font-medium text-sm hover:shadow-lg hover:shadow-primary-500/25 transition-all">
+          <button
+            onClick={handleUpgrade}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl font-medium text-sm hover:shadow-lg hover:shadow-primary-500/25 transition-all"
+          >
             <Zap className="w-4 h-4" />
             {t('nav.upgrade')}
           </button>
@@ -441,11 +468,13 @@ export function NewSidebar({ user, company }: NewSidebarProps) {
               </div>
             )}
             {!collapsed && (
-              <button 
-                className="p-1.5 text-surface-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              <button
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="p-1.5 text-surface-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                 title={t('nav.logout')}
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className={`w-4 h-4 ${isLoggingOut ? 'animate-spin' : ''}`} />
               </button>
             )}
           </div>

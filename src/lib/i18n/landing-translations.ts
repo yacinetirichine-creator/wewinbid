@@ -170,6 +170,17 @@ export const landingTranslations: Record<Locale, Record<string, string>> = {
     'landing.sectors.list.education': 'Éducation',
     'landing.sectors.list.telecoms': 'Télécoms',
     'landing.sectors.list.environment': 'Environnement',
+
+    // Testimonials
+    'landing.testimonials.badge': 'Témoignages',
+    'landing.testimonials.title': 'Ce que nos clients disent',
+    'landing.testimonials.subtitle': 'Découvrez comment WeWinBid a transformé la façon dont ces entreprises remportent leurs marchés.',
+    'landing.testimonials.quote1': "Grâce à WeWinBid, nous avons doublé notre taux de réussite sur les appels d'offres en seulement 6 mois. L'analyse IA nous fait gagner un temps précieux.",
+    'landing.testimonials.role1': 'Directrice Commerciale, SecuriPlus',
+    'landing.testimonials.quote2': "L'automatisation de la génération des mémoires techniques nous a permis de répondre à 3 fois plus d'AO. Un vrai game-changer pour notre PME.",
+    'landing.testimonials.role2': 'Gérant, BTP Solutions',
+    'landing.testimonials.quote3': "Le score de compatibilité IA nous aide à cibler les bons marchés. On ne perd plus de temps sur des AO où nous n'avions aucune chance.",
+    'landing.testimonials.role3': 'Responsable des Marchés, CleanTech Services',
   },
   en: {
     'landing.brand': 'WeWinBid',
@@ -339,6 +350,17 @@ export const landingTranslations: Record<Locale, Record<string, string>> = {
     'landing.sectors.list.education': 'Education',
     'landing.sectors.list.telecoms': 'Telecoms',
     'landing.sectors.list.environment': 'Environment',
+
+    // Testimonials
+    'landing.testimonials.badge': 'Testimonials',
+    'landing.testimonials.title': 'What our clients say',
+    'landing.testimonials.subtitle': 'Discover how WeWinBid has transformed the way these companies win their contracts.',
+    'landing.testimonials.quote1': 'Thanks to WeWinBid, we doubled our tender success rate in just 6 months. The AI analysis saves us precious time.',
+    'landing.testimonials.role1': 'Commercial Director, SecuriPlus',
+    'landing.testimonials.quote2': 'Automating technical document generation has allowed us to respond to 3 times more tenders. A real game-changer for our SME.',
+    'landing.testimonials.role2': 'Manager, BTP Solutions',
+    'landing.testimonials.quote3': 'The AI compatibility score helps us target the right markets. We no longer waste time on tenders we had no chance of winning.',
+    'landing.testimonials.role3': 'Procurement Manager, CleanTech Services',
   },
   de: {
     'landing.brand': 'WeWinBid',
