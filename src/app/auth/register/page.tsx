@@ -46,13 +46,109 @@ export default function RegisterPage() {
   const router = useRouter();
   const { locale } = useLocale();
 
-  const entries = useMemo(
-    () => ({
+  // Traductions multilingues pour la page d'inscription
+  const REGISTER_TRANSLATIONS: Record<string, Record<string, string>> = {
+    fr: {
+      'common.brand': 'WeWinBid',
+
+      'auth.register.left.title': 'Commencez gratuitement',
+      'auth.register.left.subtitle': 'Créez votre compte en quelques minutes et accédez à tous nos outils d\'analyse et de génération.',
+      'auth.register.left.feature1.title': '14 jours d\'essai gratuit',
+      'auth.register.left.feature1.desc': 'Testez toutes les fonctionnalités Pro',
+      'auth.register.left.feature2.title': 'Sans engagement',
+      'auth.register.left.feature2.desc': 'Annulez quand vous voulez',
+      'auth.register.left.feature3.title': 'Support dédié',
+      'auth.register.left.feature3.desc': 'Notre équipe est là pour vous aider',
+
+      'auth.register.steps.account': 'Compte',
+      'auth.register.steps.company': 'Entreprise',
+      'auth.register.steps.confirmation': 'Confirmation',
+
+      'auth.register.step1.title': 'Créez votre compte',
+      'auth.register.step1.subtitle': 'Commençons par vos informations personnelles',
+      'auth.register.step1.firstName.label': 'Prénom *',
+      'auth.register.step1.firstName.placeholder': 'Jean',
+      'auth.register.step1.lastName.label': 'Nom *',
+      'auth.register.step1.lastName.placeholder': 'Dupont',
+      'auth.register.step1.email.label': 'Email professionnel *',
+      'auth.register.step1.email.placeholder': 'vous@entreprise.com',
+      'auth.register.step1.phone.label': 'Téléphone',
+      'auth.register.step1.phone.placeholder': '+33 6 12 34 56 78',
+      'auth.register.step1.password.label': 'Mot de passe *',
+      'auth.register.step1.password.placeholder': 'Au moins 8 caractères',
+      'auth.register.step1.confirmPassword.label': 'Confirmer le mot de passe *',
+      'auth.register.step1.confirmPassword.placeholder': '••••••••',
+
+      'auth.register.step2.title': 'Votre entreprise',
+      'auth.register.step2.subtitle': 'Parlez-nous de votre entreprise',
+      'auth.register.step2.companyName.label': 'Nom de l\'entreprise *',
+      'auth.register.step2.companyName.placeholder': 'Ma Société SAS',
+      'auth.register.step2.siret.label': 'SIRET *',
+      'auth.register.step2.siret.placeholder': '12345678901234',
+      'auth.register.step2.siret.hint': '14 chiffres, sans espaces',
+      'auth.register.step2.sector.label': 'Secteur d\'activité *',
+      'auth.register.step2.sector.placeholder': 'Sélectionnez un secteur',
+      'auth.register.step2.companySize.label': 'Taille de l\'entreprise',
+      'auth.register.step2.companySize.placeholder': 'Sélectionnez une taille',
+      'auth.register.step2.address.label': 'Adresse',
+      'auth.register.step2.address.placeholder': '123 Rue de la République',
+      'auth.register.step2.postalCode.label': 'Code postal',
+      'auth.register.step2.postalCode.placeholder': '75001',
+      'auth.register.step2.city.label': 'Ville',
+      'auth.register.step2.city.placeholder': 'Paris',
+
+      'auth.register.step3.title': 'Confirmation',
+      'auth.register.step3.subtitle': 'Dernière étape avant de commencer',
+      'auth.register.step3.summary.email': 'Email',
+      'auth.register.step3.summary.name': 'Nom',
+      'auth.register.step3.summary.company': 'Entreprise',
+      'auth.register.step3.summary.siret': 'SIRET',
+      'auth.register.step3.summary.sector': 'Secteur',
+      'auth.register.step3.acceptTerms.prefix': 'J\'accepte les',
+      'auth.register.step3.acceptTerms.and': 'et la',
+      'auth.register.step3.acceptTerms.terms': 'Conditions d\'utilisation',
+      'auth.register.step3.acceptTerms.privacy': 'Politique de confidentialité',
+      'auth.register.step3.acceptTerms.requiredMarker': '*',
+      'auth.register.step3.newsletter': 'Je souhaite recevoir les actualités et conseils WeWinBid par email',
+
+      'auth.register.actions.continue': 'Continuer',
+      'auth.register.actions.back': 'Retour',
+      'auth.register.actions.or': 'ou',
+      'auth.register.actions.continueWithGoogle': 'Continuer avec Google',
+      'auth.register.actions.creating': 'Création en cours...',
+      'auth.register.actions.createAccount': 'Créer mon compte',
+      'auth.register.footer.haveAccount': 'Vous avez déjà un compte ?',
+      'auth.register.footer.signIn': 'Se connecter',
+
+      'auth.register.errors.requiredFields': 'Veuillez remplir tous les champs obligatoires',
+      'auth.register.errors.passwordMismatch': 'Les mots de passe ne correspondent pas',
+      'auth.register.errors.passwordTooShort': 'Le mot de passe doit contenir au moins 8 caractères',
+      'auth.register.errors.invalidSiret': 'Le SIRET doit contenir exactement 14 chiffres',
+      'auth.register.errors.mustAcceptTerms': 'Vous devez accepter les conditions',
+      'auth.register.errors.emailAlreadyRegistered': 'Un compte existe déjà avec cette adresse email',
+      'auth.register.errors.generic': 'Une erreur est survenue. Veuillez réessayer.',
+      'auth.register.errors.googleGeneric': 'Une erreur est survenue avec Google. Veuillez réessayer.',
+
+      // Options
+      'auth.register.sectors.security': 'Sécurité privée',
+      'auth.register.sectors.electronic_security': 'Sécurité électronique',
+      'auth.register.sectors.construction': 'BTP / Construction',
+      'auth.register.sectors.logistics': 'Logistique',
+      'auth.register.sectors.software': 'Développement logiciel',
+      'auth.register.sectors.maintenance': 'Maintenance',
+      'auth.register.sectors.consulting': 'Conseil',
+      'auth.register.sectors.other': 'Autre',
+      'auth.register.companySizes.1-10': '1-10 employés',
+      'auth.register.companySizes.11-50': '11-50 employés',
+      'auth.register.companySizes.51-200': '51-200 employés',
+      'auth.register.companySizes.201-500': '201-500 employés',
+      'auth.register.companySizes.500+': '500+ employés',
+    },
+    en: {
       'common.brand': 'WeWinBid',
 
       'auth.register.left.title': 'Start for free today',
-      'auth.register.left.subtitle':
-        'Create your account in minutes and get access to all our analysis and generation tools.',
+      'auth.register.left.subtitle': 'Create your account in minutes and get access to all our analysis and generation tools.',
       'auth.register.left.feature1.title': '14-day free trial',
       'auth.register.left.feature1.desc': 'Try all Pro features',
       'auth.register.left.feature2.title': 'No commitment',
@@ -65,7 +161,7 @@ export default function RegisterPage() {
       'auth.register.steps.confirmation': 'Confirmation',
 
       'auth.register.step1.title': 'Create your account',
-      'auth.register.step1.subtitle': 'Let’s start with your personal details',
+      'auth.register.step1.subtitle': 'Let\'s start with your personal details',
       'auth.register.step1.firstName.label': 'First name *',
       'auth.register.step1.firstName.placeholder': 'John',
       'auth.register.step1.lastName.label': 'Last name *',
@@ -82,7 +178,7 @@ export default function RegisterPage() {
       'auth.register.step2.title': 'Your company',
       'auth.register.step2.subtitle': 'Tell us about your company',
       'auth.register.step2.companyName.label': 'Company name *',
-      'auth.register.step2.companyName.placeholder': 'Ma Société SAS',
+      'auth.register.step2.companyName.placeholder': 'My Company Ltd',
       'auth.register.step2.siret.label': 'SIRET *',
       'auth.register.step2.siret.placeholder': '12345678901234',
       'auth.register.step2.siret.hint': '14 digits, no spaces',
@@ -143,8 +239,12 @@ export default function RegisterPage() {
       'auth.register.companySizes.51-200': '51-200 employees',
       'auth.register.companySizes.201-500': '201-500 employees',
       'auth.register.companySizes.500+': '500+ employees',
-    }),
-    []
+    },
+  };
+
+  const entries = useMemo(
+    () => REGISTER_TRANSLATIONS[locale] || REGISTER_TRANSLATIONS['fr'],
+    [locale]
   );
   const { t } = useUiTranslations(locale, entries);
 

@@ -15,8 +15,42 @@ export default function LoginPage() {
   const router = useRouter();
   const { locale } = useLocale();
 
-  const entries = useMemo(
-    () => ({
+  // Traductions multilingues pour la page de connexion
+  const LOGIN_TRANSLATIONS: Record<string, Record<string, string>> = {
+    fr: {
+      'auth.login.left.title': 'Gagnez plus de marchés avec l\'IA',
+      'auth.login.left.subtitle': 'Rejoignez des centaines d\'entreprises qui ont transformé leur approche commerciale avec WeWinBid.',
+      'auth.login.left.feature1': 'Score de compatibilité IA pour chaque AO',
+      'auth.login.left.feature2': 'Analyse concurrentielle et historique des prix',
+      'auth.login.left.feature3': 'Génération automatique de documents',
+
+      'auth.login.header.title': 'Bon retour !',
+      'auth.login.header.subtitle': 'Connectez-vous à votre compte',
+
+      'auth.login.form.email.label': 'Email',
+      'auth.login.form.email.placeholder': 'vous@entreprise.com',
+      'auth.login.form.password.label': 'Mot de passe',
+      'auth.login.form.password.placeholder': '••••••••',
+      'auth.login.form.rememberMe': 'Se souvenir de moi',
+      'auth.login.form.forgotPassword': 'Mot de passe oublié ?',
+
+      'auth.login.actions.signingIn': 'Connexion en cours...',
+      'auth.login.actions.signIn': 'Se connecter',
+      'auth.login.actions.orContinueWith': 'ou continuer avec',
+
+      'auth.login.footer.noAccount': 'Pas encore de compte ?',
+      'auth.login.footer.createAccount': 'Créer un compte',
+
+      'auth.login.legal.prefix': 'En vous connectant, vous acceptez nos',
+      'auth.login.legal.terms': 'Conditions d\'utilisation',
+      'auth.login.legal.and': 'et notre',
+      'auth.login.legal.privacy': 'Politique de confidentialité',
+
+      'auth.login.errors.invalidCredentials': 'Email ou mot de passe incorrect',
+      'auth.login.errors.generic': 'Une erreur est survenue. Veuillez réessayer.',
+      'auth.login.errors.googleGeneric': 'Une erreur est survenue avec Google. Veuillez réessayer.',
+    },
+    en: {
       'auth.login.left.title': 'Win more tenders with AI',
       'auth.login.left.subtitle': 'Join hundreds of companies that transformed their commercial approach with WeWinBid.',
       'auth.login.left.feature1': 'AI compatibility score for every tender',
@@ -48,8 +82,12 @@ export default function LoginPage() {
       'auth.login.errors.invalidCredentials': 'Incorrect email or password',
       'auth.login.errors.generic': 'Something went wrong. Please try again.',
       'auth.login.errors.googleGeneric': 'Something went wrong with Google. Please try again.',
-    }),
-    []
+    },
+  };
+
+  const entries = useMemo(
+    () => LOGIN_TRANSLATIONS[locale] || LOGIN_TRANSLATIONS['fr'],
+    [locale]
   );
   const { t } = useUiTranslations(locale, entries);
 

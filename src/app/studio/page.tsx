@@ -66,71 +66,47 @@ interface GeneratedContent {
 
 type TranslateFn = (key: string, params?: Record<string, string | number>) => string;
 
-// Templates de contenu
-const CONTENT_TEMPLATES: ContentTemplate[] = [
+// Templates de contenu - les clés de traduction
+const CONTENT_TEMPLATE_KEYS = [
   {
     id: '1',
-    name: 'Win announcement',
-    description: 'Share your public procurement wins',
-    category: 'win_announcement',
-    platforms: ['linkedin', 'twitter'],
-    preview: '🎉 We are proud to announce…',
+    nameKey: 'studio.template.winAnnouncement.name',
+    descriptionKey: 'studio.template.winAnnouncement.description',
+    category: 'win_announcement' as const,
+    platforms: ['linkedin', 'twitter'] as ('linkedin' | 'twitter')[],
+    previewKey: 'studio.template.winAnnouncement.preview',
   },
   {
     id: '2',
-    name: 'Expertise spotlight',
-    description: 'Highlight your domain expertise',
-    category: 'expertise',
-    platforms: ['linkedin', 'instagram'],
-    preview: '💡 Did you know…',
+    nameKey: 'studio.template.expertise.name',
+    descriptionKey: 'studio.template.expertise.description',
+    category: 'expertise' as const,
+    platforms: ['linkedin', 'instagram'] as ('linkedin' | 'instagram')[],
+    previewKey: 'studio.template.expertise.preview',
   },
   {
     id: '3',
-    name: 'Customer testimonial',
-    description: 'Share feedback from happy customers',
-    category: 'testimonial',
-    platforms: ['linkedin', 'facebook'],
-    preview: '“Thanks to [company]…”',
+    nameKey: 'studio.template.testimonial.name',
+    descriptionKey: 'studio.template.testimonial.description',
+    category: 'testimonial' as const,
+    platforms: ['linkedin', 'facebook'] as ('linkedin' | 'facebook')[],
+    previewKey: 'studio.template.testimonial.preview',
   },
   {
     id: '4',
-    name: 'Company update',
-    description: 'Share news from your company',
-    category: 'company_news',
-    platforms: ['linkedin', 'instagram', 'facebook'],
-    preview: '📢 Big news…',
+    nameKey: 'studio.template.companyUpdate.name',
+    descriptionKey: 'studio.template.companyUpdate.description',
+    category: 'company_news' as const,
+    platforms: ['linkedin', 'instagram', 'facebook'] as ('linkedin' | 'instagram' | 'facebook')[],
+    previewKey: 'studio.template.companyUpdate.preview',
   },
   {
     id: '5',
-    name: 'Hiring post',
-    description: 'Attract top talent',
-    category: 'recruitment',
-    platforms: ['linkedin', 'twitter'],
-    preview: '🚀 Join our team…',
-  },
-];
-
-// Contenu généré de démonstration
-const DEMO_GENERATED: GeneratedContent[] = [
-  {
-    id: '1',
-    type: 'Win announcement',
-    platform: 'linkedin',
-    content: "🎉 We are proud to announce that we have been awarded the video surveillance contract for the City of Bordeaux!\n\nThis €156,000 project will help secure public buildings with state-of-the-art technology.\n\nHuge thanks to the whole team for this great win! 🙏\n\n#PublicProcurement #Security #VideoSurveillance #Bordeaux",
-    hashtags: ['PublicProcurement', 'Security', 'VideoSurveillance', 'Bordeaux'],
-    image_suggestion: 'A photo of modern cameras or the team in front of the building',
-    status: 'draft',
-    created_at: '2024-01-15T10:30:00Z',
-  },
-  {
-    id: '2',
-    type: 'Expertise',
-    platform: 'linkedin',
-    content: '💡 Did you know? AI-powered smart video surveillance can reduce false positives by up to 90%.\n\nAt SecuriTech, we integrate these technologies into all our security projects.\n\nLearn how in our latest article 👇\n\n#Innovation #AI #Security #TechForGood',
-    hashtags: ['Innovation', 'AI', 'Security', 'TechForGood'],
-    status: 'scheduled',
-    scheduled_date: '2024-01-20T09:00:00Z',
-    created_at: '2024-01-14T14:00:00Z',
+    nameKey: 'studio.template.hiring.name',
+    descriptionKey: 'studio.template.hiring.description',
+    category: 'recruitment' as const,
+    platforms: ['linkedin', 'twitter'] as ('linkedin' | 'twitter')[],
+    previewKey: 'studio.template.hiring.preview',
   },
 ];
 
@@ -147,12 +123,14 @@ function PlatformIcon({ platform, className = 'w-5 h-5' }: { platform: string; c
 }
 
 // Composant carte template
-function TemplateCard({ 
-  template, 
-  onSelect 
-}: { 
-  template: ContentTemplate; 
+function TemplateCard({
+  template,
+  onSelect,
+  t,
+}: {
+  template: typeof CONTENT_TEMPLATE_KEYS[0];
   onSelect: () => void;
+  t: TranslateFn;
 }) {
   return (
     <div className="cursor-pointer" onClick={onSelect}>
@@ -170,10 +148,10 @@ function TemplateCard({
               ))}
             </div>
           </div>
-          <h3 className="font-semibold text-gray-900 mb-1">{template.name}</h3>
-          <p className="text-sm text-gray-500 mb-3">{template.description}</p>
+          <h3 className="font-semibold text-gray-900 mb-1">{t(template.nameKey)}</h3>
+          <p className="text-sm text-gray-500 mb-3">{t(template.descriptionKey)}</p>
           <div className="px-3 py-2 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600 italic truncate">{template.preview}</p>
+            <p className="text-sm text-gray-600 italic truncate">{t(template.previewKey)}</p>
           </div>
         </CardContent>
       </Card>
@@ -280,13 +258,13 @@ function GeneratedContentCard({
 }
 
 // Modal de génération
-function GenerationModal({ 
+function GenerationModal({
   template,
   onClose,
   onGenerate,
   t,
-}: { 
-  template: ContentTemplate | null;
+}: {
+  template: typeof CONTENT_TEMPLATE_KEYS[0] | null;
   onClose: () => void;
   onGenerate: (data: any) => void;
   t: TranslateFn;
@@ -310,6 +288,7 @@ function GenerationModal({
     onGenerate({
       ...formData,
       template: template.id,
+      templateName: t(template.nameKey),
     });
     setGenerating(false);
   };
@@ -323,7 +302,7 @@ function GenerationModal({
               <Sparkles className="w-5 h-5 text-primary-600" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">{template.name}</h2>
+              <h2 className="text-xl font-semibold text-gray-900">{t(template.nameKey)}</h2>
               <p className="text-sm text-gray-500">{t('studio.modal.subtitle')}</p>
             </div>
           </div>
@@ -436,81 +415,183 @@ function GenerationModal({
   );
 }
 
+// Traductions multilingues pour le Studio
+const STUDIO_TRANSLATIONS: Record<string, Record<string, string>> = {
+  fr: {
+    'studio.title': 'Studio Créatif',
+    'studio.description': 'Créez du contenu professionnel pour valoriser vos succès aux appels d\'offres',
+
+    'studio.action.calendar': 'Calendrier',
+    'studio.action.newContent': 'Nouveau contenu',
+
+    'studio.stats.created': 'Contenus créés',
+    'studio.stats.scheduled': 'Planifiés',
+    'studio.stats.published': 'Publiés',
+    'studio.stats.aiGenerations': 'Générations IA',
+
+    'studio.tab.templates': 'Modèles',
+    'studio.tab.myContent': 'Mes contenus ({count})',
+    'studio.tab.imageGenerator': 'Générateur d\'images',
+    'studio.tab.presentations': 'Présentations',
+
+    'studio.templates.title': 'Choisissez un modèle pour commencer',
+
+    'studio.empty.title': 'Aucun contenu créé',
+    'studio.empty.description': 'Commencez par choisir un modèle pour générer votre premier contenu',
+    'studio.empty.action.create': 'Créer un contenu',
+
+    'studio.modal.subtitle': 'Générer du contenu avec l\'IA',
+    'studio.field.context': 'Contexte / détails',
+    'studio.field.context.placeholder': 'Ex: Nous avons remporté le marché de vidéosurveillance de la Ville de Bordeaux pour 156 000€…',
+    'studio.field.tenderRefOptional': 'Référence de l\'AO (optionnel)',
+    'studio.field.tenderRef.placeholder': 'Ex: AO-2024-0042',
+    'studio.field.platform': 'Plateforme',
+    'studio.field.tone': 'Ton',
+
+    'studio.tone.professional': 'Professionnel',
+    'studio.tone.casual': 'Décontracté',
+    'studio.tone.enthusiastic': 'Enthousiaste',
+    'studio.tone.formal': 'Formel',
+
+    'studio.option.includeEmojis': 'Inclure des emojis',
+    'studio.option.includeHashtags': 'Suggérer des hashtags',
+
+    'studio.action.cancel': 'Annuler',
+    'studio.action.generate': 'Générer',
+    'studio.action.generating': 'Génération…',
+    'studio.action.edit': 'Modifier',
+    'studio.action.schedule': 'Planifier',
+
+    'studio.status.draft': 'Brouillon',
+    'studio.status.scheduled': 'Planifié',
+    'studio.status.published': 'Publié',
+
+    'studio.scheduledOn': 'Planifié le {date} à {time}',
+
+    'studio.generated.defaultType': 'Contenu',
+    'studio.generated.body': '🎉 Nouveau contenu généré automatiquement basé sur : "{context}"\n\nVotre entreprise continue de grandir grâce à ses succès aux marchés publics.\n\n#MarchesPublics #Succes #Croissance',
+    'studio.generated.imageSuggestion': 'Une photo de l\'équipe ou du projet',
+
+    // Templates
+    'studio.template.winAnnouncement.name': 'Annonce de victoire',
+    'studio.template.winAnnouncement.description': 'Partagez vos succès aux appels d\'offres',
+    'studio.template.winAnnouncement.preview': '🎉 Nous sommes fiers d\'annoncer…',
+
+    'studio.template.expertise.name': 'Mise en avant expertise',
+    'studio.template.expertise.description': 'Valorisez votre expertise métier',
+    'studio.template.expertise.preview': '💡 Le saviez-vous…',
+
+    'studio.template.testimonial.name': 'Témoignage client',
+    'studio.template.testimonial.description': 'Partagez les retours de vos clients satisfaits',
+    'studio.template.testimonial.preview': '"Grâce à [entreprise]…"',
+
+    'studio.template.companyUpdate.name': 'Actualité entreprise',
+    'studio.template.companyUpdate.description': 'Partagez les nouvelles de votre entreprise',
+    'studio.template.companyUpdate.preview': '📢 Grande nouvelle…',
+
+    'studio.template.hiring.name': 'Offre d\'emploi',
+    'studio.template.hiring.description': 'Attirez les meilleurs talents',
+    'studio.template.hiring.preview': '🚀 Rejoignez notre équipe…',
+  },
+  en: {
+    'studio.title': 'Creative Studio',
+    'studio.description': 'Create professional content to showcase your public procurement wins',
+
+    'studio.action.calendar': 'Calendar',
+    'studio.action.newContent': 'New content',
+
+    'studio.stats.created': 'Created content',
+    'studio.stats.scheduled': 'Scheduled',
+    'studio.stats.published': 'Published',
+    'studio.stats.aiGenerations': 'AI generations',
+
+    'studio.tab.templates': 'Templates',
+    'studio.tab.myContent': 'My content ({count})',
+    'studio.tab.imageGenerator': 'Image generator',
+    'studio.tab.presentations': 'Presentations',
+
+    'studio.templates.title': 'Pick a template to get started',
+
+    'studio.empty.title': 'No content created',
+    'studio.empty.description': 'Start by choosing a template to generate your first content',
+    'studio.empty.action.create': 'Create content',
+
+    'studio.modal.subtitle': 'Generate content with AI',
+    'studio.field.context': 'Context / details',
+    'studio.field.context.placeholder': 'e.g. We won the video surveillance contract for the City of Bordeaux worth €156,000…',
+    'studio.field.tenderRefOptional': 'Tender reference (optional)',
+    'studio.field.tenderRef.placeholder': 'e.g. ITT-2024-0042',
+    'studio.field.platform': 'Platform',
+    'studio.field.tone': 'Tone',
+
+    'studio.tone.professional': 'Professional',
+    'studio.tone.casual': 'Casual',
+    'studio.tone.enthusiastic': 'Enthusiastic',
+    'studio.tone.formal': 'Formal',
+
+    'studio.option.includeEmojis': 'Include emojis',
+    'studio.option.includeHashtags': 'Suggest hashtags',
+
+    'studio.action.cancel': 'Cancel',
+    'studio.action.generate': 'Generate',
+    'studio.action.generating': 'Generating…',
+    'studio.action.edit': 'Edit',
+    'studio.action.schedule': 'Schedule',
+
+    'studio.status.draft': 'Draft',
+    'studio.status.scheduled': 'Scheduled',
+    'studio.status.published': 'Published',
+
+    'studio.scheduledOn': 'Scheduled on {date} at {time}',
+
+    'studio.generated.defaultType': 'Content',
+    'studio.generated.body': '🎉 New content automatically generated based on: "{context}"\n\nYour company keeps growing thanks to its public procurement successes.\n\n#PublicProcurement #Success #Growth',
+    'studio.generated.imageSuggestion': 'A photo of the team or the project',
+
+    // Templates
+    'studio.template.winAnnouncement.name': 'Win announcement',
+    'studio.template.winAnnouncement.description': 'Share your public procurement wins',
+    'studio.template.winAnnouncement.preview': '🎉 We are proud to announce…',
+
+    'studio.template.expertise.name': 'Expertise spotlight',
+    'studio.template.expertise.description': 'Highlight your domain expertise',
+    'studio.template.expertise.preview': '💡 Did you know…',
+
+    'studio.template.testimonial.name': 'Customer testimonial',
+    'studio.template.testimonial.description': 'Share feedback from happy customers',
+    'studio.template.testimonial.preview': '"Thanks to [company]…"',
+
+    'studio.template.companyUpdate.name': 'Company update',
+    'studio.template.companyUpdate.description': 'Share news from your company',
+    'studio.template.companyUpdate.preview': '📢 Big news…',
+
+    'studio.template.hiring.name': 'Hiring post',
+    'studio.template.hiring.description': 'Attract top talent',
+    'studio.template.hiring.preview': '🚀 Join our team…',
+  },
+};
+
 // Page principale
 export default function StudioPage() {
   const { locale } = useLocale();
   const entries = useMemo(
-    () => ({
-      'studio.title': 'Creative Studio',
-      'studio.description': 'Create professional content to showcase your public procurement wins',
-
-      'studio.action.calendar': 'Calendar',
-      'studio.action.newContent': 'New content',
-
-      'studio.stats.created': 'Created content',
-      'studio.stats.scheduled': 'Scheduled',
-      'studio.stats.published': 'Published',
-      'studio.stats.aiGenerations': 'AI generations',
-
-      'studio.tab.templates': 'Templates',
-      'studio.tab.myContent': 'My content ({count})',
-      'studio.tab.imageGenerator': 'Image generator',
-      'studio.tab.presentations': 'Presentations',
-
-      'studio.templates.title': 'Pick a template to get started',
-
-      'studio.empty.title': 'No content created',
-      'studio.empty.description': 'Start by choosing a template to generate your first content',
-      'studio.empty.action.create': 'Create content',
-
-      'studio.modal.subtitle': 'Generate content with AI',
-      'studio.field.context': 'Context / details',
-      'studio.field.context.placeholder': 'e.g. We won the video surveillance contract for the City of Bordeaux worth €156,000…',
-      'studio.field.tenderRefOptional': 'Tender reference (optional)',
-      'studio.field.tenderRef.placeholder': 'e.g. ITT-2024-0042',
-      'studio.field.platform': 'Platform',
-      'studio.field.tone': 'Tone',
-
-      'studio.tone.professional': 'Professional',
-      'studio.tone.casual': 'Casual',
-      'studio.tone.enthusiastic': 'Enthusiastic',
-      'studio.tone.formal': 'Formal',
-
-      'studio.option.includeEmojis': 'Include emojis',
-      'studio.option.includeHashtags': 'Suggest hashtags',
-
-      'studio.action.cancel': 'Cancel',
-      'studio.action.generate': 'Generate',
-      'studio.action.generating': 'Generating…',
-      'studio.action.edit': 'Edit',
-      'studio.action.schedule': 'Schedule',
-
-      'studio.status.draft': 'Draft',
-      'studio.status.scheduled': 'Scheduled',
-      'studio.status.published': 'Published',
-
-      'studio.scheduledOn': 'Scheduled on {date} at {time}',
-
-      'studio.generated.defaultType': 'Content',
-      'studio.generated.body': '🎉 New content automatically generated based on: "{context}"\n\nYour company keeps growing thanks to its public procurement successes.\n\n#PublicProcurement #Success #Growth',
-      'studio.generated.imageSuggestion': 'A photo of the team or the project',
-    }),
-    []
+    () => STUDIO_TRANSLATIONS[locale] || STUDIO_TRANSLATIONS['fr'],
+    [locale]
   );
   const { t } = useUiTranslations(locale, entries);
 
-  const [selectedTemplate, setSelectedTemplate] = useState<ContentTemplate | null>(null);
-  const [generatedContent, setGeneratedContent] = useState<GeneratedContent[]>(DEMO_GENERATED);
+  const [selectedTemplate, setSelectedTemplate] = useState<typeof CONTENT_TEMPLATE_KEYS[0] | null>(null);
+  const [generatedContent, setGeneratedContent] = useState<GeneratedContent[]>([]);
   const [activeTab, setActiveTab] = useState<'templates' | 'content' | 'images' | 'presentations'>('templates');
 
   const handleGenerate = (data: any) => {
     // Simuler l'ajout de contenu généré
     const newContent: GeneratedContent = {
       id: Date.now().toString(),
-      type: selectedTemplate?.name || t('studio.generated.defaultType'),
+      type: data.templateName || t('studio.generated.defaultType'),
       platform: data.platform,
       content: t('studio.generated.body', { context: data.context }),
-      hashtags: ['PublicProcurement', 'Success', 'Growth'],
+      hashtags: locale === 'fr' ? ['MarchesPublics', 'Succes', 'Croissance'] : ['PublicProcurement', 'Success', 'Growth'],
       image_suggestion: t('studio.generated.imageSuggestion'),
       status: 'draft',
       created_at: new Date().toISOString(),
@@ -651,11 +732,12 @@ export default function StudioPage() {
               {t('studio.templates.title')}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {CONTENT_TEMPLATES.map((template) => (
+              {CONTENT_TEMPLATE_KEYS.map((template) => (
                 <TemplateCard
                   key={template.id}
                   template={template}
                   onSelect={() => setSelectedTemplate(template)}
+                  t={t}
                 />
               ))}
             </div>
