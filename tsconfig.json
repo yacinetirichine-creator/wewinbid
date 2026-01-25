@@ -60,6 +60,10 @@
     "**/*.test.tsx",
     "**/*.spec.ts",
     "**/*.spec.tsx",
-    "**/__tests__/**"
+    "**/__tests__/**",
+    "**/stories/**",
+    "**/*.stories.ts",
+    "**/*.stories.tsx",
+    ".storybook/**"
   ]
 }
