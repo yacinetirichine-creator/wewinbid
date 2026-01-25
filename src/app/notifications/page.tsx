@@ -11,24 +11,24 @@ import { useUiTranslations } from '@/hooks/useUiTranslations';
 
 const entries = {
   'notificationsPage.title': 'Notifications',
-  'notificationsPage.description': 'Manage your notifications and preferences',
+  'notificationsPage.description': 'Gérez vos notifications et préférences',
 
   'notificationsPage.tabs.notifications': 'Notifications',
-  'notificationsPage.tabs.preferences': 'Preferences',
+  'notificationsPage.tabs.preferences': 'Préférences',
 
-  'notificationsPage.filters.all': 'All',
-  'notificationsPage.filters.unread': 'Unread',
+  'notificationsPage.filters.all': 'Toutes',
+  'notificationsPage.filters.unread': 'Non lues',
 
-  'notificationsPage.actions.markAllRead': 'Mark all as read',
-  'notificationsPage.actions.deleteRead': 'Delete read',
-  'notificationsPage.confirm.deleteRead': 'Delete all read notifications?',
+  'notificationsPage.actions.markAllRead': 'Tout marquer comme lu',
+  'notificationsPage.actions.deleteRead': 'Supprimer les lues',
+  'notificationsPage.confirm.deleteRead': 'Supprimer toutes les notifications lues ?',
 
-  'notificationsPage.loading': 'Loading…',
+  'notificationsPage.loading': 'Chargement…',
 
-  'notificationsPage.empty.none.title': 'No notifications',
-  'notificationsPage.empty.none.subtitle': 'Important notifications will appear here',
-  'notificationsPage.empty.unread.title': 'No unread notifications',
-  'notificationsPage.empty.unread.subtitle': 'All your notifications are read',
+  'notificationsPage.empty.none.title': 'Aucune notification',
+  'notificationsPage.empty.none.subtitle': 'Les notifications importantes apparaîtront ici',
+  'notificationsPage.empty.unread.title': 'Aucune notification non lue',
+  'notificationsPage.empty.unread.subtitle': 'Toutes vos notifications ont été lues',
 } as const;
 
 interface Notification {
