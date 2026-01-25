@@ -72,88 +72,286 @@ interface TenderResponseWizardProps {
   onCancel: () => void;
 }
 
-// Configuration des étapes - Documents administratifs à la fin
-const WIZARD_STEPS: WizardStep[] = [
+// Configuration des étapes - avec clés de traduction
+const WIZARD_STEP_KEYS = [
   {
     id: 'technical',
-    title: 'Technical offer',
-    description: 'Technical proposal, methodology, references',
+    titleKey: 'step.technical.title',
+    descriptionKey: 'step.technical.description',
     icon: FileCheck,
-    status: 'current',
+    status: 'current' as const,
     aiAssisted: true,
   },
   {
     id: 'team',
-    title: 'Proposed team',
-    description: 'CVs, qualifications, staffing',
+    titleKey: 'step.team.title',
+    descriptionKey: 'step.team.description',
     icon: Users,
-    status: 'pending',
+    status: 'pending' as const,
     aiAssisted: true,
   },
   {
     id: 'financial',
-    title: 'Financial offer',
-    description: 'Unit prices, price breakdown, pricing detail',
+    titleKey: 'step.financial.title',
+    descriptionKey: 'step.financial.description',
     icon: Euro,
-    status: 'pending',
+    status: 'pending' as const,
     aiAssisted: false,
   },
   {
     id: 'administrative',
-    title: 'Administrative documents',
-    description: 'Certificates, registration extract, legal documents',
+    titleKey: 'step.administrative.title',
+    descriptionKey: 'step.administrative.description',
     icon: FileText,
-    status: 'pending',
+    status: 'pending' as const,
     aiAssisted: true,
   },
   {
     id: 'review',
-    title: 'Final review',
-    description: 'Check and validate the file',
+    titleKey: 'step.review.title',
+    descriptionKey: 'step.review.description',
     icon: Eye,
-    status: 'pending',
+    status: 'pending' as const,
   },
   {
     id: 'submit',
-    title: 'Download',
-    description: 'Download the complete file',
+    titleKey: 'step.submit.title',
+    descriptionKey: 'step.submit.description',
     icon: Download,
-    status: 'pending',
+    status: 'pending' as const,
   },
 ];
 
-// Documents par étape
-const DOCUMENTS_BY_STEP: Record<string, DocumentItem[]> = {
+// Documents par étape - avec clés de traduction
+const DOCUMENT_KEYS_BY_STEP: Record<string, Array<{
+  id: string;
+  nameKey: string;
+  type: 'required' | 'optional' | 'generated';
+  status: 'missing' | 'uploaded' | 'generating' | 'ready' | 'error';
+  aiGenerated?: boolean;
+  downloadUrl?: string;
+  template?: string;
+}>> = {
   administrative: [
-    { id: 'dc1', name: 'DC1 form (application letter)', type: 'required', status: 'missing', aiGenerated: true },
-    { id: 'dc2', name: 'DC2 form (candidate declaration)', type: 'required', status: 'missing', aiGenerated: true },
-    { id: 'kbis', name: 'Company registration extract (less than 3 months old)', type: 'required', status: 'missing' },
-    { id: 'attestation_fiscale', name: 'Tax compliance certificate', type: 'required', status: 'missing' },
-    { id: 'attestation_sociale', name: 'URSSAF certificate', type: 'required', status: 'missing' },
-    { id: 'assurance_rc', name: "Professional liability insurance certificate", type: 'required', status: 'missing' },
-    { id: 'assurance_decennale', name: 'Decennial liability insurance certificate', type: 'optional', status: 'missing' },
-    { id: 'acte_engagement', name: 'Commitment deed', type: 'generated', status: 'missing', aiGenerated: true },
+    { id: 'dc1', nameKey: 'doc.dc1', type: 'required', status: 'missing', aiGenerated: true },
+    { id: 'dc2', nameKey: 'doc.dc2', type: 'required', status: 'missing', aiGenerated: true },
+    { id: 'kbis', nameKey: 'doc.kbis', type: 'required', status: 'missing' },
+    { id: 'attestation_fiscale', nameKey: 'doc.attestation_fiscale', type: 'required', status: 'missing' },
+    { id: 'attestation_sociale', nameKey: 'doc.attestation_sociale', type: 'required', status: 'missing' },
+    { id: 'assurance_rc', nameKey: 'doc.assurance_rc', type: 'required', status: 'missing' },
+    { id: 'assurance_decennale', nameKey: 'doc.assurance_decennale', type: 'optional', status: 'missing' },
+    { id: 'acte_engagement', nameKey: 'doc.acte_engagement', type: 'generated', status: 'missing', aiGenerated: true },
   ],
   technical: [
-    { id: 'memoire_technique', name: 'Technical proposal', type: 'generated', status: 'missing', aiGenerated: true },
-    { id: 'note_methodologique', name: 'Method statement', type: 'generated', status: 'missing', aiGenerated: true },
-    { id: 'planning', name: 'Indicative schedule', type: 'generated', status: 'missing', aiGenerated: true },
-    { id: 'references', name: 'Reference list', type: 'generated', status: 'missing', aiGenerated: true },
-    { id: 'certifications', name: 'Certificates and qualifications', type: 'required', status: 'missing' },
-    { id: 'organigramme', name: 'Project organization chart', type: 'generated', status: 'missing', aiGenerated: true },
+    { id: 'memoire_technique', nameKey: 'doc.memoire_technique', type: 'generated', status: 'missing', aiGenerated: true },
+    { id: 'note_methodologique', nameKey: 'doc.note_methodologique', type: 'generated', status: 'missing', aiGenerated: true },
+    { id: 'planning', nameKey: 'doc.planning', type: 'generated', status: 'missing', aiGenerated: true },
+    { id: 'references', nameKey: 'doc.references', type: 'generated', status: 'missing', aiGenerated: true },
+    { id: 'certifications', nameKey: 'doc.certifications', type: 'required', status: 'missing' },
+    { id: 'organigramme', nameKey: 'doc.organigramme', type: 'generated', status: 'missing', aiGenerated: true },
   ],
   team: [
-    { id: 'cv_responsable', name: 'Project manager CV', type: 'required', status: 'missing', aiGenerated: true },
-    { id: 'cv_equipe', name: 'Proposed team CVs', type: 'required', status: 'missing', aiGenerated: true },
-    { id: 'moyens_humains', name: 'Staffing table', type: 'generated', status: 'missing', aiGenerated: true },
-    { id: 'qualifications', name: 'Team qualifications', type: 'optional', status: 'missing' },
+    { id: 'cv_responsable', nameKey: 'doc.cv_responsable', type: 'required', status: 'missing', aiGenerated: true },
+    { id: 'cv_equipe', nameKey: 'doc.cv_equipe', type: 'required', status: 'missing', aiGenerated: true },
+    { id: 'moyens_humains', nameKey: 'doc.moyens_humains', type: 'generated', status: 'missing', aiGenerated: true },
+    { id: 'qualifications', nameKey: 'doc.qualifications', type: 'optional', status: 'missing' },
   ],
   financial: [
-    { id: 'dpgf', name: 'DPGF (lump-sum price breakdown)', type: 'required', status: 'missing' },
-    { id: 'bpu', name: 'BPU (unit price schedule)', type: 'required', status: 'missing' },
-    { id: 'detail_estimatif', name: 'Estimate detail', type: 'optional', status: 'missing' },
-    { id: 'sous_traitance', name: 'Subcontracting declaration (DC4)', type: 'optional', status: 'missing', aiGenerated: true },
+    { id: 'dpgf', nameKey: 'doc.dpgf', type: 'required', status: 'missing' },
+    { id: 'bpu', nameKey: 'doc.bpu', type: 'required', status: 'missing' },
+    { id: 'detail_estimatif', nameKey: 'doc.detail_estimatif', type: 'optional', status: 'missing' },
+    { id: 'sous_traitance', nameKey: 'doc.sous_traitance', type: 'optional', status: 'missing', aiGenerated: true },
   ],
+};
+
+// Traductions multilingues
+const WIZARD_TRANSLATIONS: Record<string, Record<string, string>> = {
+  fr: {
+    // Étapes
+    'step.technical.title': 'Offre technique',
+    'step.technical.description': 'Mémoire technique, méthodologie, références',
+    'step.team.title': 'Équipe proposée',
+    'step.team.description': 'CV, qualifications, moyens humains',
+    'step.financial.title': 'Offre financière',
+    'step.financial.description': 'Prix unitaires, décomposition, détail estimatif',
+    'step.administrative.title': 'Documents administratifs',
+    'step.administrative.description': 'Attestations, extrait Kbis, documents légaux',
+    'step.review.title': 'Vérification finale',
+    'step.review.description': 'Vérifier et valider le dossier',
+    'step.submit.title': 'Téléchargement',
+    'step.submit.description': 'Télécharger le dossier complet',
+
+    // Documents administratifs
+    'doc.dc1': 'Formulaire DC1 (lettre de candidature)',
+    'doc.dc2': 'Formulaire DC2 (déclaration du candidat)',
+    'doc.kbis': 'Extrait Kbis (moins de 3 mois)',
+    'doc.attestation_fiscale': 'Attestation de régularité fiscale',
+    'doc.attestation_sociale': 'Attestation URSSAF',
+    'doc.assurance_rc': 'Attestation d\'assurance RC professionnelle',
+    'doc.assurance_decennale': 'Attestation d\'assurance décennale',
+    'doc.acte_engagement': 'Acte d\'engagement',
+
+    // Documents techniques
+    'doc.memoire_technique': 'Mémoire technique',
+    'doc.note_methodologique': 'Note méthodologique',
+    'doc.planning': 'Planning prévisionnel',
+    'doc.references': 'Liste des références',
+    'doc.certifications': 'Certificats et qualifications',
+    'doc.organigramme': 'Organigramme du projet',
+
+    // Documents équipe
+    'doc.cv_responsable': 'CV du responsable de projet',
+    'doc.cv_equipe': 'CV de l\'équipe proposée',
+    'doc.moyens_humains': 'Tableau des moyens humains',
+    'doc.qualifications': 'Qualifications de l\'équipe',
+
+    // Documents financiers
+    'doc.dpgf': 'DPGF (décomposition du prix global forfaitaire)',
+    'doc.bpu': 'BPU (bordereau des prix unitaires)',
+    'doc.detail_estimatif': 'Détail estimatif',
+    'doc.sous_traitance': 'Déclaration de sous-traitance (DC4)',
+
+    // UI
+    'tenderResponseWizard.header.title': 'Réponse à l\'appel d\'offres',
+    'tenderResponseWizard.header.deadline': 'Échéance : {date}',
+    'tenderResponseWizard.action.saveAndExit': 'Enregistrer et quitter',
+    'tenderResponseWizard.progress.label': 'Progression du dossier',
+    'tenderResponseWizard.action.generateWithAi': 'Générer avec l\'IA',
+    'tenderResponseWizard.action.generatingWithProgress': 'Génération… {progress}%',
+    'tenderResponseWizard.doc.required': 'Obligatoire',
+    'tenderResponseWizard.doc.optional': 'Optionnel',
+    'tenderResponseWizard.doc.generating': 'Génération…',
+    'tenderResponseWizard.doc.upload': 'Téléverser',
+    'tenderResponseWizard.doc.download': 'Télécharger le document',
+    'tenderResponseWizard.notes.title': 'Notes pour cette étape',
+    'tenderResponseWizard.notes.placeholder': 'Ajoutez vos notes, remarques ou points d\'attention…',
+    'tenderResponseWizard.aiTips.title': 'Conseils IA',
+    'tenderResponseWizard.aiTips.line1': 'Pour cette étape, notre IA peut générer automatiquement les documents marqués',
+    'tenderResponseWizard.aiTips.line2': 'Les documents générés sont personnalisés en fonction de votre profil entreprise et des exigences de l\'AO.',
+    'tenderResponseWizard.attention.title': 'Points d\'attention',
+    'tenderResponseWizard.attention.admin.1': 'Vérifiez que l\'extrait Kbis a moins de 3 mois',
+    'tenderResponseWizard.attention.admin.2': 'Votre attestation fiscale doit être à jour',
+    'tenderResponseWizard.attention.tech.1': 'Le mémoire technique représente 40% de la note finale',
+    'tenderResponseWizard.attention.tech.2': 'Incluez des références récentes similaires',
+    'tenderResponseWizard.attention.team.1': 'Mettez en valeur les certifications pertinentes',
+    'tenderResponseWizard.attention.fin.1': 'Le prix représente 60% de la note finale',
+    'tenderResponseWizard.attention.fin.2': 'Vérifiez que chaque ligne est chiffrée',
+    'tenderResponseWizard.review.title': 'Vérification finale',
+    'tenderResponseWizard.review.subtitle': 'Assurez-vous que votre dossier est complet avant de finaliser.',
+    'tenderResponseWizard.review.requiredDocs': '{done}/{total} documents obligatoires',
+    'tenderResponseWizard.review.action.complete': 'Complet',
+    'tenderResponseWizard.review.checklist.title': 'Checklist finale',
+    'tenderResponseWizard.review.checklist.1': 'J\'ai vérifié que tous les documents sont signés',
+    'tenderResponseWizard.review.checklist.2': 'Les montants financiers sont corrects',
+    'tenderResponseWizard.review.checklist.3': 'Le dossier respecte le format demandé',
+    'tenderResponseWizard.review.checklist.4': 'J\'ai relu le mémoire technique',
+    'tenderResponseWizard.submit.title': 'Votre dossier est prêt !',
+    'tenderResponseWizard.submit.subtitle': 'Tous les documents ont été générés et assemblés. Vous pouvez télécharger le dossier complet.',
+    'tenderResponseWizard.submit.stats.documents': 'Documents',
+    'tenderResponseWizard.submit.stats.compatibility': 'Compatibilité',
+    'tenderResponseWizard.submit.stats.status': 'Statut',
+    'tenderResponseWizard.submit.stats.onTime': 'Dans les temps',
+    'tenderResponseWizard.submit.action.downloadFull': 'Télécharger le dossier complet',
+    'tenderResponseWizard.submit.zipNote': 'Fichier ZIP sécurisé • Prêt pour soumission',
+    'tenderResponseWizard.nav.previous': 'Précédent',
+    'tenderResponseWizard.nav.next': 'Suivant',
+    'tenderResponseWizard.nav.finalize': 'Finaliser',
+    'tenderResponseWizard.log.draftSaved': 'Brouillon enregistré :',
+    'tenderResponseWizard.log.saveError': 'Erreur de sauvegarde :',
+  },
+  en: {
+    // Steps
+    'step.technical.title': 'Technical offer',
+    'step.technical.description': 'Technical proposal, methodology, references',
+    'step.team.title': 'Proposed team',
+    'step.team.description': 'CVs, qualifications, staffing',
+    'step.financial.title': 'Financial offer',
+    'step.financial.description': 'Unit prices, price breakdown, pricing detail',
+    'step.administrative.title': 'Administrative documents',
+    'step.administrative.description': 'Certificates, registration extract, legal documents',
+    'step.review.title': 'Final review',
+    'step.review.description': 'Check and validate the file',
+    'step.submit.title': 'Download',
+    'step.submit.description': 'Download the complete file',
+
+    // Administrative documents
+    'doc.dc1': 'DC1 form (application letter)',
+    'doc.dc2': 'DC2 form (candidate declaration)',
+    'doc.kbis': 'Company registration extract (less than 3 months old)',
+    'doc.attestation_fiscale': 'Tax compliance certificate',
+    'doc.attestation_sociale': 'URSSAF certificate',
+    'doc.assurance_rc': 'Professional liability insurance certificate',
+    'doc.assurance_decennale': 'Decennial liability insurance certificate',
+    'doc.acte_engagement': 'Commitment deed',
+
+    // Technical documents
+    'doc.memoire_technique': 'Technical proposal',
+    'doc.note_methodologique': 'Method statement',
+    'doc.planning': 'Indicative schedule',
+    'doc.references': 'Reference list',
+    'doc.certifications': 'Certificates and qualifications',
+    'doc.organigramme': 'Project organization chart',
+
+    // Team documents
+    'doc.cv_responsable': 'Project manager CV',
+    'doc.cv_equipe': 'Proposed team CVs',
+    'doc.moyens_humains': 'Staffing table',
+    'doc.qualifications': 'Team qualifications',
+
+    // Financial documents
+    'doc.dpgf': 'DPGF (lump-sum price breakdown)',
+    'doc.bpu': 'BPU (unit price schedule)',
+    'doc.detail_estimatif': 'Estimate detail',
+    'doc.sous_traitance': 'Subcontracting declaration (DC4)',
+
+    // UI
+    'tenderResponseWizard.header.title': 'Tender response',
+    'tenderResponseWizard.header.deadline': 'Deadline: {date}',
+    'tenderResponseWizard.action.saveAndExit': 'Save & exit',
+    'tenderResponseWizard.progress.label': 'File progress',
+    'tenderResponseWizard.action.generateWithAi': 'Generate with AI',
+    'tenderResponseWizard.action.generatingWithProgress': 'Generating… {progress}%',
+    'tenderResponseWizard.doc.required': 'Required',
+    'tenderResponseWizard.doc.optional': 'Optional',
+    'tenderResponseWizard.doc.generating': 'Generating…',
+    'tenderResponseWizard.doc.upload': 'Upload',
+    'tenderResponseWizard.doc.download': 'Download document',
+    'tenderResponseWizard.notes.title': 'Notes for this step',
+    'tenderResponseWizard.notes.placeholder': 'Add your notes, remarks, or points of attention…',
+    'tenderResponseWizard.aiTips.title': 'AI tips',
+    'tenderResponseWizard.aiTips.line1': 'For this step, our AI can automatically generate documents marked with',
+    'tenderResponseWizard.aiTips.line2': 'Generated documents are personalized based on your company profile and the tender requirements.',
+    'tenderResponseWizard.attention.title': 'Points to watch',
+    'tenderResponseWizard.attention.admin.1': 'Make sure the company registration extract is less than 3 months old',
+    'tenderResponseWizard.attention.admin.2': 'Your tax compliance certificate must be up to date',
+    'tenderResponseWizard.attention.tech.1': 'The technical proposal represents 40% of the final score',
+    'tenderResponseWizard.attention.tech.2': 'Include recent similar references',
+    'tenderResponseWizard.attention.team.1': 'Highlight relevant certifications',
+    'tenderResponseWizard.attention.fin.1': 'Price represents 60% of the final score',
+    'tenderResponseWizard.attention.fin.2': 'Double-check that every line item is priced',
+    'tenderResponseWizard.review.title': 'Final review',
+    'tenderResponseWizard.review.subtitle': 'Make sure your file is complete before finalizing.',
+    'tenderResponseWizard.review.requiredDocs': '{done}/{total} required documents',
+    'tenderResponseWizard.review.action.complete': 'Complete',
+    'tenderResponseWizard.review.checklist.title': 'Final checklist',
+    'tenderResponseWizard.review.checklist.1': 'I verified that all documents are signed',
+    'tenderResponseWizard.review.checklist.2': 'Financial amounts are correct',
+    'tenderResponseWizard.review.checklist.3': 'The file matches the required format',
+    'tenderResponseWizard.review.checklist.4': 'I proofread the technical proposal',
+    'tenderResponseWizard.submit.title': 'Your file is ready!',
+    'tenderResponseWizard.submit.subtitle': 'All documents have been generated and assembled. You can download the complete file.',
+    'tenderResponseWizard.submit.stats.documents': 'Documents',
+    'tenderResponseWizard.submit.stats.compatibility': 'Compatibility',
+    'tenderResponseWizard.submit.stats.status': 'Status',
+    'tenderResponseWizard.submit.stats.onTime': 'On time',
+    'tenderResponseWizard.submit.action.downloadFull': 'Download full file',
+    'tenderResponseWizard.submit.zipNote': 'Secure ZIP file • Ready for submission',
+    'tenderResponseWizard.nav.previous': 'Previous',
+    'tenderResponseWizard.nav.next': 'Next',
+    'tenderResponseWizard.nav.finalize': 'Finalize',
+    'tenderResponseWizard.log.draftSaved': 'Draft saved:',
+    'tenderResponseWizard.log.saveError': 'Save error:',
+  },
 };
 
 export function TenderResponseWizard({
@@ -164,73 +362,39 @@ export function TenderResponseWizard({
 }: TenderResponseWizardProps) {
   const { locale } = useLocale();
   const entries = useMemo(
-    () => ({
-      'tenderResponseWizard.header.title': 'Tender response',
-      'tenderResponseWizard.header.deadline': 'Deadline: {date}',
-      'tenderResponseWizard.action.saveAndExit': 'Save & exit',
-
-      'tenderResponseWizard.progress.label': 'File progress',
-
-      'tenderResponseWizard.action.generateWithAi': 'Generate with AI',
-      'tenderResponseWizard.action.generatingWithProgress': 'Generating… {progress}%',
-
-      'tenderResponseWizard.doc.required': 'Required',
-      'tenderResponseWizard.doc.optional': 'Optional',
-      'tenderResponseWizard.doc.generating': 'Generating…',
-      'tenderResponseWizard.doc.upload': 'Upload',
-      'tenderResponseWizard.doc.download': 'Download document',
-
-      'tenderResponseWizard.notes.title': 'Notes for this step',
-      'tenderResponseWizard.notes.placeholder': 'Add your notes, remarks, or points of attention…',
-
-      'tenderResponseWizard.aiTips.title': 'AI tips',
-      'tenderResponseWizard.aiTips.line1': 'For this step, our AI can automatically generate documents marked with',
-      'tenderResponseWizard.aiTips.line2': 'Generated documents are personalized based on your company profile and the tender requirements.',
-
-      'tenderResponseWizard.attention.title': 'Points to watch',
-      'tenderResponseWizard.attention.admin.1': 'Make sure the company registration extract is less than 3 months old',
-      'tenderResponseWizard.attention.admin.2': 'Your tax compliance certificate must be up to date',
-      'tenderResponseWizard.attention.tech.1': 'The technical proposal represents 40% of the final score',
-      'tenderResponseWizard.attention.tech.2': 'Include recent similar references',
-      'tenderResponseWizard.attention.team.1': 'Highlight relevant certifications',
-      'tenderResponseWizard.attention.fin.1': 'Price represents 60% of the final score',
-      'tenderResponseWizard.attention.fin.2': 'Double-check that every line item is priced',
-
-      'tenderResponseWizard.review.title': 'Final review',
-      'tenderResponseWizard.review.subtitle': 'Make sure your file is complete before finalizing.',
-      'tenderResponseWizard.review.requiredDocs': '{done}/{total} required documents',
-      'tenderResponseWizard.review.action.complete': 'Complete',
-      'tenderResponseWizard.review.checklist.title': 'Final checklist',
-      'tenderResponseWizard.review.checklist.1': 'I verified that all documents are signed',
-      'tenderResponseWizard.review.checklist.2': 'Financial amounts are correct',
-      'tenderResponseWizard.review.checklist.3': 'The file matches the required format',
-      'tenderResponseWizard.review.checklist.4': 'I proofread the technical proposal',
-
-      'tenderResponseWizard.submit.title': 'Your file is ready!',
-      'tenderResponseWizard.submit.subtitle': 'All documents have been generated and assembled. You can download the complete file.',
-      'tenderResponseWizard.submit.stats.documents': 'Documents',
-      'tenderResponseWizard.submit.stats.compatibility': 'Compatibility',
-      'tenderResponseWizard.submit.stats.status': 'Status',
-      'tenderResponseWizard.submit.stats.onTime': 'On time',
-      'tenderResponseWizard.submit.action.downloadFull': 'Download full file',
-      'tenderResponseWizard.submit.zipNote': 'Secure ZIP file • Ready for submission',
-
-      'tenderResponseWizard.nav.previous': 'Previous',
-      'tenderResponseWizard.nav.next': 'Next',
-      'tenderResponseWizard.nav.finalize': 'Finalize',
-
-      'tenderResponseWizard.log.draftSaved': 'Draft saved:',
-      'tenderResponseWizard.log.saveError': 'Save error:',
-    }),
-    []
+    () => WIZARD_TRANSLATIONS[locale] || WIZARD_TRANSLATIONS['fr'],
+    [locale]
   );
   const { t } = useUiTranslations(locale, entries);
 
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [steps, setSteps] = useState<WizardStep[]>(
-    WIZARD_STEPS.map((s, i) => ({ ...s, status: i === 0 ? 'current' : 'pending' }))
+  // Créer les étapes avec les traductions
+  const translatedSteps = useMemo(() =>
+    WIZARD_STEP_KEYS.map((s, i) => ({
+      id: s.id,
+      title: t(s.titleKey),
+      description: t(s.descriptionKey),
+      icon: s.icon,
+      status: (i === 0 ? 'current' : 'pending') as WizardStep['status'],
+      aiAssisted: s.aiAssisted,
+    })),
+    [t]
   );
-  const [documents, setDocuments] = useState<Record<string, DocumentItem[]>>(DOCUMENTS_BY_STEP);
+
+  // Créer les documents avec les traductions
+  const translatedDocuments = useMemo(() => {
+    const result: Record<string, DocumentItem[]> = {};
+    Object.entries(DOCUMENT_KEYS_BY_STEP).forEach(([stepId, docs]) => {
+      result[stepId] = docs.map(doc => ({
+        ...doc,
+        name: t(doc.nameKey),
+      }));
+    });
+    return result;
+  }, [t]);
+
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [steps, setSteps] = useState<WizardStep[]>(translatedSteps);
+  const [documents, setDocuments] = useState<Record<string, DocumentItem[]>>(translatedDocuments);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [notes, setNotes] = useState<Record<string, string>>({});
@@ -817,7 +981,7 @@ export function TenderResponseWizard({
 
                   <div className="space-y-6">
                     {Object.entries(documents).filter(([key]) => key !== 'review' && key !== 'submit').map(([stepId, docs]) => {
-                      const step = WIZARD_STEPS.find(s => s.id === stepId);
+                      const step = steps.find(s => s.id === stepId);
                       const requiredDocs = docs.filter(d => d.type === 'required');
                       const completedRequired = requiredDocs.filter(d => d.status === 'ready' || d.status === 'uploaded').length;
                       const allComplete = completedRequired === requiredDocs.length;
@@ -848,7 +1012,7 @@ export function TenderResponseWizard({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => setCurrentStepIndex(WIZARD_STEPS.findIndex(s => s.id === stepId))}
+                                onClick={() => setCurrentStepIndex(steps.findIndex(s => s.id === stepId))}
                               >
                                 {t('tenderResponseWizard.review.action.complete')}
                               </Button>
