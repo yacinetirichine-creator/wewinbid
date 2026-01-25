@@ -65,6 +65,7 @@ export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
         ref={ref}
         className={cn(badgeVariants({ variant, size }), className)}
         role="status"
+        aria-live="polite"
         {...props}
       >
         {icon && <span className="mr-1" aria-hidden="true">{icon}</span>}

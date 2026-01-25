@@ -70,6 +70,25 @@ export function TendersTable({ tenders, showActions = true, onTenderClick }: Ten
     }
   };
 
+  const handleSortKeyDown = (e: React.KeyboardEvent, column: typeof sortBy) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleSort(column);
+    }
+  };
+
+  const handleRowKeyDown = (e: React.KeyboardEvent, tenderId: string) => {
+    if ((e.key === 'Enter' || e.key === ' ') && onTenderClick) {
+      e.preventDefault();
+      onTenderClick(tenderId);
+    }
+  };
+
+  const getSortLabel = (column: typeof sortBy): string => {
+    if (sortBy !== column) return '';
+    return sortOrder === 'asc' ? ', trié par ordre croissant' : ', trié par ordre décroissant';
+  };
+
   return (
     <Card className="overflow-hidden">
       <div className="overflow-x-auto">
@@ -86,16 +105,32 @@ export function TendersTable({ tenders, showActions = true, onTenderClick }: Ten
                 Statut
               </th>
               <th
-                className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:text-gray-700"
+                className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset"
                 onClick={() => handleSort('deadline')}
+                onKeyDown={(e) => handleSortKeyDown(e, 'deadline')}
+                tabIndex={0}
+                role="button"
+                aria-sort={sortBy === 'deadline' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
+                aria-label={`Échéance${getSortLabel('deadline')}`}
               >
-                Échéance {sortBy === 'deadline' && (sortOrder === 'asc' ? '↑' : '↓')}
+                Échéance{' '}
+                {sortBy === 'deadline' && (
+                  <span aria-hidden="true">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                )}
               </th>
               <th
-                className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:text-gray-700"
+                className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset"
                 onClick={() => handleSort('value')}
+                onKeyDown={(e) => handleSortKeyDown(e, 'value')}
+                tabIndex={0}
+                role="button"
+                aria-sort={sortBy === 'value' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
+                aria-label={`Valeur${getSortLabel('value')}`}
               >
-                Valeur {sortBy === 'value' && (sortOrder === 'asc' ? '↑' : '↓')}
+                Valeur{' '}
+                {sortBy === 'value' && (
+                  <span aria-hidden="true">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                )}
               </th>
               {showActions && (
                 <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -114,8 +149,12 @@ export function TendersTable({ tenders, showActions = true, onTenderClick }: Ten
               return (
                 <tr
                   key={tender.id}
-                  className={`hover:bg-gray-50 ${onTenderClick ? 'cursor-pointer' : ''}`}
+                  className={`hover:bg-gray-50 focus:bg-gray-100 focus:outline-none ${onTenderClick ? 'cursor-pointer' : ''}`}
                   onClick={() => onTenderClick?.(tender.id)}
+                  onKeyDown={(e) => handleRowKeyDown(e, tender.id)}
+                  tabIndex={onTenderClick ? 0 : undefined}
+                  role={onTenderClick ? 'button' : undefined}
+                  aria-label={onTenderClick ? `Voir l'appel d'offres ${tender.reference || tender.title}` : undefined}
                 >
                   <td className="whitespace-nowrap px-6 py-4">
                     <div>
@@ -157,11 +196,12 @@ export function TendersTable({ tenders, showActions = true, onTenderClick }: Ten
                   {showActions && (
                     <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                       <button
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded px-2 py-1"
                         onClick={(e) => {
                           e.stopPropagation();
                           window.location.href = `/tenders/${tender.id}`;
                         }}
+                        aria-label={`Voir l'appel d'offres ${tender.reference || tender.title}`}
                       >
                         Voir
                       </button>

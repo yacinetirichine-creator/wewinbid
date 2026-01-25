@@ -58,14 +58,21 @@ export function DropdownMenuTrigger({ children, asChild }: DropdownMenuTriggerPr
   }, [open, setOpen]);
 
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children as React.ReactElement<{ onClick?: () => void }>, {
+    return React.cloneElement(children as React.ReactElement<{ onClick?: () => void; 'aria-expanded'?: boolean; 'aria-haspopup'?: boolean }>, {
       onClick: () => setOpen(!open),
+      'aria-expanded': open,
+      'aria-haspopup': true,
     });
   }
 
   return (
     <div ref={ref} className="dropdown-menu-root">
-      <button onClick={() => setOpen(!open)} type="button">
+      <button
+        onClick={() => setOpen(!open)}
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="menu"
+      >
         {children}
       </button>
     </div>
@@ -113,6 +120,16 @@ export function DropdownMenuContent({
     }
   }, [open, setOpen]);
 
+  // Focus first menu item when menu opens
+  React.useEffect(() => {
+    if (open && ref.current) {
+      const firstItem = ref.current.querySelector('[role="menuitem"]') as HTMLElement;
+      if (firstItem) {
+        firstItem.focus();
+      }
+    }
+  }, [open]);
+
   if (!open) return null;
 
   const alignmentClasses = {
@@ -135,6 +152,7 @@ export function DropdownMenuContent({
         className
       )}
       role="menu"
+      aria-orientation="vertical"
     >
       {children}
     </div>
@@ -164,6 +182,36 @@ export function DropdownMenuItem({
     }
   };
 
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    const target = event.currentTarget as HTMLElement;
+    const parent = target.closest('[role="menu"]');
+    if (!parent) return;
+
+    const items = Array.from(parent.querySelectorAll('[role="menuitem"]:not([disabled])')) as HTMLElement[];
+    const currentIndex = items.indexOf(target);
+
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        const nextIndex = (currentIndex + 1) % items.length;
+        items[nextIndex]?.focus();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        const prevIndex = (currentIndex - 1 + items.length) % items.length;
+        items[prevIndex]?.focus();
+        break;
+      case 'Home':
+        event.preventDefault();
+        items[0]?.focus();
+        break;
+      case 'End':
+        event.preventDefault();
+        items[items.length - 1]?.focus();
+        break;
+    }
+  };
+
   return (
     <button
       className={cn(
@@ -171,14 +219,16 @@ export function DropdownMenuItem({
         'text-surface-700 dark:text-surface-200',
         'hover:bg-surface-100 dark:hover:bg-surface-700',
         'focus:bg-surface-100 dark:focus:bg-surface-700',
-        'focus:outline-none',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-inset',
         'transition-colors duration-150',
         disabled && 'opacity-50 cursor-not-allowed',
         className
       )}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
       disabled={disabled}
       role="menuitem"
+      tabIndex={disabled ? -1 : 0}
     >
       {children}
     </button>
